@@ -1,13 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Settings, Plus, Pencil, Trash2, DollarSign, Save, Search, Eye, EyeOff } from "lucide-react";
+import { Settings, Plus, Pencil, Trash2, Search, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PetFormDialog from "@/components/care/PetFormDialog";
 import TaskFormDialog from "@/components/care/TaskFormDialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatBirthDate, formatAge } from "@/utils/pet";
 import { computePetBadges } from "@/utils/petStatus";
 import { assignmentLabel } from "@/utils/assignment";
@@ -23,22 +22,15 @@ export default function Manage() {
   const [editingPet, setEditingPet] = useState(null);
   const [editingTask, setEditingTask] = useState(null);
   const [activeTab, setActiveTab] = useState("pets");
-  const [payForm, setPayForm] = useState(null);
   const [search, setSearch] = useState("");
   const qc = useQueryClient();
   const navigate = useNavigate();
 
   const { data: pets = [] } = useQuery({ queryKey: ["pets"], queryFn: () => base44.entities.PetProfile.list("sort_order") });
   const { data: tasks = [] } = useQuery({ queryKey: ["careTasks"], queryFn: () => base44.entities.CareTask.list("sort_order") });
-  const { data: payConfigs = [] } = useQuery({ queryKey: ["payConfig"], queryFn: () => base44.entities.PayConfig.list() });
   const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives"], queryFn: () => base44.entities.Preventative.list() });
   const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations"], queryFn: () => base44.entities.Vaccination.list() });
   const { data: petMedications = [] } = useQuery({ queryKey: ["allPetMedications"], queryFn: () => base44.entities.PetMedication.list() });
-  const payConfig = payConfigs[0] || null;
-
-  useEffect(() => {
-    if (payConfig && payForm === null) setPayForm({ ...payConfig });
-  }, [payConfig]);
 
   const createPet = useMutation({ mutationFn: d => base44.entities.PetProfile.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
   const updatePet = useMutation({ mutationFn: ({ id, data }) => base44.entities.PetProfile.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
@@ -47,9 +39,6 @@ export default function Manage() {
   const createTask = useMutation({ mutationFn: d => base44.entities.CareTask.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
   const updateTask = useMutation({ mutationFn: ({ id, data }) => base44.entities.CareTask.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
   const deleteTask = useMutation({ mutationFn: id => base44.entities.CareTask.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
-
-  const createPayConfig = useMutation({ mutationFn: d => base44.entities.PayConfig.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["payConfig"] }) });
-  const updatePayConfig = useMutation({ mutationFn: ({ id, data }) => base44.entities.PayConfig.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["payConfig"] }) });
 
   const handleSavePet = async (formData, id) => {
     if (id) await updatePet.mutateAsync({ id, data: formData });
@@ -61,19 +50,6 @@ export default function Manage() {
     if (id) await updateTask.mutateAsync({ id, data: formData });
     else await createTask.mutateAsync(formData);
     setTaskDialog(false); setEditingTask(null);
-  };
-
-  const handleSavePayConfig = async () => {
-    if (!payForm) return;
-    const data = {
-      daily_pay_amount: parseFloat(payForm.daily_pay_amount) || 100,
-      owner_email: payForm.owner_email || "",
-      owner_name: payForm.owner_name || "",
-      trip_start_date: payForm.trip_start_date || "",
-      notes: payForm.notes || "",
-    };
-    if (payConfig?.id) await updatePayConfig.mutateAsync({ id: payConfig.id, data });
-    else await createPayConfig.mutateAsync(data);
   };
 
   const getPetName = (id) => pets.find(p => p.id === id)?.name || "";
@@ -249,77 +225,6 @@ export default function Manage() {
         {/* Pay & Alerts tab */}
         {activeTab === "pay" && (
           <div>
-            <div className="rounded-2xl overflow-hidden mb-4"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div className="px-4 py-3 flex items-center gap-2"
-                style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                <DollarSign className="h-4 w-4 text-green-400" />
-                <span className="text-sm font-bold text-white">Trip Pay Configuration</span>
-              </div>
-              <div className="p-4 space-y-4">
-                {payForm === null ? (
-                  <div className="text-center py-4">
-                    <button
-                      onClick={() => setPayForm({ daily_pay_amount: 100, owner_email: "", owner_name: "", trip_start_date: "", notes: "" })}
-                      className="text-sm text-purple-400 hover:text-purple-300 font-semibold"
-                    >
-                      + Set up pay configuration
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-1.5">
-                      <Label className="text-white/50 text-xs uppercase tracking-wider">Daily Pay Amount ($)</Label>
-                      <Input
-                        type="number"
-                        value={payForm.daily_pay_amount ?? 100}
-                        onChange={e => setPayForm(f => ({ ...f, daily_pay_amount: e.target.value }))}
-                        className="bg-white/5 border-white/10 text-white rounded-xl"
-                        placeholder="100"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-white/50 text-xs uppercase tracking-wider">Owner Name</Label>
-                      <Input
-                        value={payForm.owner_name || ""}
-                        onChange={e => setPayForm(f => ({ ...f, owner_name: e.target.value }))}
-                        className="bg-white/5 border-white/10 text-white rounded-xl"
-                        placeholder="e.g. Sarah"
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-white/50 text-xs uppercase tracking-wider">Owner Email (for notifications)</Label>
-                      <Input
-                        type="email"
-                        value={payForm.owner_email || ""}
-                        onChange={e => setPayForm(f => ({ ...f, owner_email: e.target.value }))}
-                        className="bg-white/5 border-white/10 text-white rounded-xl"
-                        placeholder="owner@email.com"
-                      />
-                      <p className="text-[10px] text-white/25">Completion and problem reports will be emailed here automatically</p>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-white/50 text-xs uppercase tracking-wider">Trip Start Date</Label>
-                      <Input
-                        type="date"
-                        value={payForm.trip_start_date || ""}
-                        onChange={e => setPayForm(f => ({ ...f, trip_start_date: e.target.value }))}
-                        className="bg-white/5 border-white/10 text-white rounded-xl"
-                      />
-                    </div>
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      onClick={handleSavePayConfig}
-                      className="w-full py-3 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
-                      style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}
-                    >
-                      <Save className="h-4 w-4" /> Save Configuration
-                    </motion.button>
-                  </>
-                )}
-              </div>
-            </div>
-
             <div className="rounded-2xl p-4"
               style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
               <p className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">How this works</p>
