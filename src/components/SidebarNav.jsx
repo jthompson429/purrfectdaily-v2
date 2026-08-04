@@ -12,8 +12,7 @@ const GROUPS = [
         label: "Pets",
         sub: [
           { label: "Pet Profiles", path: "/manage" },
-          { label: "Neonatal Foster", path: "/neonatal" },
-          { label: "Growth Charts", path: "/neonatal/growth" },
+          { label: "Neonatal Dashboard", path: "/neonatal" },
         ],
       },
       {

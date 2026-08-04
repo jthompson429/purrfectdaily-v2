@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -23,10 +23,14 @@ function Stat({ label, value, valueColor }) {
 }
 
 export default function NeonatalGrowth() {
+  const { kittenId } = useParams();
   const [range, setRange] = useState("7d");
-  const { data: weights = [] } = useQuery({ queryKey: ["neonatalWeights"], queryFn: () => base44.entities.NeonatalWeight.list("-date_time", 500) });
+
+  const { data: allWeights = [] } = useQuery({ queryKey: ["neonatalWeights"], queryFn: () => base44.entities.NeonatalWeight.list("-date_time", 500) });
   const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens"], queryFn: () => base44.entities.NeonatalKitten.list() });
-  const kitten = kittens[0] || null;
+
+  const kitten = kittens.find((k) => k.id === kittenId) || null;
+  const weights = allWeights.filter((w) => w.kitten_id === kittenId);
 
   const sorted = useMemo(() => [...weights].sort((a, b) => new Date(a.date_time) - new Date(b.date_time)), [weights]);
   const trend = weightTrend(weights);
@@ -57,7 +61,7 @@ export default function NeonatalGrowth() {
     <div className="min-h-full bg-background">
       <div className="relative max-w-lg mx-auto px-4 pt-6 pb-6">
         <div className="flex items-center gap-3 mb-5">
-          <Link to="/neonatal" className="h-10 w-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
+          <Link to={kittenId ? `/neonatal/kitten/${kittenId}` : "/neonatal"} className="h-10 w-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div className="flex-1">

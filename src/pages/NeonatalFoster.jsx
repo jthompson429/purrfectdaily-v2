@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { Pencil, Download, Droplet, Scale, Droplets, Cat, FileText, TrendingUp } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Pencil, Download, Droplet, Scale, Droplets, Cat, FileText, TrendingUp, ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
 import NeonatalDashboard from "@/components/neonatal/NeonatalDashboard";
 import ActivityList from "@/components/neonatal/ActivityList";
@@ -22,16 +22,22 @@ const QUICK = [
 ];
 
 export default function NeonatalFoster() {
+  const { kittenId } = useParams();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(null);
 
   const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens"], queryFn: () => base44.entities.NeonatalKitten.list() });
-  const { data: feedings = [] } = useQuery({ queryKey: ["neonatalFeedings"], queryFn: () => base44.entities.NeonatalFeeding.list("-date_time", 100) });
-  const { data: weights = [] } = useQuery({ queryKey: ["neonatalWeights"], queryFn: () => base44.entities.NeonatalWeight.list("-date_time", 100) });
-  const { data: eliminations = [] } = useQuery({ queryKey: ["neonatalEliminations"], queryFn: () => base44.entities.NeonatalElimination.list("-date_time", 100) });
-  const { data: motherLogs = [] } = useQuery({ queryKey: ["neonatalMotherLogs"], queryFn: () => base44.entities.NeonatalMotherLog.list("-date_time", 100) });
+  const { data: groups = [] } = useQuery({ queryKey: ["neonatalGroups"], queryFn: () => base44.entities.NeonatalGroup.list() });
+  const { data: allFeedings = [] } = useQuery({ queryKey: ["neonatalFeedings"], queryFn: () => base44.entities.NeonatalFeeding.list("-date_time", 300) });
+  const { data: allWeights = [] } = useQuery({ queryKey: ["neonatalWeights"], queryFn: () => base44.entities.NeonatalWeight.list("-date_time", 300) });
+  const { data: allEliminations = [] } = useQuery({ queryKey: ["neonatalEliminations"], queryFn: () => base44.entities.NeonatalElimination.list("-date_time", 300) });
+  const { data: allMotherLogs = [] } = useQuery({ queryKey: ["neonatalMotherLogs"], queryFn: () => base44.entities.NeonatalMotherLog.list("-date_time", 300) });
 
-  const kitten = kittens[0] || null;
+  const kitten = kittens.find((k) => k.id === kittenId) || null;
+  const feedings = allFeedings.filter((f) => f.kitten_id === kittenId);
+  const weights = allWeights.filter((w) => w.kitten_id === kittenId);
+  const eliminations = allEliminations.filter((e) => e.kitten_id === kittenId);
+  const motherLogs = allMotherLogs.filter((m) => m.kitten_id === kittenId);
 
   const createKitten = useMutation({ mutationFn: (d) => base44.entities.NeonatalKitten.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
   const updateKitten = useMutation({ mutationFn: ({ id, data }) => base44.entities.NeonatalKitten.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
@@ -62,47 +68,54 @@ export default function NeonatalFoster() {
 
   const handleGenerateReport = () => generateFosterReportPDF(kitten, feedings, weights, eliminations, motherLogs);
 
+  if (!kitten) {
+    return (
+      <div className="min-h-full bg-background">
+        <div className="max-w-lg mx-auto px-4 pt-6 pb-6">
+          <Link to="/neonatal" className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground mb-4">
+            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
+          </Link>
+          <div className="rounded-2xl p-8 bg-card border border-border text-center">
+            <Cat className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-sm font-bold text-foreground">Kitten not found</p>
+            <p className="text-xs text-muted-foreground mt-1">This kitten may have been removed.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-full bg-background">
       <div className="relative max-w-lg mx-auto px-4 pt-6 pb-6">
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/15 border border-border">
-            <Cat className="h-6 w-6 text-primary" />
+          <Link to="/neonatal" className="h-10 w-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-black text-foreground font-heading truncate">{kitten.name}</h1>
+            <p className="text-muted-foreground text-xs">Neonatal Foster Care</p>
           </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-black text-foreground font-heading">Neonatal Foster</h1>
-            <p className="text-muted-foreground text-xs">{kitten ? kitten.name : "No kitten profile yet"}</p>
+          <div className="flex gap-1">
+            <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button onClick={handleExport} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
+              <Download className="h-4 w-4" />
+            </button>
           </div>
-          {kitten && (
-            <div className="flex gap-1">
-              <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
-                <Pencil className="h-4 w-4" />
-              </button>
-              <button onClick={handleExport} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
-                <Download className="h-4 w-4" />
-              </button>
-            </div>
-          )}
         </div>
 
-        {kitten ? (
-          <>
-            <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={() => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <Link to="/neonatal/growth" className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-foreground/80 bg-card border border-border">
-                <TrendingUp className="h-4 w-4 text-primary" /> Growth Chart
-              </Link>
-              <button onClick={handleGenerateReport} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-primary-foreground bg-primary">
-                <FileText className="h-4 w-4" /> Foster Report
-              </button>
-            </div>
-          </>
-        ) : (
-          <button onClick={() => setDialog("profile")} className="w-full py-8 rounded-2xl mb-4 bg-card border border-dashed border-border">
-            <p className="text-foreground/80 font-bold text-sm">+ Create Neonatal Kitten Profile</p>
-            <p className="text-muted-foreground text-xs mt-1">Required to start logging care</p>
+        <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={() => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
+
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <Link to={`/neonatal/kitten/${kitten.id}/growth`} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-foreground/80 bg-card border border-border">
+            <TrendingUp className="h-4 w-4 text-primary" /> Growth Chart
+          </Link>
+          <button onClick={handleGenerateReport} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-primary-foreground bg-primary">
+            <FileText className="h-4 w-4" /> Foster Report
           </button>
-        )}
+        </div>
 
         <div className="grid grid-cols-4 gap-2 my-4">
           {QUICK.map(({ key, label, icon: Icon, color }) => (
@@ -110,8 +123,7 @@ export default function NeonatalFoster() {
               key={key}
               whileTap={{ scale: 0.95 }}
               onClick={() => setDialog(key)}
-              disabled={!kitten}
-              className="rounded-2xl py-3 flex flex-col items-center gap-1.5 disabled:opacity-40 bg-card border border-border"
+              className="rounded-2xl py-3 flex flex-col items-center gap-1.5 bg-card border border-border"
             >
               <Icon className="h-5 w-5" style={{ color }} />
               <span className="text-[10px] font-bold text-muted-foreground">{label}</span>
@@ -123,7 +135,7 @@ export default function NeonatalFoster() {
         <ActivityList feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} />
       </div>
 
-      <KittenProfileDialog open={dialog === "profile"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={kitten} />
+      <KittenProfileDialog open={dialog === "profile"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={kitten} groups={groups} />
       <FeedingDialog open={dialog === "feeding"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createFeeding.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} />
       <WeightDialog open={dialog === "weight"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createWeight.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} previousWeight={previousWeight} />
       <EliminationDialog open={dialog === "elimination"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createElimination.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} />

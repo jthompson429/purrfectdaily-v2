@@ -306,3 +306,107 @@ export const generateFosterReportPDF = (kitten, feedings, weights, eliminations,
 
   doc.save(`neonatal-foster-report-${format(new Date(), "yyyy-MM-dd")}.pdf`);
 };
+
+// === Multi-kitten support ===
+
+// Per-kitten compact summary for the Primary Neonatal Dashboard.
+// Returns status, current weight, weight change, last feeding, next due, etc.
+export const kittenSummary = (kitten, allFeedings, allWeights, allEliminations, now = Date.now()) => {
+  const feedings = (allFeedings || []).filter((f) => f.kitten_id === kitten.id);
+  const weights = (allWeights || []).filter((w) => w.kitten_id === kitten.id);
+  const eliminations = (allEliminations || []).filter((e) => e.kitten_id === kitten.id);
+
+  const sortedF = [...feedings].sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+  const sortedW = [...weights].sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
+
+  const lastFeeding = sortedF[0] || null;
+  const lastWeight = sortedW[0] || null;
+  const prevWeight = sortedW[1] || null;
+  const weightToday = lastWeight ? isToday(lastWeight.date_time) : false;
+  const weightChange = lastWeight && prevWeight ? lastWeight.weight_g - prevWeight.weight_g : null;
+  const fStatus = feedingStatus(lastFeeding?.date_time);
+  const currentWeight = lastWeight?.weight_g ?? kitten.current_weight_g ?? null;
+
+  // Status priority: overdue > weight_decreased > no_feedings > no_weight_today > due_soon > on_track
+  let status = "on_track";
+  let statusLabel = "On Track";
+  let statusColor = "green";
+
+  if (fStatus.status === "overdue") {
+    status = "overdue"; statusLabel = "Overdue"; statusColor = "red";
+  } else if (weightChange !== null && weightChange < 0) {
+    status = "weight_decreased"; statusLabel = "Weight Decreased"; statusColor = "red";
+  } else if (!lastFeeding) {
+    status = "needs_attention"; statusLabel = "Needs Attention"; statusColor = "yellow";
+  } else if (!weightToday) {
+    status = "no_weight_today"; statusLabel = "No Weight Today"; statusColor = "yellow";
+  } else if (fStatus.status === "feed_now" || fStatus.status === "due_soon") {
+    status = "due_soon"; statusLabel = "Due Soon"; statusColor = "yellow";
+  }
+
+  return {
+    kitten,
+    lastFeeding,
+    lastWeight,
+    weightToday,
+    weightChange,
+    currentWeight,
+    feedingStatus: fStatus,
+    nextFeedingDue: fStatus.due,
+    status,
+    statusLabel,
+    statusColor,
+    feedingMethod: lastFeeding?.method || null,
+    feedingNursing: lastFeeding?.nursing_observed || null,
+    feedingsCount: feedings.length,
+    weightsCount: weights.length,
+    lastElimination: eliminations[0] || null,
+  };
+};
+
+// Aggregate dashboard stats across all active kittens.
+export const neonatalDashboardStats = (kittens, feedings, weights, eliminations, now = Date.now()) => {
+  const activeKittens = (kittens || []).filter((k) => k.active !== false);
+  const summaries = activeKittens.map((k) => kittenSummary(k, feedings, weights, eliminations, now));
+
+  return {
+    totalActive: activeKittens.length,
+    feedingsDueNow: summaries.filter((s) => s.feedingStatus.status === "feed_now").length,
+    feedingsDueSoon: summaries.filter((s) => s.feedingStatus.status === "due_soon").length,
+    overdue: summaries.filter((s) => s.status === "overdue").length,
+    noWeightToday: summaries.filter((s) => s.status === "no_weight_today").length,
+    weightGains: summaries.filter((s) => s.weightChange !== null && s.weightChange > 0).length,
+    weightLosses: summaries.filter((s) => s.weightChange !== null && s.weightChange < 0).length,
+    needsAttention: summaries.filter((s) => s.status === "needs_attention").length,
+    summaries,
+  };
+};
+
+export const formatWeightChange = (change) => {
+  if (change === null || change === undefined) return "—";
+  const sign = change >= 0 ? "+" : "";
+  return `${sign}${change.toFixed(1)} g`;
+};
+
+// Group kittens by their group_id, returning ungrouped kittens separately.
+export const kittensByGroup = (kittens) => {
+  const groups = {};
+  const ungrouped = [];
+  (kittens || []).forEach((k) => {
+    if (k.group_id) {
+      if (!groups[k.group_id]) groups[k.group_id] = [];
+      groups[k.group_id].push(k);
+    } else {
+      ungrouped.push(k);
+    }
+  });
+  return { groups, ungrouped };
+};
+
+// Group type display labels.
+export const GROUP_TYPE_LABELS = {
+  litter: "Litter",
+  intake_group: "Intake Group",
+  nursing_mother_group: "Nursing Mother Group",
+  unrelated: "Unrelated Kittens",
+};

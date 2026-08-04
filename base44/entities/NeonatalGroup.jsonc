@@ -1,56 +1,49 @@
 {
-  "name": "NeonatalKitten",
+  "name": "NeonatalGroup",
   "type": "object",
   "properties": {
-    "name": {
+    "group_name": {
       "type": "string",
-      "description": "Name or temporary ID"
+      "description": "Litter, intake group, or nursing mother group name"
     },
-    "birth_date": {
+    "group_type": {
+      "type": "string",
+      "enum": [
+        "litter",
+        "intake_group",
+        "nursing_mother_group",
+        "unrelated"
+      ],
+      "default": "litter"
+    },
+    "estimated_birth_date": {
       "type": "string",
       "format": "date-time",
-      "description": "Estimated date/time of birth"
+      "description": "Estimated date/time of birth for the group"
     },
-    "current_weight_g": {
-      "type": "number",
-      "description": "Current weight in grams"
+    "mother_cat_name": {
+      "type": "string",
+      "description": "Mother cat name if applicable"
     },
-    "mother_present": {
-      "type": "boolean",
-      "default": true
-    },
-    "supplementing_kmr": {
-      "type": "boolean",
-      "default": false
+    "mother_pet_id": {
+      "type": "string",
+      "description": "Reference to PetProfile if mother is a tracked pet"
     },
     "notes": {
       "type": "string"
     },
-    "group_id": {
-      "type": "string",
-      "description": "Reference to NeonatalGroup this kitten belongs to"
-    },
-    "photo_url": {
-      "type": "string",
-      "description": "Photo URL for the kitten"
-    },
-    "active": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether kitten is currently in active neonatal care"
-    },
-    "sex": {
+    "status": {
       "type": "string",
       "enum": [
-        "male",
-        "female",
-        "unknown"
+        "active",
+        "graduated",
+        "archived"
       ],
-      "default": "unknown"
+      "default": "active"
     }
   },
   "required": [
-    "name"
+    "group_name"
   ],
   "rls": {
     "create": {
