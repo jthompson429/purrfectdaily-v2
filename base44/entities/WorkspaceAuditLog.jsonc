@@ -35,14 +35,28 @@
   ],
   "rls": {
     "create": {
-      "data.workspace_id": {
-        "$in": "{{user.data.workspace_ids}}"
-      }
+      "$or": [
+        {
+          "data.actor_user_id": "{{user.id}}"
+        },
+        {
+          "data.workspace_id": {
+            "$in": "{{user.data.workspace_ids}}"
+          }
+        }
+      ]
     },
     "read": {
-      "data.workspace_id": {
-        "$in": "{{user.data.workspace_ids}}"
-      }
+      "$or": [
+        {
+          "data.workspace_id": {
+            "$in": "{{user.data.workspace_ids}}"
+          }
+        },
+        {
+          "data.actor_user_id": "{{user.id}}"
+        }
+      ]
     },
     "update": {
       "user_condition": {
