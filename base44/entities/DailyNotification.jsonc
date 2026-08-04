@@ -2,6 +2,10 @@
   "name": "DailyNotification",
   "type": "object",
   "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "Workspace this notification belongs to"
+    },
     "notification_date": {
       "type": "string",
       "format": "date",
@@ -28,58 +32,29 @@
   },
   "required": [
     "notification_date",
-    "type"
+    "type",
+    "workspace_id"
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "user_condition": {
-            "role": "user"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "update": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     }
   }
 }
