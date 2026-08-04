@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import InviteDialog from "@/components/workspace/InviteDialog";
+import { wsManage } from "@/lib/workspaceApi";
 import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, Shield, Clock, CheckCircle, XCircle } from "lucide-react";
 
 const ROLE_LABELS = { owner: "Owner", admin: "Admin", caregiver: "Caregiver", viewer: "Viewer" };
@@ -40,12 +41,12 @@ export default function WorkspaceSettings() {
   });
 
   const updateWs = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Workspace.update(id, data),
+    mutationFn: ({ data }) => wsManage("updateWorkspace", { data, workspace_id: activeWorkspaceId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] }),
   });
 
   const updateMember = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.WorkspaceMember.update(id, data),
+    mutationFn: ({ id, data }) => wsManage("changeRole", { memberId: id, newRole: data.role, workspace_id: activeWorkspaceId }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] });
       toast({ title: "Role updated" });
@@ -53,25 +54,16 @@ export default function WorkspaceSettings() {
   });
 
   const removeMember = useMutation({
-    mutationFn: (member) => base44.entities.WorkspaceMember.delete(member.id),
-    onSuccess: async (_, member) => {
-      const ws = activeWorkspace;
-      if (ws) {
-        await base44.entities.Workspace.update(ws.id, {
-          member_user_ids: (ws.member_user_ids || []).filter((id) => id !== member.user_id),
-          member_emails: (ws.member_emails || []).filter((e) => e !== member.email),
-        });
-      }
-      await writeAuditLog(activeWorkspaceId, "member_removed", "WorkspaceMember", member.id, `Removed ${member.email}`);
+    mutationFn: (member) => wsManage("removeMember", { memberId: member.id, workspace_id: activeWorkspaceId }),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] });
       toast({ title: "Member removed" });
     },
   });
 
   const revokeInvitation = useMutation({
-    mutationFn: (inv) => base44.entities.WorkspaceInvitation.update(inv.id, { status: "revoked" }),
-    onSuccess: async (_, inv) => {
-      await writeAuditLog(activeWorkspaceId, "invitation_revoked", "WorkspaceInvitation", inv.id, `Revoked invitation to ${inv.email}`);
+    mutationFn: (inv) => wsManage("revokeInvitation", { invitationId: inv.id, workspace_id: activeWorkspaceId }),
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspace-invitations", activeWorkspaceId] });
       toast({ title: "Invitation revoked" });
     },
@@ -80,19 +72,10 @@ export default function WorkspaceSettings() {
   const changeRole = (member, newRole) => {
     if (member.role === "owner") return;
     updateMember.mutate({ id: member.id, data: { role: newRole } });
-    writeAuditLog(activeWorkspaceId, "member_role_changed", "WorkspaceMember", member.id, `Changed ${member.email} to ${newRole}`);
   };
 
   const handleTransferOwnership = async (newOwnerId) => {
-    const newOwner = members.find((m) => m.id === newOwnerId);
-    if (!newOwner) return;
-    await base44.entities.Workspace.update(activeWorkspace.id, {
-      owner_user_id: newOwner.user_id,
-      owner_email: newOwner.email,
-    });
-    await updateMember.mutateAsync({ id: activeWorkspace.membershipId, data: { role: "admin" } });
-    await updateMember.mutateAsync({ id: newOwner.id, data: { role: "owner" } });
-    await writeAuditLog(activeWorkspaceId, "ownership_transferred", "Workspace", activeWorkspace.id, `Transferred to ${newOwner.email}`);
+    await wsManage("transferOwnership", { newOwnerId, workspace_id: activeWorkspaceId });
     setTransferOpen(false);
     toast({ title: "Ownership transferred" });
     window.location.reload();
@@ -100,7 +83,7 @@ export default function WorkspaceSettings() {
 
   const handleSaveName = () => {
     if (!editName.trim()) return;
-    updateWs.mutate({ id: activeWorkspace.id, data: { name: editName.trim() } });
+    updateWs.mutate({ data: { name: editName.trim() } });
     setEditName("");
     toast({ title: "Workspace updated" });
   };

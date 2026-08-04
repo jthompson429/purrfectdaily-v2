@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { getMedicationStatus } from "@/lib/dateUtils";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 import { format } from "date-fns";
 
 const empty = {
@@ -132,9 +133,9 @@ export default function Medications() {
   const { data: meds = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }) });
   const { data: pets = [] } = useQuery({ queryKey: ["pets", activeWorkspaceId], queryFn: () => base44.entities.PetProfile.filter({ workspace_id: activeWorkspaceId }) });
 
-  const create = useMutation({ mutationFn: d => base44.entities.MedicationSchedule.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
-  const update = useMutation({ mutationFn: ({ id, data }) => base44.entities.MedicationSchedule.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
-  const remove = useMutation({ mutationFn: id => base44.entities.MedicationSchedule.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
+  const create = useMutation({ mutationFn: d => wsCreate("MedicationSchedule", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
+  const update = useMutation({ mutationFn: ({ id, data }) => wsUpdate("MedicationSchedule", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
+  const remove = useMutation({ mutationFn: id => wsDelete("MedicationSchedule", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
 
   const handleSave = async (formData, id) => {
     if (id) await update.mutateAsync({ id, data: formData });

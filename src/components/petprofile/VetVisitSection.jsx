@@ -7,6 +7,7 @@ import VisitRecordDialog from "./VisitRecordDialog";
 import VisitCard from "./VisitCard";
 import AttachmentViewer from "./AttachmentViewer";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
 export default function VetVisitSection({ petId }) {
   const { activeWorkspaceId } = useWorkspace();
@@ -17,14 +18,14 @@ export default function VetVisitSection({ petId }) {
   const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ pet_id: petId }, "-date") });
   const items = Array.isArray(data) ? data : [];
   const upsert = useMutation({
-    mutationFn: ({ id, data }) => id ? base44.entities.VetVisit.update(id, data) : base44.entities.VetVisit.create({ ...data, workspace_id: activeWorkspaceId }),
+    mutationFn: ({ id, data }) => id ? wsUpdate("VetVisit", id, data, activeWorkspaceId) : wsCreate("VetVisit", { ...data }, activeWorkspaceId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] })
   });
-  const remove = useMutation({ mutationFn: (id) => base44.entities.VetVisit.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] }) });
+  const remove = useMutation({ mutationFn: (id) => wsDelete("VetVisit", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] }) });
 
   const handleSave = async (data, id) => {
     try {
-    const saved = id ? await base44.entities.VetVisit.update(id, data) : await base44.entities.VetVisit.create({ ...data, pet_id: petId, workspace_id: activeWorkspaceId });
+    const saved = id ? await wsUpdate("VetVisit", id, data, activeWorkspaceId) : await wsCreate("VetVisit", { ...data, pet_id: petId }, activeWorkspaceId);
     const visitDate = saved?.date || data.date;
 
     const givenV = data.vaccinations_given || [];
@@ -33,7 +34,7 @@ export default function VetVisitSection({ petId }) {
       for (const gv of givenV) {
         const exists = existing.find((v) => v.name === gv.name && v.date_given === visitDate && (gv.name !== "custom" || v.custom_name === (gv.custom_name || "")));
         if (!exists) {
-          await base44.entities.Vaccination.create({ pet_id: petId, name: gv.name, custom_name: gv.custom_name || "", date_given: visitDate, due_date: gv.due_date || "", veterinarian: saved?.veterinarian || "", workspace_id: activeWorkspaceId });
+          await wsCreate("Vaccination", { pet_id: petId, name: gv.name, custom_name: gv.custom_name || "", date_given: visitDate, due_date: gv.due_date || "", veterinarian: saved?.veterinarian || "" }, activeWorkspaceId);
         }
       }
       qc.invalidateQueries({ queryKey: ["vaccinations", petId] });
@@ -46,7 +47,7 @@ export default function VetVisitSection({ petId }) {
         const dg = gp.date_given || visitDate;
         const exists = existingP.find((p) => p.name === gp.name && p.date_given === dg);
         if (!exists) {
-          await base44.entities.Preventative.create({ pet_id: petId, name: gp.name, date_given: dg, frequency: gp.frequency || "monthly", custom_interval_days: gp.custom_interval_days || 30, workspace_id: activeWorkspaceId });
+          await wsCreate("Preventative", { pet_id: petId, name: gp.name, date_given: dg, frequency: gp.frequency || "monthly", custom_interval_days: gp.custom_interval_days || 30 }, activeWorkspaceId);
         }
       }
       qc.invalidateQueries({ queryKey: ["preventatives", petId] });
@@ -62,16 +63,15 @@ export default function VetVisitSection({ petId }) {
   const handleAddMeds = async (visit) => {
     const meds = visit.medications_prescribed || [];
     for (const m of meds) {
-      await base44.entities.PetMedication.create({
+      await wsCreate("PetMedication", {
         pet_id: petId,
-        workspace_id: activeWorkspaceId,
         medication_name: m.name,
         frequency: m.frequency || "twice_daily",
         start_date: m.start_date || visit.date,
         end_date: m.end_date || ""
-      });
+      }, activeWorkspaceId);
     }
-    await base44.entities.VetVisit.update(visit.id, { meds_added: true });
+    await wsUpdate("VetVisit", visit.id, { meds_added: true }, activeWorkspaceId);
     qc.invalidateQueries({ queryKey: ["petMedications", petId] });
     qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
   };

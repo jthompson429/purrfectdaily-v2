@@ -15,6 +15,7 @@ import AssignmentMigrationDialog from "@/components/care/AssignmentMigrationDial
 import { getMedicationStatus } from "@/lib/dateUtils";
 import { taskAssignmentType, isGroupName, ASSIGNMENT_ICON } from "@/utils/assignment";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsBulkUpdate } from "@/lib/workspaceApi";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -115,7 +116,7 @@ export default function Dashboard() {
       else autoUpdates.push({ id: t.id, assignment_type: "general" });
     });
     if (autoUpdates.length) {
-      base44.entities.CareTask.bulkUpdate(autoUpdates).then(() => qc.invalidateQueries({ queryKey: ["careTasks"] }));
+      wsBulkUpdate("CareTask", autoUpdates, activeWorkspaceId).then(() => qc.invalidateQueries({ queryKey: ["careTasks"] }));
     }
     if (localStorage.getItem("careAssignmentMigrated") !== "1" && pending.length) {
       setMigration({ open: true, pending });
@@ -123,34 +124,34 @@ export default function Dashboard() {
   }, [tasks, pets]);
 
   const handleMigrationApply = async (results) => {
-    await base44.entities.CareTask.bulkUpdate(results);
+    await wsBulkUpdate("CareTask", results, activeWorkspaceId);
     localStorage.setItem("careAssignmentMigrated", "1");
     setMigration({ open: false, pending: [] });
     qc.invalidateQueries({ queryKey: ["careTasks"] });
   };
 
   const createLog = useMutation({
-    mutationFn: (data) => base44.entities.CompletionLog.create({ ...data, workspace_id: activeWorkspaceId }),
+    mutationFn: (data) => wsCreate("CompletionLog", data, activeWorkspaceId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["completionLogs", TODAY] }); },
   });
 
   const updateLog = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.CompletionLog.update(id, data),
+    mutationFn: ({ id, data }) => wsUpdate("CompletionLog", id, data, activeWorkspaceId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["completionLogs", TODAY] }); },
   });
 
   const createTask = useMutation({
-    mutationFn: (data) => base44.entities.CareTask.create({ ...data, workspace_id: activeWorkspaceId }),
+    mutationFn: (data) => wsCreate("CareTask", data, activeWorkspaceId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }),
   });
 
   const updateTask = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.CareTask.update(id, data),
+    mutationFn: ({ id, data }) => wsUpdate("CareTask", id, data, activeWorkspaceId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }),
   });
 
   const createNotification = useMutation({
-    mutationFn: (data) => base44.entities.DailyNotification.create({ ...data, workspace_id: activeWorkspaceId }),
+    mutationFn: (data) => wsCreate("DailyNotification", data, activeWorkspaceId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dailyNotifications", TODAY] }),
   });
 

@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import { wsManage } from "@/lib/workspaceApi";
 
 const WorkspaceContext = createContext(null);
 
@@ -12,21 +13,7 @@ export function WorkspaceProvider({ children }) {
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const writeAuditLog = useCallback(async (wsId, action, entityType, entityId, details) => {
-    if (!wsId || !user) return;
-    try {
-      await base44.entities.WorkspaceAuditLog.create({
-        workspace_id: wsId,
-        actor_user_id: user.id,
-        actor_email: user.email,
-        action,
-        entity_type: entityType,
-        entity_id: entityId,
-        details,
-        event_time: new Date().toISOString(),
-      });
-    } catch (e) { /* audit failures should not break operations */ }
-  }, [user]);
+  const writeAuditLog = useCallback(async () => { /* backend functions handle auditing */ }, []);
 
   const processMemberships = useCallback(async (memberships, currentUser) => {
     const wsDetails = await Promise.all(
@@ -63,38 +50,20 @@ export function WorkspaceProvider({ children }) {
   }, []);
 
   const createPersonalWorkspace = useCallback(async (currentUser) => {
-    const firstName = currentUser.full_name?.split(" ")[0];
-    const name = firstName ? `${firstName}'s Pet Care` : "My Pet Care Workspace";
-    const ws = await base44.entities.Workspace.create({
-      name,
-      workspace_type: "household",
-      owner_user_id: currentUser.id,
-      owner_email: currentUser.email,
-      member_user_ids: [currentUser.id],
-      member_emails: [currentUser.email],
-      active: true,
-    });
+    const result = await wsManage("createPersonalWorkspace");
     await base44.auth.updateMe({
-      workspace_ids: [ws.id],
-      active_workspace_id: ws.id,
+      workspace_ids: [result.id],
+      active_workspace_id: result.id,
       active_workspace_role: "owner",
       can_write_workspace: true,
       can_delete_workspace: true,
     });
-    await base44.entities.WorkspaceMember.create({
-      workspace_id: ws.id,
-      user_id: currentUser.id,
-      email: currentUser.email,
-      display_name: currentUser.full_name || currentUser.email,
-      role: "owner",
-      status: "active",
-    });
-    await writeAuditLog(ws.id, "workspace_created", "Workspace", ws.id, `Created workspace ${name}`);
-    setActiveWorkspaceId(ws.id);
+    const ws = await base44.entities.Workspace.get(result.id);
+    setActiveWorkspaceId(result.id);
     setActiveWorkspace({ ...ws, role: "owner" });
     setWorkspaces([{ ...ws, role: "owner" }]);
     setLoading(false);
-  }, [writeAuditLog]);
+  }, []);
 
   const loadWorkspaces = useCallback(async () => {
     if (!user?.id) return;
@@ -141,29 +110,12 @@ export function WorkspaceProvider({ children }) {
   }, [workspaces, writeAuditLog]);
 
   const acceptInvitation = useCallback(async (invitation) => {
-    await base44.entities.WorkspaceMember.create({
-      workspace_id: invitation.workspace_id,
-      user_id: user.id,
-      email: user.email,
-      display_name: user.full_name || user.email,
-      role: invitation.role,
-      status: "active",
-    });
-    await base44.entities.WorkspaceInvitation.update(invitation.id, {
-      status: "accepted",
-      accepted_by_user_id: user.id,
-    });
-    const ws = await base44.entities.Workspace.get(invitation.workspace_id);
-    await base44.entities.Workspace.update(ws.id, {
-      member_user_ids: [...(ws.member_user_ids || []), user.id],
-      member_emails: [...(ws.member_emails || []), user.email],
-    });
+    await wsManage("acceptInvitation", { invitationId: invitation.id });
     await base44.auth.updateMe({
       workspace_ids: [...(user.workspace_ids || []), invitation.workspace_id],
     });
-    await writeAuditLog(invitation.workspace_id, "invitation_accepted", "WorkspaceInvitation", invitation.id, "Accepted invitation");
     await loadWorkspaces();
-  }, [user, writeAuditLog, loadWorkspaces]);
+  }, [user, loadWorkspaces]);
 
   const role = activeWorkspace?.role || "viewer";
   const value = {

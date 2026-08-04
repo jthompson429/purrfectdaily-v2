@@ -14,6 +14,7 @@ import EliminationDialog from "@/components/neonatal/EliminationDialog";
 import MotherLogDialog from "@/components/neonatal/MotherLogDialog";
 import { buildReport, generateFosterReportPDF } from "@/utils/neonatal";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate } from "@/lib/workspaceApi";
 
 const QUICK = [
   { key: "feeding", label: "Feeding", icon: Droplet, color: "#3b82f6" },
@@ -41,12 +42,12 @@ export default function NeonatalFoster() {
   const eliminations = allEliminations.filter((e) => e.kitten_id === kittenId);
   const motherLogs = allMotherLogs.filter((m) => m.kitten_id === kittenId);
 
-  const createKitten = useMutation({ mutationFn: (d) => base44.entities.NeonatalKitten.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
-  const updateKitten = useMutation({ mutationFn: ({ id, data }) => base44.entities.NeonatalKitten.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
-  const createFeeding = useMutation({ mutationFn: (d) => base44.entities.NeonatalFeeding.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalFeedings"] }) });
-  const createWeight = useMutation({ mutationFn: (d) => base44.entities.NeonatalWeight.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalWeights"] }) });
-  const createElimination = useMutation({ mutationFn: (d) => base44.entities.NeonatalElimination.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalEliminations"] }) });
-  const createMotherLog = useMutation({ mutationFn: (d) => base44.entities.NeonatalMotherLog.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalMotherLogs"] }) });
+  const createKitten = useMutation({ mutationFn: (d) => wsCreate("NeonatalKitten", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
+  const updateKitten = useMutation({ mutationFn: ({ id, data }) => wsUpdate("NeonatalKitten", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
+  const createFeeding = useMutation({ mutationFn: (d) => wsCreate("NeonatalFeeding", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalFeedings"] }) });
+  const createWeight = useMutation({ mutationFn: (d) => wsCreate("NeonatalWeight", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalWeights"] }) });
+  const createElimination = useMutation({ mutationFn: (d) => wsCreate("NeonatalElimination", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalEliminations"] }) });
+  const createMotherLog = useMutation({ mutationFn: (d) => wsCreate("NeonatalMotherLog", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalMotherLogs"] }) });
 
   const sortedWeights = [...weights].sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
   const previousWeight = sortedWeights[0]?.weight_g ?? kitten?.current_weight_g ?? null;

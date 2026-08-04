@@ -7,6 +7,7 @@ import SectionCard from "./SectionCard";
 import WeightDialog from "./WeightDialog";
 import { fmtShort, todayStr } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
 export default function WeightSection({ petId, profileType }) {
   const { activeWorkspaceId } = useWorkspace();
@@ -15,15 +16,15 @@ export default function WeightSection({ petId, profileType }) {
   const [editing, setEditing] = useState(null);
   const { data: items = [] } = useQuery({ queryKey: ["weightLogs", petId], queryFn: () => base44.entities.WeightLog.filter({ pet_id: petId }, "-date") });
   const upsert = useMutation({
-    mutationFn: ({ id, data }) => id ? base44.entities.WeightLog.update(id, data) : base44.entities.WeightLog.create({ ...data, pet_id: petId, workspace_id: activeWorkspaceId }),
+    mutationFn: ({ id, data }) => id ? wsUpdate("WeightLog", id, data, activeWorkspaceId) : wsCreate("WeightLog", { ...data, pet_id: petId }, activeWorkspaceId),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["weightLogs", petId] }); qc.invalidateQueries({ queryKey: ["pet", petId] }); }
   });
-  const remove = useMutation({ mutationFn: (id) => base44.entities.WeightLog.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] }) });
+  const remove = useMutation({ mutationFn: (id) => wsDelete("WeightLog", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] }) });
 
   const handleSave = async (data, id) => {
     await upsert.mutateAsync({ id, data });
     if (!id) {
-      try { await base44.entities.PetProfile.update(petId, { latest_weight: Number(data.weight) }); } catch {}
+      try { await wsUpdate("PetProfile", petId, { latest_weight: Number(data.weight) }, activeWorkspaceId); } catch {}
     }
     setDialog(false); setEditing(null);
   };

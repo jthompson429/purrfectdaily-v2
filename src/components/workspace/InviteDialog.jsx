@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { wsManage } from "@/lib/workspaceApi";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,24 +12,14 @@ import { Mail, X, Crown, UserCog, Trash2, ArrowRightLeft } from "lucide-react";
 const ROLE_LABELS = { owner: "Owner", admin: "Admin", caregiver: "Caregiver", viewer: "Viewer" };
 
 export default function InviteDialog({ open, onOpenChange }) {
-  const { activeWorkspaceId, writeAuditLog, user } = useWorkspace();
+  const { activeWorkspaceId } = useWorkspace();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("caregiver");
   const qc = useQueryClient();
 
   const invite = useMutation({
     mutationFn: async () => {
-      await base44.entities.WorkspaceInvitation.create({
-        workspace_id: activeWorkspaceId,
-        email: email.trim().toLowerCase(),
-        role,
-        status: "pending",
-        invited_by_user_id: user.id,
-        invited_by_email: user.email,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      });
-      try { await base44.users.inviteUser(email.trim().toLowerCase(), "user"); } catch (e) {}
-      await writeAuditLog(activeWorkspaceId, "invitation_sent", "WorkspaceInvitation", null, `Invited ${email} as ${role}`);
+      await wsManage("invite", { email: email.trim().toLowerCase(), role, workspace_id: activeWorkspaceId });
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspace-invitations", activeWorkspaceId] });

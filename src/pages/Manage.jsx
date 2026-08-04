@@ -12,6 +12,7 @@ import { computePetBadges } from "@/utils/petStatus";
 import { assignmentLabel } from "@/utils/assignment";
 import StatusBadge from "@/components/petprofile/StatusBadge";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
 const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
@@ -33,13 +34,13 @@ export default function Manage() {
   const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations", activeWorkspaceId], queryFn: () => base44.entities.Vaccination.filter({ workspace_id: activeWorkspaceId }) });
   const { data: petMedications = [] } = useQuery({ queryKey: ["allPetMedications", activeWorkspaceId], queryFn: () => base44.entities.PetMedication.filter({ workspace_id: activeWorkspaceId }) });
 
-  const createPet = useMutation({ mutationFn: d => base44.entities.PetProfile.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
-  const updatePet = useMutation({ mutationFn: ({ id, data }) => base44.entities.PetProfile.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
-  const deletePet = useMutation({ mutationFn: id => base44.entities.PetProfile.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+  const createPet = useMutation({ mutationFn: d => wsCreate("PetProfile", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+  const updatePet = useMutation({ mutationFn: ({ id, data }) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+  const deletePet = useMutation({ mutationFn: id => wsDelete("PetProfile", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
 
-  const createTask = useMutation({ mutationFn: d => base44.entities.CareTask.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
-  const updateTask = useMutation({ mutationFn: ({ id, data }) => base44.entities.CareTask.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
-  const deleteTask = useMutation({ mutationFn: id => base44.entities.CareTask.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+  const createTask = useMutation({ mutationFn: d => wsCreate("CareTask", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+  const updateTask = useMutation({ mutationFn: ({ id, data }) => wsUpdate("CareTask", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+  const deleteTask = useMutation({ mutationFn: id => wsDelete("CareTask", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
 
   const handleSavePet = async (formData, id) => {
     if (id) await updatePet.mutateAsync({ id, data: formData });

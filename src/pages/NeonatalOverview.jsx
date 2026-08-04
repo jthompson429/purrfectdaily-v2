@@ -12,6 +12,7 @@ import GroupDialog from "@/components/neonatal/GroupDialog";
 import BatchLogDialog from "@/components/neonatal/BatchLogDialog";
 import { neonatalDashboardStats, kittensByGroup, GROUP_TYPE_LABELS, timeAgo } from "@/utils/neonatal";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsBulkCreate } from "@/lib/workspaceApi";
 
 export default function NeonatalOverview() {
   const { activeWorkspaceId, canWrite } = useWorkspace();
@@ -33,10 +34,10 @@ export default function NeonatalOverview() {
   const { data: eliminations = [] } = useQuery({ queryKey: ["neonatalEliminations", activeWorkspaceId], queryFn: () => base44.entities.NeonatalElimination.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300) });
   const { data: motherLogs = [] } = useQuery({ queryKey: ["neonatalMotherLogs", activeWorkspaceId], queryFn: () => base44.entities.NeonatalMotherLog.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300) });
 
-  const createKitten = useMutation({ mutationFn: (d) => base44.entities.NeonatalKitten.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
-  const updateKitten = useMutation({ mutationFn: ({ id, data }) => base44.entities.NeonatalKitten.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
-  const createGroup = useMutation({ mutationFn: (d) => base44.entities.NeonatalGroup.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
-  const updateGroup = useMutation({ mutationFn: ({ id, data }) => base44.entities.NeonatalGroup.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
+  const createKitten = useMutation({ mutationFn: (d) => wsCreate("NeonatalKitten", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
+  const updateKitten = useMutation({ mutationFn: ({ id, data }) => wsUpdate("NeonatalKitten", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
+  const createGroup = useMutation({ mutationFn: (d) => wsCreate("NeonatalGroup", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
+  const updateGroup = useMutation({ mutationFn: ({ id, data }) => wsUpdate("NeonatalGroup", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
 
   const stats = useMemo(() => neonatalDashboardStats(kittens, feedings, weights, eliminations, now), [kittens, feedings, weights, eliminations, now]);
   const activeGroups = groups.filter((g) => g.status === "active");
@@ -72,13 +73,13 @@ export default function NeonatalOverview() {
 
   const handleBatchSave = async (careType, records) => {
     if (careType === "feeding") {
-      await base44.entities.NeonatalFeeding.bulkCreate(records.map(r => ({ ...r, workspace_id: activeWorkspaceId })));
+      await wsBulkCreate("NeonatalFeeding", records, activeWorkspaceId);
       qc.invalidateQueries({ queryKey: ["neonatalFeedings"] });
     } else if (careType === "weight") {
-      await base44.entities.NeonatalWeight.bulkCreate(records.map(r => ({ ...r, workspace_id: activeWorkspaceId })));
+      await wsBulkCreate("NeonatalWeight", records, activeWorkspaceId);
       qc.invalidateQueries({ queryKey: ["neonatalWeights"] });
     } else if (careType === "elimination") {
-      await base44.entities.NeonatalElimination.bulkCreate(records.map(r => ({ ...r, workspace_id: activeWorkspaceId })));
+      await wsBulkCreate("NeonatalElimination", records, activeWorkspaceId);
       qc.invalidateQueries({ queryKey: ["neonatalEliminations"] });
     } else if (careType === "observation") {
       await Promise.all(records.map((r) => {
@@ -86,7 +87,7 @@ export default function NeonatalOverview() {
         if (!kitten) return null;
         const ts = format(new Date(r.date_time || new Date()), "MMM d, h:mm a");
         const newNotes = `${kitten.notes ? kitten.notes + "\n" : ""}[${ts}] ${r.notes}`;
-        return base44.entities.NeonatalKitten.update(r.kitten_id, { notes: newNotes });
+        return wsUpdate("NeonatalKitten", r.kitten_id, { notes: newNotes }, activeWorkspaceId);
       }));
       qc.invalidateQueries({ queryKey: ["neonatalKittens"] });
     }

@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
 const TYPE_CONFIG = {
   owner: { label: "Owner", color: "text-primary", bg: "bg-primary/15", emoji: "👤" },
@@ -84,9 +85,9 @@ export default function Emergency() {
     queryFn: () => base44.entities.EmergencyInfo.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
   });
 
-  const create = useMutation({ mutationFn: d => base44.entities.EmergencyInfo.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
-  const update = useMutation({ mutationFn: ({ id, data }) => base44.entities.EmergencyInfo.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
-  const remove = useMutation({ mutationFn: id => base44.entities.EmergencyInfo.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
+  const create = useMutation({ mutationFn: d => wsCreate("EmergencyInfo", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
+  const update = useMutation({ mutationFn: ({ id, data }) => wsUpdate("EmergencyInfo", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
+  const remove = useMutation({ mutationFn: id => wsDelete("EmergencyInfo", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
 
   const handleSave = async (formData, id) => {
     if (id) await update.mutateAsync({ id, data: formData });

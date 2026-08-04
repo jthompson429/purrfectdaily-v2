@@ -18,11 +18,14 @@ import MedicalHistoryTimeline from "@/components/petprofile/MedicalHistoryTimeli
 import StatusBadge from "@/components/petprofile/StatusBadge";
 import { computePetBadges } from "@/utils/petStatus";
 import { formatAge } from "@/utils/pet";
+import { useWorkspace } from "@/lib/workspaceContext";
+import { wsUpdate } from "@/lib/workspaceApi";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
 
 export default function PetProfile() {
   const { id } = useParams();
+  const { activeWorkspaceId } = useWorkspace();
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
@@ -34,7 +37,7 @@ export default function PetProfile() {
   const { data: vetVisits = [] } = useQuery({ queryKey: ["vetVisits", id], queryFn: () => base44.entities.VetVisit.filter({ pet_id: id }, "-date") });
   const { data: weightLogs = [] } = useQuery({ queryKey: ["weightLogs", id], queryFn: () => base44.entities.WeightLog.filter({ pet_id: id }, "-date") });
 
-  const updatePet = useMutation({ mutationFn: (data) => base44.entities.PetProfile.update(id, data), onSuccess: () => { qc.invalidateQueries({ queryKey: ["pet", id] }); qc.invalidateQueries({ queryKey: ["pets"] }); } });
+  const updatePet = useMutation({ mutationFn: (data) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => { qc.invalidateQueries({ queryKey: ["pet", id] }); qc.invalidateQueries({ queryKey: ["pets"] }); } });
   const handleSavePet = async (formData) => { await updatePet.mutateAsync(formData); setEditOpen(false); };
 
   if (isLoading) return (

@@ -6,6 +6,7 @@ import SectionCard from "./SectionCard";
 import PreventativeDialog from "./PreventativeDialog";
 import { preventativeStatus, fmtShort, frequencyLabel, COLOR_MAP } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
+import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
 export default function PreventativeSection({ petId }) {
   const { activeWorkspaceId } = useWorkspace();
@@ -13,8 +14,8 @@ export default function PreventativeSection({ petId }) {
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const { data: items = [] } = useQuery({ queryKey: ["preventatives", petId], queryFn: () => base44.entities.Preventative.filter({ pet_id: petId }, "-date_given") });
-  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? base44.entities.Preventative.update(id, data) : base44.entities.Preventative.create({ ...data, pet_id: petId, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
-  const remove = useMutation({ mutationFn: (id) => base44.entities.Preventative.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
+  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? wsUpdate("Preventative", id, data, activeWorkspaceId) : wsCreate("Preventative", { ...data, pet_id: petId }, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
+  const remove = useMutation({ mutationFn: (id) => wsDelete("Preventative", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
   const handleSave = async (data, id) => { await upsert.mutateAsync({ id, data }); setDialog(false); setEditing(null); };
 
   return (
