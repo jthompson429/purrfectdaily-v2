@@ -14,7 +14,7 @@ import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, Shield, Clock, CheckCircl
 const ROLE_LABELS = { owner: "Owner", admin: "Admin", caregiver: "Caregiver", viewer: "Viewer" };
 
 export default function WorkspaceSettings() {
-  const { activeWorkspaceId, activeWorkspace, activeWorkspaceRole, canManageMembers, isOwner, writeAuditLog, user, pendingInvitations, acceptInvitation } = useWorkspace();
+  const { activeWorkspaceId, activeWorkspace, activeWorkspaceRole, canManageMembers, isOwner, writeAuditLog, pendingInvitations, acceptInvitation } = useWorkspace();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);

@@ -174,6 +174,7 @@ export function WorkspaceProvider({ children }) {
     workspaces,
     pendingInvitations,
     loading,
+    user,
     switchWorkspace,
     acceptInvitation,
     writeAuditLog,
