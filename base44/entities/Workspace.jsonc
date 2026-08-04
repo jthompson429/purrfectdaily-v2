@@ -43,7 +43,7 @@
   ],
   "rls": {
     "create": {
-      "data.owner_user_id": "{{user.id}}"
+      "data.__rls_block": true
     },
     "read": {
       "$or": [
@@ -65,19 +65,10 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.owner_user_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.__rls_block": true
     },
     "delete": {
-      "data.owner_user_id": "{{user.id}}"
+      "data.__rls_block": true
     }
   }
 }
