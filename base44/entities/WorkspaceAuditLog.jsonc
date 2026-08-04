@@ -35,28 +35,14 @@
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "update": {
       "user_condition": {
