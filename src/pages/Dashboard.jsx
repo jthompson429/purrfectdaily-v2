@@ -46,7 +46,6 @@ function medToTask(med) {
   };
 }
 
-// Check if a task counts as fully complete given its log
 function isTaskFullyDone(task, log) {
   if (!log || log.status !== "done") return false;
   if (task.requires_photo && !log.photo_url) return false;
@@ -100,7 +99,6 @@ export default function Dashboard() {
 
   const payConfig = payConfigs[0] || null;
 
-  // One-time migration of legacy tasks to the Pet / Area / General assignment model
   useEffect(() => {
     if (!tasks.length || !pets.length) return;
     if (localStorage.getItem("careAssignmentMigrated") === "1" && migration.open) return;
@@ -154,18 +152,16 @@ export default function Dashboard() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dailyNotifications", TODAY] }),
   });
 
-  // Map logs by task_id
   const logByTaskId = useMemo(() => {
     const map = {};
     logs.forEach(l => { map[l.task_id] = l; });
     return map;
   }, [logs]);
 
-  // Active CareTask records for today
   const activeCareTaskRecords = useMemo(() => {
     const now = new Date();
-    const todayWeekday = now.getDay(); // 0 = Sunday
-    const todayMonthDay = now.getDate(); // 1-31
+    const todayWeekday = now.getDay();
+    const todayMonthDay = now.getDate();
     return tasks.filter(t => {
       if (t.active === false) return false;
       if (t.start_date && TODAY < t.start_date) return false;
@@ -176,7 +172,6 @@ export default function Dashboard() {
     });
   }, [tasks]);
 
-  // Classify medications
   const { activeMedTasks, offMedWarnings } = useMemo(() => {
     const activeMedTasks = [];
     const offMedWarnings = [];
@@ -191,7 +186,6 @@ export default function Dashboard() {
     return { activeMedTasks, offMedWarnings };
   }, [meds]);
 
-  // All tasks for today
   const allActiveTasks = useMemo(() => {
     return [...activeCareTaskRecords, ...activeMedTasks];
   }, [activeCareTaskRecords, activeMedTasks]);
@@ -208,23 +202,19 @@ export default function Dashboard() {
   const photoCount = doneLogs.filter(l => l.photo_url).length;
   const problemCount = logs.filter(l => l.status === "skipped").length;
 
-  // Full completion: every required task has a "done" log + photo if needed
   const requiredTasks = allActiveTasks.filter(t => t.care_type !== "optional");
   const isFullyComplete = requiredTasks.length > 0 &&
     requiredTasks.every(t => isTaskFullyDone(t, logByTaskId[t.id]));
 
-  // Trigger summary + notification when day becomes fully complete
   useEffect(() => {
     if (!isFullyComplete || totalTasks === 0) return;
     if (completionFiredRef.current) return;
 
-    // Check if we already sent a notification today
     const alreadySent = notifications.some(n => n.type === "daily_complete" && n.notification_date === TODAY);
     if (alreadySent) return;
 
     completionFiredRef.current = true;
 
-    // Mark notification as sent
     createNotification.mutate({
       notification_date: TODAY,
       type: "daily_complete",
@@ -233,7 +223,6 @@ export default function Dashboard() {
       summary: `${criticalDone} critical, ${routineDone} routine, ${photoCount} photos, ${problemCount} problems`,
     });
 
-    // Try to send owner email via integration
     const ownerEmail = payConfig?.owner_email;
     if (ownerEmail) {
       const caregiverName = user?.full_name || "";
@@ -255,13 +244,12 @@ export default function Dashboard() {
         to: ownerEmail,
         subject: "PurrfectDaily: Daily care complete",
         body,
-      }).catch(() => {}); // silent — fallback is the manual button
+      }).catch(() => {});
     }
 
     setTimeout(() => setShowSummary(true), 700);
   }, [isFullyComplete, totalTasks, notifications]);
 
-  // Problem notification to owner
   const problemNotifiedRef = useRef(new Set());
   useEffect(() => {
     const ownerEmail = payConfig?.owner_email;
@@ -323,7 +311,6 @@ export default function Dashboard() {
 
   const togglePet = (petId) => setCollapsedPets(p => ({ ...p, [petId]: !p[petId] }));
 
-  // Group by assignment: Pet (by pet), Area (by area), General
   const groups = useMemo(() => {
     const petTasks = allActiveTasks.filter(t => taskAssignmentType(t) === "pet");
     const areaTasks = allActiveTasks.filter(t => taskAssignmentType(t) === "area");
@@ -349,23 +336,23 @@ export default function Dashboard() {
   const FILTERS = [["all", "All"], ["pet", "🐾 Pets"], ["area", "🏠 Areas"], ["general", "✦ General"]];
 
   return (
-    <div className="min-h-full" style={{ background: "#0f1117" }}>
+    <div className="min-h-full bg-background">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-3xl opacity-8"
-          style={{ background: "radial-gradient(circle, rgba(124,58,237,0.3), transparent)" }} />
-        <div className="absolute bottom-1/3 right-0 w-64 h-64 rounded-full blur-3xl opacity-8"
-          style={{ background: "radial-gradient(circle, rgba(59,130,246,0.2), transparent)" }} />
+        <div className="absolute top-0 left-1/4 w-80 h-80 rounded-full blur-3xl opacity-20"
+          style={{ background: "radial-gradient(circle, rgba(114,9,183,0.15), transparent)" }} />
+        <div className="absolute bottom-1/3 right-0 w-64 h-64 rounded-full blur-3xl opacity-10"
+          style={{ background: "radial-gradient(circle, rgba(181,131,141,0.15), transparent)" }} />
       </div>
 
       <div className="relative max-w-lg mx-auto px-4 pt-4">
         {/* App header */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <PawPrint className="h-5 w-5 text-purple-400" />
-            <span className="font-black text-white text-lg tracking-tight">PurrfectDaily</span>
+            <PawPrint className="h-5 w-5 text-primary" />
+            <span className="font-black text-foreground text-lg tracking-tight font-heading">PurrfectDaily</span>
           </div>
-          <span className="text-[11px] text-white/30 font-medium">
+          <span className="text-[11px] text-muted-foreground font-medium">
             {new Date().toLocaleDateString("en-US", { weekday: "long" })}
           </span>
         </div>
@@ -383,15 +370,14 @@ export default function Dashboard() {
           <motion.div
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-3 mb-4 flex items-start gap-2.5"
-            style={{ background: "rgba(239,68,68,0.09)", border: "1px solid rgba(239,68,68,0.25)" }}
+            className="rounded-2xl p-3 mb-4 flex items-start gap-2.5 bg-destructive/10 border border-destructive/25"
           >
-            <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-xs font-bold text-red-300">
+              <p className="text-xs font-bold text-destructive">
                 Reported Problems — {problemCount} task{problemCount !== 1 ? "s" : ""} had issues today
               </p>
-              <p className="text-[10px] text-white/40 mt-0.5">
+              <p className="text-[10px] text-muted-foreground mt-0.5">
                 Review the task cards below for details. Owner will be notified.
               </p>
             </div>
@@ -401,7 +387,7 @@ export default function Dashboard() {
         {/* Off-week medication warnings */}
         {offMedWarnings.length > 0 && (
           <div className="mb-4">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-red-400 mb-2 px-1">⛔ Medication Alert</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-destructive mb-2 px-1">⛔ Medication Alert</p>
             {offMedWarnings.map(m => <MedOffWarningCard key={m.id} med={m} />)}
           </div>
         )}
@@ -410,14 +396,14 @@ export default function Dashboard() {
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-24 rounded-2xl animate-pulse" style={{ background: "rgba(255,255,255,0.04)" }} />
+              <div key={i} className="h-24 rounded-2xl animate-pulse bg-muted" />
             ))}
           </div>
         ) : allActiveTasks.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-20 text-center">
             <div className="text-5xl mb-4">🐾</div>
-            <p className="text-white/50 font-medium mb-1">No tasks for today</p>
-            <p className="text-white/25 text-sm">Tap + to add care tasks</p>
+            <p className="text-muted-foreground font-medium mb-1">No tasks for today</p>
+            <p className="text-muted-foreground/60 text-sm">Tap + to add care tasks</p>
           </motion.div>
         ) : (
           <div className="space-y-6">
@@ -425,10 +411,7 @@ export default function Dashboard() {
             <div className="flex gap-2">
               {FILTERS.map(([v, l]) => (
                 <button key={v} onClick={() => setFilter(v)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${filter === v ? "text-white" : "text-white/40"}`}
-                  style={filter === v
-                    ? { background: "linear-gradient(135deg,#7c3aed,#3b82f6)" }
-                    : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${filter === v ? "text-primary-foreground bg-primary" : "text-muted-foreground bg-muted border border-border"}`}>
                   {l}
                 </button>
               ))}
@@ -463,8 +446,8 @@ export default function Dashboard() {
                     {ASSIGNMENT_ICON[group.kind]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-white text-base">{group.label}</h3>
-                    <p className="text-xs text-white/40">{gDone}/{gTasks.length} tasks</p>
+                    <h3 className="font-bold text-foreground text-base font-heading">{group.label}</h3>
+                    <p className="text-xs text-muted-foreground">{gDone}/{gTasks.length} tasks</p>
                   </div>
                 </div>
               );
@@ -472,10 +455,10 @@ export default function Dashboard() {
               return (
                 <div key={group.key}>
                   <div className="mb-3 px-1">
-                    <div className="h-px w-full mb-3" style={{ background: "rgba(255,255,255,0.06)" }} />
+                    <div className="h-px w-full mb-3 bg-border" />
                     <button className="w-full flex items-center" onClick={() => togglePet(group.key)}>
                       {header}
-                      <div className="ml-2 flex-shrink-0 text-white/30">
+                      <div className="ml-2 flex-shrink-0 text-muted-foreground">
                         {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
                       </div>
                     </button>
@@ -502,7 +485,7 @@ export default function Dashboard() {
                         {completed.length > 0 && (
                           <div className="mt-2">
                             {pending.length > 0 && (
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-white/20 mb-2 px-1">
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mb-2 px-1">
                                 ✓ Completed
                               </p>
                             )}
@@ -533,8 +516,7 @@ export default function Dashboard() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => { setEditingTask(null); setTaskDialog(true); }}
-          className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-bold shadow-2xl"
-          style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)", boxShadow: "0 0 25px rgba(124,58,237,0.4)" }}
+          className="w-14 h-14 rounded-2xl flex items-center justify-center text-primary-foreground font-bold shadow-2xl bg-primary glow-purple"
         >
           <Plus className="h-6 w-6" />
         </motion.button>

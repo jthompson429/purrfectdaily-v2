@@ -23,10 +23,10 @@ const DOT = {
 function Row({ label, value, sub }) {
   return (
     <div className="flex items-start justify-between gap-3 py-1.5">
-      <span className="text-xs text-white/40 pt-0.5">{label}</span>
+      <span className="text-xs text-muted-foreground pt-0.5">{label}</span>
       <div className="text-right">
-        <p className="text-sm font-semibold text-white">{value}</p>
-        {sub && <p className="text-[10px] text-white/30">{sub}</p>}
+        <p className="text-sm font-semibold text-foreground">{value}</p>
+        {sub && <p className="text-[10px] text-muted-foreground/70">{sub}</p>}
       </div>
     </div>
   );
@@ -34,12 +34,9 @@ function Row({ label, value, sub }) {
 
 function Section({ title, children }) {
   return (
-    <div
-      className="rounded-2xl p-3 mt-3"
-      style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-    >
-      <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-1">{title}</p>
-      <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>{children}</div>
+    <div className="rounded-2xl p-3 mt-3 bg-card border border-border">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1">{title}</p>
+      <div className="divide-y divide-border">{children}</div>
     </div>
   );
 }
@@ -112,21 +109,18 @@ export default function KittenCareSummarySheet({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-w-lg mx-auto rounded-t-3xl" style={{ background: "#0f1117" }}>
+      <DrawerContent className="max-w-lg mx-auto rounded-t-3xl bg-background">
         <DrawerHeader className="text-center">
-          <DrawerTitle className="text-white font-black text-lg">🐾 Kitten Care Summary</DrawerTitle>
-          <DrawerDescription className="text-white/40 text-xs">
+          <DrawerTitle className="text-foreground font-black text-lg font-heading">🐾 Kitten Care Summary</DrawerTitle>
+          <DrawerDescription className="text-muted-foreground text-xs">
             Current status and recent care activity
           </DrawerDescription>
         </DrawerHeader>
 
         <div className="px-4 pb-6 overflow-y-auto" style={{ maxHeight: "72vh" }}>
-          <div
-            className="rounded-2xl p-3 mt-1 flex items-center gap-2"
-            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-          >
+          <div className="rounded-2xl p-3 mt-1 flex items-center gap-2 bg-card border border-border">
             <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: DOT[status.color] }} />
-            <p className="text-xs font-semibold text-white/80">{line}</p>
+            <p className="text-xs font-semibold text-foreground/80">{line}</p>
           </div>
 
           <Section title="Current Status">
@@ -173,15 +167,15 @@ export default function KittenCareSummarySheet({
 
           <Section title="Recent Activity">
             {events.length === 0 ? (
-              <p className="text-center text-white/30 text-sm py-4">No events logged yet</p>
+              <p className="text-center text-muted-foreground text-sm py-4">No events logged yet</p>
             ) : (
               <div className="pt-1">
                 {events.map((ev, i) => (
                   <div key={i} className="flex items-start gap-3 py-1.5">
-                    <span className="text-[10px] text-white/40 w-16 pt-0.5 flex-shrink-0">{formatTime(ev.time)}</span>
+                    <span className="text-[10px] text-muted-foreground w-16 pt-0.5 flex-shrink-0">{formatTime(ev.time)}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">{ev.type}</p>
-                      {ev.detail && <p className="text-[11px] text-white/40 truncate">{ev.detail}</p>}
+                      <p className="text-sm font-semibold text-foreground">{ev.type}</p>
+                      {ev.detail && <p className="text-[11px] text-muted-foreground truncate">{ev.detail}</p>}
                     </div>
                   </div>
                 ))}
@@ -192,15 +186,13 @@ export default function KittenCareSummarySheet({
           <div className="space-y-2 mt-4">
             <button
               onClick={handleLogCare}
-              className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-white"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}
+              className="w-full py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-primary-foreground bg-primary"
             >
               <Plus className="h-4 w-4" /> Log Care
             </button>
             <button
               onClick={handleReport}
-              className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-white/80"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+              className="w-full py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-foreground/80 bg-card border border-border"
             >
               <FileText className="h-4 w-4" /> Generate Foster Report
             </button>

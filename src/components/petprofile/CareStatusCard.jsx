@@ -5,8 +5,8 @@ import { isMedicationActive, vaccinationStatus, preventativeStatus, fmtShort } f
 function Info({ label, value, color }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">{label}</p>
-      <p className={`text-xs font-semibold ${color || "text-white/80"}`}>{value || "—"}</p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</p>
+      <p className={`text-xs font-semibold ${color || "text-foreground/80"}`}>{value || "—"}</p>
     </div>
   );
 }
@@ -17,7 +17,7 @@ export default function CareStatusCard({ pet, preventatives, vaccinations, medic
   const rabies = vaccinations.find((v) => v.name === "rabies");
   const rabiesSt = rabies ? vaccinationStatus(rabies) : null;
   const rabiesText = rabiesSt ? rabiesSt.label : "Not recorded";
-  const rabiesColor = rabiesSt ? (rabiesSt.color === "green" ? "text-green-400" : rabiesSt.color === "yellow" ? "text-yellow-400" : rabiesSt.color === "red" ? "text-red-400" : "text-white/60") : "text-white/60";
+  const rabiesColor = rabiesSt ? (rabiesSt.color === "green" ? "text-green-500" : rabiesSt.color === "yellow" ? "text-yellow-500" : rabiesSt.color === "red" ? "text-red-500" : "text-muted-foreground") : "text-muted-foreground";
 
   const lastPrev = preventatives[0];
   const lastPrevSt = lastPrev ? preventativeStatus(lastPrev) : null;
@@ -30,22 +30,21 @@ export default function CareStatusCard({ pet, preventatives, vaccinations, medic
   const apptText = upcoming ? `${fmtShort(upcoming.date)}${upcoming.clinic ? ` · ${upcoming.clinic}` : ""}` : "No appointments scheduled";
 
   return (
-    <div className="rounded-2xl p-4"
-      style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.12), rgba(59,130,246,0.06))", border: "1px solid rgba(124,58,237,0.25)" }}>
+    <div className="rounded-2xl p-4 bg-primary/10 border border-primary/25">
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xl">🐾</span>
-        <p className="text-lg font-black text-white">{pet.name}</p>
+        <p className="text-lg font-black text-foreground">{pet.name}</p>
       </div>
       <div className="flex flex-wrap gap-1.5 mb-3">
         {badges.map((b) => <StatusBadge key={b.key} badge={b} />)}
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2.5">
         <Info label="Last Preventative" value={lastPrev ? `${lastPrev.name} · ${fmtShort(lastPrev.date_given)}` : "—"} />
-        <Info label="Next Due" value={nextDue} color={lastPrevSt && lastPrevSt.color === "red" ? "text-red-400" : lastPrevSt && lastPrevSt.color === "yellow" ? "text-yellow-400" : "text-white/80"} />
+        <Info label="Next Due" value={nextDue} color={lastPrevSt && lastPrevSt.color === "red" ? "text-red-500" : lastPrevSt && lastPrevSt.color === "yellow" ? "text-yellow-500" : "text-foreground/80"} />
         <Info label="Rabies" value={rabiesText} color={rabiesColor} />
         <Info label="Active Meds" value={activeMeds.length ? activeMeds.map((m) => m.medication_name).join(", ") : "None"} />
       </div>
-      <p className="text-[11px] text-white/40 mt-2.5 pt-2.5 border-t border-white/5">📅 {apptText}</p>
+      <p className="text-[11px] text-muted-foreground mt-2.5 pt-2.5 border-t border-border">📅 {apptText}</p>
     </div>
   );
 }

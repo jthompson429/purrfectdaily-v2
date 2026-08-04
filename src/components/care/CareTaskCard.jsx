@@ -67,30 +67,29 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.97 }}
-      className="relative rounded-2xl overflow-hidden mb-3"
+      className="relative rounded-2xl overflow-hidden mb-3 border"
       style={{
         background: isDone
-          ? "rgba(16,185,129,0.06)"
+          ? "rgba(16,185,129,0.08)"
           : isSkipped
-            ? "rgba(255,255,255,0.03)"
+            ? "hsl(var(--muted))"
             : isCritical
-              ? "rgba(239,68,68,0.07)"
-              : "rgba(255,255,255,0.04)",
-        border: isDone
-          ? "1px solid rgba(16,185,129,0.2)"
+              ? "rgba(239,68,68,0.08)"
+              : "hsl(var(--card))",
+        borderColor: isDone
+          ? "rgba(16,185,129,0.3)"
           : isSkipped
-            ? "1px solid rgba(255,255,255,0.06)"
+            ? "hsl(var(--border))"
             : isCritical
-              ? "1px solid rgba(239,68,68,0.25)"
-              : "1px solid rgba(255,255,255,0.08)",
-        backdropFilter: "blur(20px)",
+              ? "rgba(239,68,68,0.3)"
+              : "hsl(var(--border))",
       }}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
           {/* Icon */}
           <div className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center text-lg"
-            style={{ background: isCritical ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.06)" }}>
+            style={{ background: isCritical ? "rgba(239,68,68,0.15)" : "hsl(var(--muted))" }}>
             {CATEGORY_EMOJI[task.category] || "⭐"}
           </div>
 
@@ -100,26 +99,26 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               <div className="flex-1">
                 {isCritical && !isDone && !isSkipped && (
                   <div className="flex items-center gap-1 mb-1">
-                    <AlertTriangle className="h-3 w-3 text-red-400" />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-red-400">
+                    <AlertTriangle className="h-3 w-3 text-destructive" />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-destructive">
                       {task.care_type === "critical_medical" ? "Critical Medical" : "Critical"}
                     </span>
                   </div>
                 )}
-                <p className={`font-semibold text-sm leading-snug ${isDone || isSkipped ? "text-white/40 line-through" : "text-white"}`}>
+                <p className={`font-semibold text-sm leading-snug ${isDone || isSkipped ? "text-muted-foreground line-through" : "text-foreground"}`}>
                   {task.title}
                 </p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="flex items-center gap-0.5 text-[10px] text-white/30">
+                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                     {ASSIGNMENT_ICON[taskAssignmentType(task)]}
                   </span>
                   {task.scheduled_time && task.scheduled_time !== "anytime" && (
-                    <span className="flex items-center gap-0.5 text-[10px] text-white/30">
+                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                       <Clock className="h-2.5 w-2.5" />{TIME_LABELS[task.scheduled_time]}
                     </span>
                   )}
                   {task.requires_photo && (
-                    <span className={`flex items-center gap-0.5 text-[10px] font-medium ${photoUrl ? "text-green-400" : "text-yellow-400"}`}>
+                    <span className={`flex items-center gap-0.5 text-[10px] font-medium ${photoUrl ? "text-green-500" : "text-yellow-500"}`}>
                       <Camera className="h-2.5 w-2.5" />
                       {photoUrl ? "Proof ✓" : "Proof Required"}
                     </span>
@@ -130,7 +129,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               {/* Toggle expand */}
               {(task.instructions || task.warning_text) && (
                 <button onClick={() => setExpanded(!expanded)}
-                  className="flex-shrink-0 h-6 w-6 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 transition-all">
+                  className="flex-shrink-0 h-6 w-6 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
                   {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                 </button>
               )}
@@ -138,8 +137,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
 
             {/* Warning text */}
             {task.warning_text && !isDone && !isSkipped && (
-              <div className="mt-2 px-2.5 py-2 rounded-xl text-xs text-orange-300"
-                style={{ background: "rgba(251,146,60,0.1)", border: "1px solid rgba(251,146,60,0.2)" }}>
+              <div className="mt-2 px-2.5 py-2 rounded-xl text-xs text-orange-600 bg-orange-500/10 border border-orange-500/20">
                 ⚠️ {task.warning_text}
               </div>
             )}
@@ -148,14 +146,12 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
 
         {/* Expanded instructions */}
         {expanded && task.instructions && (
-          <div className="mt-3 px-3 py-2.5 rounded-xl text-xs text-white/60 leading-relaxed"
-            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="mt-3 px-3 py-2.5 rounded-xl text-xs text-muted-foreground leading-relaxed bg-muted border border-border">
             📋 {task.instructions}
           </div>
         )}
         {expanded && task.proof_instructions && (
-          <div className="mt-2 px-3 py-2 rounded-xl text-xs text-blue-300"
-            style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
+          <div className="mt-2 px-3 py-2 rounded-xl text-xs text-blue-600 bg-blue-500/10 border border-blue-500/20">
             📸 {task.proof_instructions}
           </div>
         )}
@@ -164,30 +160,29 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
         {isDone && log && (
           <div className="mt-3 flex items-center gap-3">
             {log.photo_url && (
-              <img src={log.photo_url} alt="Proof" className="w-14 h-14 rounded-xl object-cover ring-1 ring-green-400/30" />
+              <img src={log.photo_url} alt="Proof" className="w-14 h-14 rounded-xl object-cover ring-1 ring-green-500/30" />
             )}
             <div>
-              <p className="text-xs text-green-400 font-semibold flex items-center gap-1">
+              <p className="text-xs text-green-500 font-semibold flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> Completed
               </p>
               {log.completed_at && (
-                <p className="text-[10px] text-white/30">{formatTime(log.completed_at)}</p>
+                <p className="text-[10px] text-muted-foreground">{formatTime(log.completed_at)}</p>
               )}
-              {log.notes && <p className="text-[10px] text-white/40 mt-0.5">"{log.notes}"</p>}
+              {log.notes && <p className="text-[10px] text-muted-foreground mt-0.5">"{log.notes}"</p>}
             </div>
           </div>
         )}
 
         {/* Reported/skipped state */}
         {isSkipped && (
-          <div className="mt-2 px-2.5 py-2 rounded-xl"
-            style={{ background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)" }}>
-            <p className="text-xs text-red-300 font-medium flex items-center gap-1">
+          <div className="mt-2 px-2.5 py-2 rounded-xl bg-destructive/10 border border-destructive/20">
+            <p className="text-xs text-destructive font-medium flex items-center gap-1">
               <AlertCircle className="h-3 w-3" /> Problem Reported
             </p>
-            {log?.notes && <p className="text-[10px] text-white/40 mt-0.5">"{log.notes}"</p>}
+            {log?.notes && <p className="text-[10px] text-muted-foreground mt-0.5">"{log.notes}"</p>}
             {log?.photo_url && (
-              <img src={log.photo_url} alt="Evidence" className="w-12 h-12 rounded-xl object-cover mt-2 ring-1 ring-red-400/30" />
+              <img src={log.photo_url} alt="Evidence" className="w-12 h-12 rounded-xl object-cover mt-2 ring-1 ring-destructive/30" />
             )}
           </div>
         )}
@@ -200,18 +195,17 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               <div>
                 {photoUrl ? (
                   <div className="flex items-center gap-2">
-                    <img src={photoUrl} alt="Proof" className="w-12 h-12 rounded-xl object-cover ring-1 ring-purple-400/30" />
+                    <img src={photoUrl} alt="Proof" className="w-12 h-12 rounded-xl object-cover ring-1 ring-primary/30" />
                     <div>
-                      <p className="text-xs text-green-400 font-medium">📸 Photo uploaded</p>
-                      <button onClick={() => setPhotoUrl(null)} className="text-[10px] text-white/30 hover:text-red-400">Remove</button>
+                      <p className="text-xs text-green-500 font-medium">📸 Photo uploaded</p>
+                      <button onClick={() => setPhotoUrl(null)} className="text-[10px] text-muted-foreground hover:text-destructive">Remove</button>
                     </div>
                   </div>
                 ) : (
                   <button
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
-                    className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-xs font-semibold transition-all"
-                    style={{ background: "rgba(234,179,8,0.1)", border: "1px dashed rgba(234,179,8,0.4)", color: "#fbbf24" }}
+                    className="flex items-center gap-2 w-full px-3 py-2.5 rounded-xl text-xs font-semibold transition-all bg-yellow-500/10 border border-dashed border-yellow-500/40 text-yellow-600"
                   >
                     {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                     {uploading ? "Uploading..." : "Upload Proof Photo — Required"}
@@ -228,8 +222,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               {/* All tasks: Report Problem */}
               <button
                 onClick={() => setReportMode(true)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all flex-shrink-0"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171" }}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all flex-shrink-0 bg-destructive/10 border border-destructive/20 text-destructive"
               >
                 <AlertCircle className="h-3 w-3" /> Report Problem
               </button>
@@ -238,16 +231,15 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
                 whileTap={{ scale: 0.96 }}
                 onClick={handleComplete}
                 disabled={needsPhoto}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-primary-foreground transition-all"
                 style={{
                   background: needsPhoto
-                    ? "rgba(255,255,255,0.05)"
+                    ? "hsl(var(--muted))"
                     : isCritical
-                      ? "linear-gradient(135deg, #dc2626, #9333ea)"
-                      : "linear-gradient(135deg, #7c3aed, #3b82f6)",
+                      ? "linear-gradient(135deg, #dc2626, #7209B7)"
+                      : "hsl(var(--primary))",
                   opacity: needsPhoto ? 0.5 : 1,
                   cursor: needsPhoto ? "not-allowed" : "pointer",
-                  boxShadow: needsPhoto ? "none" : "0 0 20px rgba(124,58,237,0.3)",
                 }}
               >
                 <CheckCircle2 className="h-4 w-4" />
@@ -266,33 +258,31 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               exit={{ opacity: 0, height: 0 }}
               className="mt-3 overflow-hidden"
             >
-              <div className="px-3 py-3 rounded-xl space-y-3"
-                style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                <p className="text-xs font-bold text-red-300 flex items-center gap-1.5">
+              <div className="px-3 py-3 rounded-xl space-y-3 bg-destructive/10 border border-destructive/20">
+                <p className="text-xs font-bold text-destructive flex items-center gap-1.5">
                   <AlertCircle className="h-3.5 w-3.5" /> Report Problem — describe what happened
                 </p>
                 <textarea
                   value={reportNotes}
                   onChange={e => setReportNotes(e.target.value)}
                   placeholder="What happened? (required)"
-                  className="w-full px-3 py-2 rounded-xl text-xs text-white placeholder:text-white/30 resize-none h-20"
-                  style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(239,68,68,0.3)" }}
+                  className="w-full px-3 py-2 rounded-xl text-xs text-foreground placeholder:text-muted-foreground/60 resize-none h-20 bg-background border border-destructive/30"
                 />
 
                 {/* Optional photo for report */}
                 {reportPhoto ? (
                   <div className="flex items-center gap-2">
-                    <img src={reportPhoto} alt="Evidence" className="w-10 h-10 rounded-xl object-cover ring-1 ring-red-400/30" />
+                    <img src={reportPhoto} alt="Evidence" className="w-10 h-10 rounded-xl object-cover ring-1 ring-destructive/30" />
                     <div>
-                      <p className="text-[10px] text-red-300 font-medium">Photo attached</p>
-                      <button onClick={() => setReportPhoto(null)} className="text-[10px] text-white/30 hover:text-red-400">Remove</button>
+                      <p className="text-[10px] text-destructive font-medium">Photo attached</p>
+                      <button onClick={() => setReportPhoto(null)} className="text-[10px] text-muted-foreground hover:text-destructive">Remove</button>
                     </div>
                   </div>
                 ) : (
                   <button
                     onClick={() => reportFileRef.current?.click()}
                     disabled={reportUploading}
-                    className="flex items-center gap-1.5 text-[10px] text-white/30 hover:text-white/50 transition-all"
+                    className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-all"
                   >
                     {reportUploading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Camera className="h-3 w-3" />}
                     {reportUploading ? "Uploading..." : "+ Attach photo (optional)"}
@@ -303,17 +293,16 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => { setReportMode(false); setReportNotes(""); setReportPhoto(null); }}
-                    className="flex-1 py-2 rounded-xl text-xs font-medium text-white/40 hover:text-white/60 transition-all"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                    className="flex-1 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground transition-all bg-muted border border-border"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmitReport}
                     disabled={!reportNotes.trim()}
-                    className="flex-1 py-2 rounded-xl text-xs font-bold text-white transition-all"
+                    className="flex-1 py-2 rounded-xl text-xs font-bold text-foreground transition-all"
                     style={{
-                      background: reportNotes.trim() ? "linear-gradient(135deg, #dc2626, #7c3aed)" : "rgba(255,255,255,0.05)",
+                      background: reportNotes.trim() ? "linear-gradient(135deg, #dc2626, #7209B7)" : "hsl(var(--muted))",
                       opacity: reportNotes.trim() ? 1 : 0.5,
                     }}
                   >

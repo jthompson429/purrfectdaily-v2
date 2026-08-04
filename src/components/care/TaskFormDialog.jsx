@@ -34,31 +34,28 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
     onSave(form, task?.id);
   };
 
-  const inputClass = "bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/20 focus:border-purple-500/50";
+  const inputClass = "bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/50 focus:border-primary/50";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-3xl border-white/10 bg-[#0f1117] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-md rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-white font-bold text-xl">
+          <DialogTitle className="text-foreground font-bold text-xl font-heading">
             {isEditing ? "Edit Care Task" : "New Care Task"}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 mt-2">
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Task Title</Label>
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Task Title</Label>
             <Input placeholder="e.g. Give eye drops — left eye" value={form.title} onChange={e => set("title", e.target.value)} className={inputClass} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Assignment</Label>
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Assignment</Label>
             <div className="grid grid-cols-3 gap-2">
               {[["pet", "🐾 Pet"], ["area", "🏠 Area"], ["general", "✦ General"]].map(([v, l]) => (
                 <button type="button" key={v} onClick={() => setAssignment(v)}
-                  className={`py-2 rounded-xl text-xs font-bold border transition-all ${form.assignment_type === v ? "text-white" : "text-white/40"}`}
-                  style={form.assignment_type === v
-                    ? { background: "linear-gradient(135deg, #7c3aed, #3b82f6)", borderColor: "transparent" }
-                    : { background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }}>
+                  className={`py-2 rounded-xl text-xs font-bold border transition-all ${form.assignment_type === v ? "text-primary-foreground bg-primary border-transparent" : "text-muted-foreground bg-muted border-border"}`}>
                   {l}
                 </button>
               ))}
@@ -67,14 +64,14 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
 
           {form.assignment_type === "pet" && (
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Pet</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Pet</Label>
               <Select value={form.pet_id} onValueChange={v => set("pet_id", v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue placeholder="Select pet" />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
+                <SelectContent className="bg-popover border-border">
                   {pets.map(p => (
-                    <SelectItem key={p.id} value={p.id} className="text-white hover:bg-white/5">{p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id} className="text-foreground hover:bg-muted">{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -83,7 +80,7 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
 
           {form.assignment_type === "area" && (
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Area</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Area</Label>
               <Input list="task-areas" placeholder="Select or type an area" value={form.area || ""} onChange={e => set("area", e.target.value)} className={inputClass} />
               <datalist id="task-areas">{BUILTIN_AREAS.map(a => <option key={a} value={a} />)}</datalist>
             </div>
@@ -91,28 +88,28 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Category</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Category</Label>
               <Select value={form.category} onValueChange={v => set("category", v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
+                <SelectContent className="bg-popover border-border">
                   {[["feeding","🍖 Feeding"],["medication","💊 Medication"],["water","💧 Water"],["litter","🗑️ Litter"],["hygiene","🧼 Hygiene"],["quarantine","⚠️ Quarantine"],["house_check","🏠 House Check"],["other","⭐ Other"]].map(([v,l]) => (
-                    <SelectItem key={v} value={v} className="text-white hover:bg-white/5">{l}</SelectItem>
+                    <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Care Type</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Care Type</Label>
               <Select value={form.care_type} onValueChange={v => set("care_type", v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
-                  <SelectItem value="critical_medical" className="text-white hover:bg-white/5">🚨 Critical Medical</SelectItem>
-                  <SelectItem value="routine" className="text-white hover:bg-white/5">📋 Routine</SelectItem>
-                  <SelectItem value="optional" className="text-white hover:bg-white/5">✨ Optional</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="critical_medical" className="text-foreground hover:bg-muted">🚨 Critical Medical</SelectItem>
+                  <SelectItem value="routine" className="text-foreground hover:bg-muted">📋 Routine</SelectItem>
+                  <SelectItem value="optional" className="text-foreground hover:bg-muted">✨ Optional</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -120,57 +117,57 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Time of Day</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Time of Day</Label>
               <Select value={form.scheduled_time} onValueChange={v => set("scheduled_time", v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
+                <SelectContent className="bg-popover border-border">
                   {[["morning","Morning"],["afternoon","Afternoon"],["evening","Evening"],["bedtime","Bedtime"],["anytime","Anytime"]].map(([v,l]) => (
-                    <SelectItem key={v} value={v} className="text-white hover:bg-white/5">{l}</SelectItem>
+                    <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Priority</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Priority</Label>
               <Select value={form.priority} onValueChange={v => set("priority", v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
-                  <SelectItem value="critical" className="text-white hover:bg-white/5">🔴 Critical</SelectItem>
-                  <SelectItem value="high" className="text-white hover:bg-white/5">🟠 High</SelectItem>
-                  <SelectItem value="normal" className="text-white hover:bg-white/5">🔵 Normal</SelectItem>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="critical" className="text-foreground hover:bg-muted">🔴 Critical</SelectItem>
+                  <SelectItem value="high" className="text-foreground hover:bg-muted">🟠 High</SelectItem>
+                  <SelectItem value="normal" className="text-foreground hover:bg-muted">🔵 Normal</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Schedule</Label>
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Schedule</Label>
             <Select value={form.schedule_frequency} onValueChange={v => set("schedule_frequency", v)}>
-              <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+              <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#0f1117] border-white/10">
-                <SelectItem value="daily" className="text-white hover:bg-white/5">Daily</SelectItem>
-                <SelectItem value="weekly" className="text-white hover:bg-white/5">Weekly</SelectItem>
-                <SelectItem value="monthly" className="text-white hover:bg-white/5">Monthly</SelectItem>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="daily" className="text-foreground hover:bg-muted">Daily</SelectItem>
+                <SelectItem value="weekly" className="text-foreground hover:bg-muted">Weekly</SelectItem>
+                <SelectItem value="monthly" className="text-foreground hover:bg-muted">Monthly</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {form.schedule_frequency === "weekly" && (
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Day of Week</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Day of Week</Label>
               <Select value={String(form.weekday ?? 0)} onValueChange={v => set("weekday", Number(v))}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
+                <SelectContent className="bg-popover border-border">
                   {["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((d, i) => (
-                    <SelectItem key={i} value={String(i)} className="text-white hover:bg-white/5">{d}</SelectItem>
+                    <SelectItem key={i} value={String(i)} className="text-foreground hover:bg-muted">{d}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -179,14 +176,14 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
 
           {form.schedule_frequency === "monthly" && (
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Day of Month</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Day of Month</Label>
               <Select value={String(form.month_day ?? 1)} onValueChange={v => set("month_day", Number(v))}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl">
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
+                <SelectContent className="bg-popover border-border">
                   {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
-                    <SelectItem key={d} value={String(d)} className="text-white hover:bg-white/5">{d}</SelectItem>
+                    <SelectItem key={d} value={String(d)} className="text-foreground hover:bg-muted">{d}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -194,34 +191,33 @@ export default function TaskFormDialog({ open, onOpenChange, task, pets, onSave 
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Instructions</Label>
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Instructions</Label>
             <Textarea placeholder="Step-by-step instructions for the caregiver..." value={form.instructions} onChange={e => set("instructions", e.target.value)} className={`${inputClass} h-20 resize-none`} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Warning Text (optional)</Label>
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Warning Text (optional)</Label>
             <Input placeholder="e.g. Do not give if cat vomited in last 2 hours" value={form.warning_text} onChange={e => set("warning_text", e.target.value)} className={inputClass} />
           </div>
 
-          <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-white/5">
+          <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
             <div>
-              <p className="text-white text-sm font-medium">Require Proof Photo</p>
-              <p className="text-white/40 text-xs">Caregiver must upload photo to complete</p>
+              <p className="text-foreground text-sm font-medium">Require Proof Photo</p>
+              <p className="text-muted-foreground text-xs">Caregiver must upload photo to complete</p>
             </div>
             <Switch checked={form.requires_photo} onCheckedChange={v => set("requires_photo", v)} />
           </div>
 
           {form.requires_photo && (
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Photo Instructions</Label>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Photo Instructions</Label>
               <Input placeholder="e.g. Take photo of empty medicine cup" value={form.proof_instructions} onChange={e => set("proof_instructions", e.target.value)} className={inputClass} />
             </div>
           )}
 
           <DialogFooter className="pt-2 gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-white/50 hover:text-white rounded-xl flex-1">Cancel</Button>
-            <Button type="submit" disabled={!form.title.trim()} className="gradient-purple text-white rounded-xl flex-1 font-bold border-0"
-              style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground rounded-xl flex-1">Cancel</Button>
+            <Button type="submit" disabled={!form.title.trim()} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">
               {isEditing ? "Save Task" : "Add Task"}
             </Button>
           </DialogFooter>

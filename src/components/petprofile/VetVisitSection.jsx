@@ -13,7 +13,6 @@ export default function VetVisitSection({ petId }) {
   const [editing, setEditing] = useState(null);
   const [viewer, setViewer] = useState(null);
   const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ pet_id: petId }, "-date") });
-  // Guard against a null/non-array result so "no records" never throws.
   const items = Array.isArray(data) ? data : [];
   const upsert = useMutation({
     mutationFn: ({ id, data }) => id ? base44.entities.VetVisit.update(id, data) : base44.entities.VetVisit.create(data),
@@ -26,7 +25,6 @@ export default function VetVisitSection({ petId }) {
     const saved = id ? await base44.entities.VetVisit.update(id, data) : await base44.entities.VetVisit.create({ ...data, pet_id: petId });
     const visitDate = saved?.date || data.date;
 
-    // Auto-sync vaccinations given -> Vaccinations section (dedup by name + date)
     const givenV = data.vaccinations_given || [];
     if (givenV.length) {
       const existing = await base44.entities.Vaccination.filter({ pet_id: petId });
@@ -39,7 +37,6 @@ export default function VetVisitSection({ petId }) {
       qc.invalidateQueries({ queryKey: ["vaccinations", petId] });
     }
 
-    // Auto-sync preventives administered -> Preventive Care (dedup by name + date)
     const givenP = data.preventives_administered || [];
     if (givenP.length) {
       const existingP = await base44.entities.Preventative.filter({ pet_id: petId });
@@ -80,8 +77,8 @@ export default function VetVisitSection({ petId }) {
     <SectionCard title="Veterinary Visits" icon={Stethoscope} onAdd={() => { setEditing(null); setDialog(true); }} addLabel="Add">
       {items.length === 0 ? (
         <div className="flex flex-col items-center py-5 text-center">
-          <p className="text-xs text-white/30 mb-3">No veterinary visits have been recorded yet.</p>
-          <button onClick={() => { setEditing(null); setDialog(true); }} className="flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 px-3 py-1.5 rounded-lg" style={{ background: "rgba(124,58,237,0.12)" }}>
+          <p className="text-xs text-muted-foreground mb-3">No veterinary visits have been recorded yet.</p>
+          <button onClick={() => { setEditing(null); setDialog(true); }} className="flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 px-3 py-1.5 rounded-lg bg-primary/10">
             <Plus className="h-3.5 w-3.5" /> Add Veterinary Visit
           </button>
         </div>

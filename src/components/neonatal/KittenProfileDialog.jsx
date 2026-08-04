@@ -74,7 +74,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
               />
             </div>
           </div>
-          <div className="rounded-xl divide-y divide-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-xl divide-y divide-border bg-muted">
             <div className="flex items-center justify-between px-3 py-2.5">
               <Label>Mother present</Label>
               <Switch checked={form.mother_present} onCheckedChange={(v) => setForm((f) => ({ ...f, mother_present: v }))} />

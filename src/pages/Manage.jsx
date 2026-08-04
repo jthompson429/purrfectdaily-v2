@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Settings, Plus, Pencil, Trash2, Search, Eye, EyeOff } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PetFormDialog from "@/components/care/PetFormDialog";
@@ -13,7 +13,6 @@ import { assignmentLabel } from "@/utils/assignment";
 import StatusBadge from "@/components/petprofile/StatusBadge";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
-const CARE_COLOR = { critical: "text-red-400", special: "text-orange-400", routine: "text-blue-400" };
 const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
 
 export default function Manage() {
@@ -63,24 +62,23 @@ export default function Manage() {
     : pets;
 
   return (
-    <div className="min-h-full" style={{ background: "#0f1117" }}>
+    <div className="min-h-full bg-background">
       <div className="relative max-w-lg mx-auto px-4 pt-6 pb-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <Settings className="h-6 w-6 text-white/60" />
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-muted border border-border">
+            <Settings className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white">Pet Profiles</h1>
-            <p className="text-white/40 text-xs">Care profiles for your pets</p>
+            <h1 className="text-2xl font-black text-foreground font-heading">Pet Profiles</h1>
+            <p className="text-muted-foreground text-xs">Care profiles for your pets</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 mb-6 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.04)" }}>
+        <div className="flex gap-1.5 mb-6 p-1 rounded-2xl bg-muted">
           {[["pets","Profiles"],["tasks","Care Tasks"],["pay","Notifications"]].map(([v,l]) => (
             <button key={v} onClick={() => setActiveTab(v)}
-              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === v ? "text-white" : "text-white/30"}`}
-              style={activeTab === v ? { background: "linear-gradient(135deg, #7c3aed, #3b82f6)" } : {}}>
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === v ? "text-primary-foreground bg-primary" : "text-muted-foreground"}`}>
               {l}
             </button>
           ))}
@@ -91,12 +89,12 @@ export default function Manage() {
           <div>
             {pets.length > 0 && (
               <div className="relative mb-3">
-                <Search className="h-4 w-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search by name, status, medication…"
-                  className="pl-9 bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/30"
+                  className="pl-9 bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/60"
                 />
               </div>
             )}
@@ -112,34 +110,33 @@ export default function Manage() {
                   return (
                     <motion.div key={pet.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                       onClick={() => navigate(`/pets/${pet.id}`)}
-                      className="rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-white/[0.06] transition-colors"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      className="rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-muted/50 transition-colors bg-card border border-border">
                       <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
                         {pet.photo_url ? (
                           <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-2xl" style={{ background: "rgba(124,58,237,0.15)" }}>
+                          <div className="w-full h-full flex items-center justify-center text-2xl bg-primary/15">
                             {SPECIES_EMOJI[pet.species] || "🐾"}
                           </div>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-sm">{pet.name}</p>
-                        <p className="text-xs text-white/40 capitalize">
+                        <p className="font-bold text-foreground text-sm">{pet.name}</p>
+                        <p className="text-xs text-muted-foreground capitalize">
                           {pet.species}{pet.sex && pet.sex !== "unknown" ? ` · ${pet.sex}` : ""}{pet.birth_date ? ` · ${formatAge(pet.birth_date)}` : ""}
                         </p>
                         {pet.latest_weight != null && pet.latest_weight !== "" && (
-                          <p className="text-xs text-white/30">{pet.latest_weight} {pet.profile_type === "neonatal" ? "g" : "kg"}</p>
+                          <p className="text-xs text-muted-foreground">{pet.latest_weight} {pet.profile_type === "neonatal" ? "g" : "kg"}</p>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {badges.map((b) => <StatusBadge key={b.key} badge={b} />)}
                         </div>
                       </div>
                       <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                        <button onClick={() => { setEditingPet(pet); setPetDialog(true); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <button onClick={() => { setEditingPet(pet); setPetDialog(true); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => deletePet.mutate(pet.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <button onClick={() => deletePet.mutate(pet.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-destructive transition-all bg-muted border border-border">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
@@ -150,16 +147,15 @@ export default function Manage() {
               {pets.length === 0 && (
                 <div className="flex flex-col items-center py-12 text-center">
                   <div className="text-5xl mb-3">🐾</div>
-                  <p className="text-white/40 text-sm">No pets added yet</p>
+                  <p className="text-muted-foreground text-sm">No pets added yet</p>
                 </div>
               )}
               {pets.length > 0 && filteredPets.length === 0 && (
-                <p className="text-white/40 text-sm text-center py-8">No pets match "{search}"</p>
+                <p className="text-muted-foreground text-sm text-center py-8">No pets match "{search}"</p>
               )}
             </div>
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setEditingPet(null); setPetDialog(true); }}
-              className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(255,255,255,0.15)" }}>
+              className="w-full py-4 rounded-2xl font-bold text-foreground flex items-center justify-center gap-2 bg-muted border border-dashed border-border">
               <Plus className="h-4 w-4" /> Add Pet
             </motion.button>
           </div>
@@ -168,22 +164,22 @@ export default function Manage() {
         {/* Tasks tab */}
         {activeTab === "tasks" && (
           <div>
-            <p className="text-[10px] text-white/25 mb-2 px-1">Tap the eye icon to pause a task (hidden from the daily list) without deleting it.</p>
+            <p className="text-[10px] text-muted-foreground mb-2 px-1">Tap the eye icon to pause a task (hidden from the daily list) without deleting it.</p>
             <div className="space-y-2 mb-4">
               <AnimatePresence>
                 {tasks.map(task => {
                   const isOff = task.active === false;
                   return (
                   <motion.div key={task.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="rounded-2xl p-3.5 flex items-center gap-3"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", opacity: isOff ? 0.45 : 1 }}>
+                    className="rounded-2xl p-3.5 flex items-center gap-3 bg-card border border-border"
+                    style={{ opacity: isOff ? 0.5 : 1 }}>
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
-                      style={{ background: task.care_type === "critical_medical" ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.06)" }}>
+                      style={{ background: task.care_type === "critical_medical" ? "rgba(239,68,68,0.15)" : "hsl(var(--muted))" }}>
                       {CATEGORY_EMOJI[task.category] || "⭐"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-white text-sm truncate">{task.title}</p>
-                      <p className="text-xs text-white/30">
+                      <p className="font-semibold text-foreground text-sm truncate">{task.title}</p>
+                      <p className="text-xs text-muted-foreground">
                         {assignmentLabel(task, pets)} · {task.care_type?.replace("_", " ")} {task.requires_photo ? "· 📸" : ""}
                         {isOff ? " · Off" : ""}
                       </p>
@@ -192,14 +188,13 @@ export default function Manage() {
                       <button
                         onClick={() => updateTask.mutate({ id: task.id, data: { active: isOff } })}
                         title={isOff ? "Turn on" : "Turn off"}
-                        className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all"
-                        style={{ background: "rgba(255,255,255,0.05)" }}>
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
                         {isOff ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                       </button>
-                      <button onClick={() => { setEditingTask(task); setTaskDialog(true); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                      <button onClick={() => { setEditingTask(task); setTaskDialog(true); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={() => deleteTask.mutate(task.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                      <button onClick={() => deleteTask.mutate(task.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-destructive transition-all bg-muted border border-border">
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
@@ -210,28 +205,26 @@ export default function Manage() {
               {tasks.length === 0 && (
                 <div className="flex flex-col items-center py-12 text-center">
                   <div className="text-5xl mb-3">📋</div>
-                  <p className="text-white/40 text-sm">No care tasks yet</p>
+                  <p className="text-muted-foreground text-sm">No care tasks yet</p>
                 </div>
               )}
             </div>
             <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setEditingTask(null); setTaskDialog(true); }}
-              className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(255,255,255,0.15)" }}>
+              className="w-full py-4 rounded-2xl font-bold text-foreground flex items-center justify-center gap-2 bg-muted border border-dashed border-border">
               <Plus className="h-4 w-4" /> Add Care Task
             </motion.button>
           </div>
         )}
 
-        {/* Pay & Alerts tab */}
+        {/* Notifications tab */}
         {activeTab === "pay" && (
           <div>
-            <div className="rounded-2xl p-4"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <p className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">How this works</p>
-              <ul className="space-y-2 text-xs text-white/35 leading-relaxed">
+            <div className="rounded-2xl p-4 bg-card border border-border">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">How this works</p>
+              <ul className="space-y-2 text-xs text-muted-foreground leading-relaxed">
                 <li>• When all required tasks + proof photos are complete, an automatic email is sent to the owner.</li>
                 <li>• If a problem is reported on any task, the owner is notified by email immediately.</li>
-                <li>• The caregiver can also tap <strong className="text-white/50">"Send Completion Message"</strong> on the summary screen to send a manual email from their own mail app.</li>
+                <li>• The caregiver can also tap <strong className="text-foreground/70">"Send Completion Message"</strong> on the summary screen to send a manual email from their own mail app.</li>
                 <li>• Daily pay is locked until all required tasks and required proof photos are complete for the day.</li>
               </ul>
             </div>

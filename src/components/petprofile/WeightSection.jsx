@@ -36,13 +36,13 @@ export default function WeightSection({ petId, profileType }) {
   return (
     <SectionCard title="Weight History" icon={Scale} onAdd={() => { setEditing(null); setDialog(true); }} addLabel="Log">
       {items.length === 0 ? (
-        <p className="text-xs text-white/30 py-3 text-center">No weight logged yet</p>
+        <p className="text-xs text-muted-foreground py-3 text-center">No weight logged yet</p>
       ) : (
         <div className="space-y-3">
           <div className="flex items-end gap-2">
-            <p className="text-2xl font-black text-white">{latest.weight} <span className="text-sm text-white/40 font-medium">{unit}</span></p>
+            <p className="text-2xl font-black text-foreground">{latest.weight} <span className="text-sm text-muted-foreground font-medium">{unit}</span></p>
             {trend != null && (
-              <p className={`text-xs font-bold mb-1 ${trend >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-xs font-bold mb-1 ${trend >= 0 ? "text-green-500" : "text-red-500"}`}>
                 {trend >= 0 ? "↑" : "↓"} {Math.abs(trend).toFixed(1)} {unit}
               </p>
             )}
@@ -51,22 +51,22 @@ export default function WeightSection({ petId, profileType }) {
             <div className="h-24">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
-                  <XAxis dataKey="date" tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }} tickLine={false} axisLine={false} />
-                  <YAxis domain={["auto", "auto"]} tick={{ fill: "rgba(255,255,255,0.4)", fontSize: 9 }} tickLine={false} axisLine={false} width={32} />
-                  <Tooltip contentStyle={{ background: "#0f1117", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, fontSize: 11 }} labelStyle={{ color: "rgba(255,255,255,0.6)" }} />
-                  <Line type="monotone" dataKey="weight" stroke="#a78bfa" strokeWidth={2} dot={{ r: 2, fill: "#a78bfa" }} />
+                  <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickLine={false} axisLine={false} />
+                  <YAxis domain={["auto", "auto"]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickLine={false} axisLine={false} width={32} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 11 }} labelStyle={{ color: "hsl(var(--muted-foreground))" }} />
+                  <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 2, fill: "hsl(var(--primary))" }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
           )}
           <div className="space-y-1">
             {[...items].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map((w) => (
-              <div key={w.id} className="flex items-center justify-between rounded-lg px-2 py-1.5" style={{ background: "rgba(255,255,255,0.03)" }}>
-                <span className="text-xs text-white/70">{w.weight} {unit}</span>
+              <div key={w.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 bg-muted">
+                <span className="text-xs text-foreground/70">{w.weight} {unit}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-[11px] text-white/40">{fmtShort(w.date)}</span>
-                  <button onClick={() => { setEditing(w); setDialog(true); }} className="text-white/30 hover:text-white/60"><Pencil className="h-3 w-3" /></button>
-                  <button onClick={() => { if (window.confirm("Delete this weight entry?")) remove.mutate(w.id); }} className="text-white/30 hover:text-red-400"><Trash2 className="h-3 w-3" /></button>
+                  <span className="text-[11px] text-muted-foreground">{fmtShort(w.date)}</span>
+                  <button onClick={() => { setEditing(w); setDialog(true); }} className="text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /></button>
+                  <button onClick={() => { if (window.confirm("Delete this weight entry?")) remove.mutate(w.id); }} className="text-muted-foreground hover:text-destructive"><Trash2 className="h-3 w-3" /></button>
                 </div>
               </div>
             ))}

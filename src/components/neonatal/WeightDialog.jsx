@@ -39,10 +39,10 @@ export default function WeightDialog({ open, onOpenChange, onSave, previousWeigh
             <Label>Weight (grams)</Label>
             <Input type="number" inputMode="decimal" value={form.weight_g} onChange={(e) => setForm((f) => ({ ...f, weight_g: e.target.value }))} placeholder="0" />
             {previousWeight != null && (
-              <p className="text-xs text-white/40">Previous: {previousWeight} g</p>
+              <p className="text-xs text-muted-foreground">Previous: {previousWeight} g</p>
             )}
             {change !== null && (
-              <p className={`text-sm font-bold ${change >= 0 ? "text-green-400" : "text-red-400"}`}>
+              <p className={`text-sm font-bold ${change >= 0 ? "text-green-500" : "text-destructive"}`}>
                 Change: {change >= 0 ? "+" : ""}{change.toFixed(1)} g
               </p>
             )}

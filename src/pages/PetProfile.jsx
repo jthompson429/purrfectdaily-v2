@@ -38,27 +38,27 @@ export default function PetProfile() {
   const handleSavePet = async (formData) => { await updatePet.mutateAsync(formData); setEditOpen(false); };
 
   if (isLoading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f1117" }}>
-      <div className="w-8 h-8 border-4 border-white/10 border-t-purple-500 rounded-full animate-spin" />
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-8 h-8 border-4 border-muted border-t-primary rounded-full animate-spin" />
     </div>
   );
   if (isError) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ background: "#0f1117" }}>
-      <AlertCircle className="h-10 w-10 text-amber-400" />
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center bg-background">
+      <AlertCircle className="h-10 w-10 text-amber-500" />
       <div>
-        <p className="text-white font-bold text-lg">Couldn't load this profile</p>
-        <p className="text-white/40 text-sm mt-1">Check your connection and try again.</p>
+        <p className="text-foreground font-bold text-lg font-heading">Couldn't load this profile</p>
+        <p className="text-muted-foreground text-sm mt-1">Check your connection and try again.</p>
       </div>
       <div className="flex gap-2">
-        <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-xl text-sm font-bold text-white/70 hover:text-white" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>Back</button>
-        <button onClick={() => refetch()} className="px-4 py-2 rounded-xl text-sm font-bold text-white flex items-center gap-1.5" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}><RotateCw className="h-3.5 w-3.5" /> Try again</button>
+        <button onClick={() => navigate(-1)} className="px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground bg-muted border border-border">Back</button>
+        <button onClick={() => refetch()} className="px-4 py-2 rounded-xl text-sm font-bold text-primary-foreground flex items-center gap-1.5 bg-primary"><RotateCw className="h-3.5 w-3.5" /> Try again</button>
       </div>
     </div>
   );
   if (!pet) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-3" style={{ background: "#0f1117" }}>
-      <p className="text-white/40">Pet not found</p>
-      <Link to="/manage" className="text-purple-400 text-sm font-semibold">Back to Pet Profiles</Link>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-background">
+      <p className="text-muted-foreground">Pet not found</p>
+      <Link to="/manage" className="text-primary text-sm font-semibold">Back to Pet Profiles</Link>
     </div>
   );
 
@@ -67,44 +67,44 @@ export default function PetProfile() {
 
   return (
     <ErrorBoundary fallback={(retry) => (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center" style={{ background: "#0f1117" }}>
-        <AlertCircle className="h-10 w-10 text-amber-400" />
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center bg-background">
+        <AlertCircle className="h-10 w-10 text-amber-500" />
         <div>
-          <p className="text-white font-bold text-lg">Something went wrong</p>
-          <p className="text-white/40 text-sm mt-1">This profile couldn't be displayed.</p>
+          <p className="text-foreground font-bold text-lg font-heading">Something went wrong</p>
+          <p className="text-muted-foreground text-sm mt-1">This profile couldn't be displayed.</p>
         </div>
         <div className="flex gap-2">
-          <Link to="/manage" className="px-4 py-2 rounded-xl text-sm font-bold text-white/70 hover:text-white" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>Back to Pet Profiles</Link>
-          <button onClick={retry} className="px-4 py-2 rounded-xl text-sm font-bold text-white flex items-center gap-1.5" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}><RotateCw className="h-3.5 w-3.5" /> Try again</button>
+          <Link to="/manage" className="px-4 py-2 rounded-xl text-sm font-bold text-muted-foreground hover:text-foreground bg-muted border border-border">Back to Pet Profiles</Link>
+          <button onClick={retry} className="px-4 py-2 rounded-xl text-sm font-bold text-primary-foreground flex items-center gap-1.5 bg-primary"><RotateCw className="h-3.5 w-3.5" /> Try again</button>
         </div>
       </div>
     )}>
-      <div className="min-h-full" style={{ background: "#0f1117" }}>
+      <div className="min-h-full bg-background">
         <div className="max-w-lg mx-auto px-4 pt-5 pb-6 space-y-3">
           <div className="flex items-center gap-3 mb-2">
-            <button onClick={() => navigate(-1)} className="h-9 w-9 rounded-xl flex items-center justify-center text-white/60" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <button onClick={() => navigate(-1)} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground bg-muted border border-border">
               <ArrowLeft className="h-4 w-4" />
             </button>
-            <h1 className="text-xl font-black text-white">Pet Profile</h1>
+            <h1 className="text-xl font-black text-foreground font-heading">Pet Profile</h1>
           </div>
 
           <ErrorBoundary label="Pet header">
-            <motion.div layout className="rounded-2xl p-4 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <motion.div layout className="rounded-2xl p-4 flex items-center gap-3 bg-card border border-border">
               <div className="w-16 h-16 rounded-2xl overflow-hidden flex-shrink-0">
                 {pet.photo_url ? (
                   <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-3xl" style={{ background: "rgba(124,58,237,0.15)" }}>{SPECIES_EMOJI[pet.species] || "🐾"}</div>
+                  <div className="w-full h-full flex items-center justify-center text-3xl bg-primary/15">{SPECIES_EMOJI[pet.species] || "🐾"}</div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-black text-white text-lg">{pet.name}</p>
-                <p className="text-xs text-white/40 capitalize">{pet.species}{pet.sex && pet.sex !== "unknown" ? ` · ${pet.sex}` : ""}{pet.birth_date ? ` · ${formatAge(pet.birth_date)}` : ""}</p>
+                <p className="font-black text-foreground text-lg font-heading">{pet.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">{pet.species}{pet.sex && pet.sex !== "unknown" ? ` · ${pet.sex}` : ""}{pet.birth_date ? ` · ${formatAge(pet.birth_date)}` : ""}</p>
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {badges.map((b) => <StatusBadge key={b.key} badge={b} />)}
                 </div>
               </div>
-              <button onClick={() => setEditOpen(true)} className="h-9 w-9 rounded-xl flex items-center justify-center text-white/60" style={{ background: "rgba(255,255,255,0.05)" }}><Pencil className="h-4 w-4" /></button>
+              <button onClick={() => setEditOpen(true)} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground bg-muted border border-border"><Pencil className="h-4 w-4" /></button>
             </motion.div>
           </ErrorBoundary>
 

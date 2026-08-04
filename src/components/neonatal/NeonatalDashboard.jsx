@@ -5,19 +5,19 @@ import KittenCareSummarySheet from "@/components/neonatal/KittenCareSummarySheet
 import RecommendedFeedingCard from "@/components/neonatal/RecommendedFeedingCard";
 
 const TONE = {
-  green: { bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)", text: "text-green-400" },
-  yellow: { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)", text: "text-yellow-400" },
-  orange: { bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.3)", text: "text-orange-400" },
-  red: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.3)", text: "text-red-400" },
-  muted: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.08)", text: "text-white/50" },
+  green: { bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)", text: "text-green-500" },
+  yellow: { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)", text: "text-yellow-500" },
+  orange: { bg: "rgba(249,115,22,0.12)", border: "rgba(249,115,22,0.3)", text: "text-orange-500" },
+  red: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.3)", text: "text-destructive" },
+  muted: { bg: "hsl(var(--muted))", border: "hsl(var(--border))", text: "text-muted-foreground" },
 };
 
 function StatCard({ label, value, sub, subColor }) {
   return (
-    <div className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-      <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">{label}</p>
-      <p className="text-lg font-black text-white mt-0.5">{value}</p>
-      {sub && <p className={`text-[11px] font-semibold ${subColor || "text-white/30"}`}>{sub}</p>}
+    <div className="rounded-2xl p-3 bg-card border border-border">
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</p>
+      <p className="text-lg font-black text-foreground mt-0.5">{value}</p>
+      {sub && <p className={`text-[11px] font-semibold ${subColor || "text-muted-foreground"}`}>{sub}</p>}
     </div>
   );
 }
@@ -63,32 +63,32 @@ export default function NeonatalDashboard({ kitten, feedings, weights, eliminati
       <div className="rounded-2xl p-4" style={{ background: tone.bg, border: `1px solid ${tone.border}` }}>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Feeding Status</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Feeding Status</p>
             <p className={`text-2xl font-black ${tone.text}`}>{status.label}</p>
             {countdown !== null && <p className={`text-sm font-bold ${tone.text}`}>{formatCountdown(countdown)}</p>}
           </div>
           <div className="text-right">
-            <p className="text-[10px] uppercase tracking-wider text-white/50 font-bold">Last Feeding</p>
-            <p className="text-sm font-bold text-white">{lastFeeding ? timeAgo(lastFeeding.date_time) : "—"}</p>
-            {status.due && <p className="text-[11px] text-white/40">Due {formatTime(status.due.toISOString())}</p>}
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Last Feeding</p>
+            <p className="text-sm font-bold text-foreground">{lastFeeding ? timeAgo(lastFeeding.date_time) : "—"}</p>
+            {status.due && <p className="text-[11px] text-muted-foreground">Due {formatTime(status.due.toISOString())}</p>}
           </div>
         </div>
       </div>
 
       {/* Weight trend */}
-      <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Weight Trend</p>
+      <div className="rounded-2xl p-4 bg-card border border-border">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Weight Trend</p>
         <div className="flex items-end gap-2 mt-1">
-          <p className="text-3xl font-black text-white">{currentWeight != null ? `${currentWeight} g` : "—"}</p>
+          <p className="text-3xl font-black text-foreground">{currentWeight != null ? `${currentWeight} g` : "—"}</p>
           {trend.hasData && !trend.isFirst && (
-            <p className={`text-sm font-bold mb-1 ${trend.change >= 0 ? "text-green-400" : "text-red-400"}`}>
+            <p className={`text-sm font-bold mb-1 ${trend.change >= 0 ? "text-green-500" : "text-red-500"}`}>
               {trend.change >= 0 ? "↑" : "↓"} {trend.change >= 0 ? "+" : ""}{trend.change.toFixed(1)} g since last
             </p>
           )}
         </div>
-        {trend.hasData && trend.isFirst && <p className="text-xs text-white/40 mt-0.5">First recorded weight</p>}
+        {trend.hasData && trend.isFirst && <p className="text-xs text-muted-foreground mt-0.5">First recorded weight</p>}
         {trend.hasData && trend.avgDaily != null && (
-          <p className={`text-xs font-semibold mt-1 ${trend.avgDaily >= 0 ? "text-green-400" : "text-red-400"}`}>
+          <p className={`text-xs font-semibold mt-1 ${trend.avgDaily >= 0 ? "text-green-500" : "text-red-500"}`}>
             Avg: {trend.avgDaily >= 0 ? "+" : ""}{trend.avgDaily.toFixed(1)} g/day
           </p>
         )}
@@ -103,24 +103,24 @@ export default function NeonatalDashboard({ kitten, feedings, weights, eliminati
       </div>
 
       {/* Feeding summary */}
-      <div className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-2">Today's Feeding Summary</p>
+      <div className="rounded-2xl p-3 bg-card border border-border">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-2">Today's Feeding Summary</p>
         <div className="grid grid-cols-2 gap-y-1.5 text-xs">
-          <span className="text-white/40">Total KMR: <b className="text-white">{summary.totalKmr} mL</b></span>
-          <span className="text-white/40">Feedings: <b className="text-white">{summary.count}</b></span>
-          <span className="text-white/40">Avg/feeding: <b className="text-white">{summary.avgMl.toFixed(1)} mL</b></span>
-          <span className="text-white/40">Longest: <b className="text-white">{summary.longest != null ? `${summary.longest.toFixed(1)}h` : "—"}</b></span>
-          <span className="text-white/40">Shortest: <b className="text-white">{summary.shortest != null ? `${summary.shortest.toFixed(1)}h` : "—"}</b></span>
+          <span className="text-muted-foreground">Total KMR: <b className="text-foreground">{summary.totalKmr} mL</b></span>
+          <span className="text-muted-foreground">Feedings: <b className="text-foreground">{summary.count}</b></span>
+          <span className="text-muted-foreground">Avg/feeding: <b className="text-foreground">{summary.avgMl.toFixed(1)} mL</b></span>
+          <span className="text-muted-foreground">Longest: <b className="text-foreground">{summary.longest != null ? `${summary.longest.toFixed(1)}h` : "—"}</b></span>
+          <span className="text-muted-foreground">Shortest: <b className="text-foreground">{summary.shortest != null ? `${summary.shortest.toFixed(1)}h` : "—"}</b></span>
         </div>
       </div>
 
       {/* Mother cat */}
-      <div className="rounded-2xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold mb-1.5">Mother Cat — Today</p>
+      <div className="rounded-2xl p-3 bg-card border border-border">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold mb-1.5">Mother Cat — Today</p>
         <div className="flex flex-wrap gap-4 text-sm">
-          <span className={motherToday?.ate ? "text-green-400 font-semibold" : "text-white/40"}>🍽️ Ate: {motherToday ? (motherToday.ate ? "Yes" : "No") : "—"}</span>
-          <span className={motherToday?.drank_water ? "text-green-400 font-semibold" : "text-white/40"}>💧 Drank: {motherToday ? (motherToday.drank_water ? "Yes" : "No") : "—"}</span>
-          <span className="text-white/40">🐱 Nursing: {motherToday ? motherToday.nursing_observed : "—"}</span>
+          <span className={motherToday?.ate ? "text-green-500 font-semibold" : "text-muted-foreground"}>🍽️ Ate: {motherToday ? (motherToday.ate ? "Yes" : "No") : "—"}</span>
+          <span className={motherToday?.drank_water ? "text-green-500 font-semibold" : "text-muted-foreground"}>💧 Drank: {motherToday ? (motherToday.drank_water ? "Yes" : "No") : "—"}</span>
+          <span className="text-muted-foreground">🐱 Nursing: {motherToday ? motherToday.nursing_observed : "—"}</span>
         </div>
       </div>
 

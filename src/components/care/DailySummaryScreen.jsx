@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { CheckCircle2, Camera, Lock, Unlock, Send, AlertCircle, X } from "lucide-react";
+import { CheckCircle2, Camera, Send, AlertCircle, X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { format } from "date-fns";
 
@@ -19,7 +19,6 @@ export default function DailySummaryScreen({
   const ownerName = payConfig?.owner_name || "Owner";
   const today = format(new Date(), "MMMM d, yyyy");
 
-  // Build the completion message body
   const buildMessage = () => {
     const lines = [
       `PurrfectDaily — Daily Care Complete`,
@@ -44,16 +43,6 @@ export default function DailySummaryScreen({
     window.open(mailto, "_blank");
   };
 
-  const handleSendSMS = () => {
-    const body = encodeURIComponent(
-      `PurrfectDaily ✓ Daily care complete for ${today}. ` +
-      `${criticalDone} critical + ${routineDone} routine tasks done. ` +
-      `${photoCount} photos.` +
-      (problemCount > 0 ? ` ⚠️ ${problemCount} problem(s) reported.` : "")
-    );
-    window.open(`sms:${ownerEmail.includes("@") ? "" : ownerEmail}?body=${body}`, "_blank");
-  };
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -66,7 +55,7 @@ export default function DailySummaryScreen({
       y: -20,
       r: Math.random() * 5 + 2,
       d: Math.random() * 80 + 10,
-      color: ["#7c3aed", "#3b82f6", "#10b981", "#f59e0b", "#ec4899"][Math.floor(Math.random() * 5)],
+      color: ["#7209B7", "#B5838D", "#10b981", "#f59e0b", "#ec4899"][Math.floor(Math.random() * 5)],
       tilt: Math.random() * 10 - 5,
       tiltAngle: 0,
       tiltAngleInc: Math.random() * 0.07 + 0.05,
@@ -102,8 +91,7 @@ export default function DailySummaryScreen({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4"
-      style={{ background: "rgba(10,10,15,0.97)", backdropFilter: "blur(20px)" }}
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-4 bg-background/97 backdrop-blur-xl"
     >
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none" />
 
@@ -117,16 +105,14 @@ export default function DailySummaryScreen({
         {/* Close */}
         <button
           onClick={onDismiss}
-          className="absolute top-4 right-4 z-10 h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all"
-          style={{ background: "rgba(255,255,255,0.06)" }}
+          className="absolute top-4 right-4 z-10 h-8 w-8 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border"
         >
           <X className="h-4 w-4" />
         </button>
 
         {/* Header */}
         <div
-          className="rounded-3xl p-6 pb-5"
-          style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}
+          className="rounded-3xl p-6 pb-5 bg-green-500/10 border border-green-500/30"
         >
           <div className="text-center mb-5">
             <motion.div
@@ -136,36 +122,36 @@ export default function DailySummaryScreen({
             >
               🏆
             </motion.div>
-            <h1 className="text-2xl font-black text-white">Daily Care Complete</h1>
-            <p className="text-white/40 text-xs mt-1">{today}</p>
+            <h1 className="text-2xl font-black text-foreground font-heading">Daily Care Complete</h1>
+            <p className="text-muted-foreground text-xs mt-1">{today}</p>
             {caregiverName && (
-              <p className="text-white/50 text-sm mt-1 font-medium">{caregiverName}</p>
+              <p className="text-foreground/70 text-sm mt-1 font-medium">{caregiverName}</p>
             )}
           </div>
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-2 mb-4">
-            <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)" }}>
-              <p className="text-xl font-black text-red-400">{criticalDone}</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">Critical Tasks</p>
+            <div className="rounded-2xl p-3 text-center bg-destructive/10 border border-destructive/20">
+              <p className="text-xl font-black text-destructive">{criticalDone}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Critical Tasks</p>
             </div>
-            <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.2)" }}>
-              <p className="text-xl font-black text-blue-400">{routineDone}</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">Routine Tasks</p>
+            <div className="rounded-2xl p-3 text-center bg-blue-500/10 border border-blue-500/20">
+              <p className="text-xl font-black text-blue-500">{routineDone}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Routine Tasks</p>
             </div>
-            <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(124,58,237,0.1)", border: "1px solid rgba(124,58,237,0.2)" }}>
-              <p className="text-xl font-black text-purple-400">{photoCount}</p>
-              <p className="text-[10px] text-white/40 uppercase tracking-wider">Proof Photos</p>
+            <div className="rounded-2xl p-3 text-center bg-primary/10 border border-primary/20">
+              <p className="text-xl font-black text-primary">{photoCount}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Proof Photos</p>
             </div>
             {problemCount > 0 ? (
-              <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-                <p className="text-xl font-black text-red-400">{problemCount}</p>
-                <p className="text-[10px] text-white/40 uppercase tracking-wider">Problems Reported</p>
+              <div className="rounded-2xl p-3 text-center bg-destructive/10 border border-destructive/20">
+                <p className="text-xl font-black text-destructive">{problemCount}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Problems Reported</p>
               </div>
             ) : (
-              <div className="rounded-2xl p-3 text-center" style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)" }}>
-                <p className="text-xl font-black text-green-400">✓</p>
-                <p className="text-[10px] text-white/40 uppercase tracking-wider">No Problems</p>
+              <div className="rounded-2xl p-3 text-center bg-green-500/10 border border-green-500/20">
+                <p className="text-xl font-black text-green-500">✓</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">No Problems</p>
               </div>
             )}
           </div>
@@ -173,11 +159,10 @@ export default function DailySummaryScreen({
           {/* Problem alert */}
           {problemCount > 0 && (
             <div
-              className="rounded-2xl p-3 mb-4 flex items-start gap-2"
-              style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.25)" }}
+              className="rounded-2xl p-3 mb-4 flex items-start gap-2 bg-destructive/10 border border-destructive/25"
             >
-              <AlertCircle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-red-300">
+              <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-destructive">
                 <span className="font-bold">Reported Problems</span> — {problemCount} task{problemCount !== 1 ? "s" : ""} had issues. Check the dashboard for details.
               </p>
             </div>
@@ -185,20 +170,16 @@ export default function DailySummaryScreen({
 
           {/* Send completion message */}
           <div className="space-y-2">
-            <p className="text-[10px] text-white/30 uppercase tracking-wider font-bold px-1">Completion Message Ready</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold px-1">Completion Message Ready</p>
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={handleSendEmail}
-              className="w-full py-3.5 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2"
-              style={{
-                background: "linear-gradient(135deg, #7c3aed, #3b82f6)",
-                boxShadow: "0 0 25px rgba(124,58,237,0.35)",
-              }}
+              className="w-full py-3.5 rounded-2xl font-bold text-primary-foreground text-sm flex items-center justify-center gap-2 bg-primary glow-purple"
             >
               <Send className="h-4 w-4" />
               Send Completion Message
             </motion.button>
-            <p className="text-[10px] text-white/25 text-center px-2">
+            <p className="text-[10px] text-muted-foreground text-center px-2">
               Opens your email app with a prefilled completion summary for {ownerName}
             </p>
           </div>
@@ -208,8 +189,7 @@ export default function DailySummaryScreen({
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={onDismiss}
-          className="w-full mt-3 py-3.5 rounded-2xl font-semibold text-white/50 text-sm border"
-          style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }}
+          className="w-full mt-3 py-3.5 rounded-2xl font-semibold text-muted-foreground text-sm border border-border bg-card"
         >
           Back to Dashboard
         </motion.button>

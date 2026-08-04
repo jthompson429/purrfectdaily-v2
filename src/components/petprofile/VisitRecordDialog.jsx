@@ -28,9 +28,9 @@ const fileType = (url, name) => {
 function SubHeading({ children, onAdd, addLabel }) {
   return (
     <div className="flex items-center justify-between pt-1">
-      <p className="text-[11px] uppercase tracking-wider text-white/50 font-bold">{children}</p>
+      <p className="text-[11px] uppercase tracking-wider text-foreground/50 font-bold">{children}</p>
       {onAdd && (
-        <button type="button" onClick={onAdd} className="flex items-center gap-1 text-[11px] font-bold text-purple-400 hover:text-purple-300">
+        <button type="button" onClick={onAdd} className="flex items-center gap-1 text-[11px] font-bold text-primary hover:text-primary/80">
           <Plus className="h-3 w-3" /> {addLabel}
         </button>
       )}
@@ -39,7 +39,7 @@ function SubHeading({ children, onAdd, addLabel }) {
 }
 
 const rowWrap = "flex gap-2 items-center";
-const rowInput = "bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/20 text-sm h-9";
+const rowInput = "bg-muted border-border text-foreground rounded-xl placeholder:text-foreground/20 text-sm h-9";
 
 export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) {
   const [form, setForm] = useState(empty);
@@ -50,7 +50,7 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
 
   useEffect(() => { setForm(item ? { ...empty, ...item } : empty); setError(""); }, [item, open]);
   const set = (k, v) => { setForm((f) => ({ ...f, [k]: v })); setError(""); };
-  const inputClass = "bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/20";
+  const inputClass = "bg-muted border-border text-foreground rounded-xl placeholder:text-foreground/20";
 
   const vaccs = form.vaccinations_given || [];
   const meds = form.medications_prescribed || [];
@@ -98,20 +98,20 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-3xl border-white/10 bg-[#0f1117] max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle className="text-white font-bold text-xl">{item?.id ? "Edit Vet Visit" : "Add Vet Visit"}</DialogTitle></DialogHeader>
+      <DialogContent className="sm:max-w-lg rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle className="text-foreground font-bold text-xl">{item?.id ? "Edit Vet Visit" : "Add Vet Visit"}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-4 mt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Visit Date</Label>
-              <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} className={`${inputClass} [color-scheme:dark]`} />
+              <Label className="text-foreground/60 text-xs uppercase tracking-wider">Visit Date</Label>
+              <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} className={`${inputClass} [color-scheme:light]`} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Visit Type</Label>
+              <Label className="text-foreground/60 text-xs uppercase tracking-wider">Visit Type</Label>
               <Select value={form.visit_type} onValueChange={(v) => set("visit_type", v)}>
-                <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-[#0f1117] border-white/10">
-                  {VISIT_TYPES.map(([v, l]) => <SelectItem key={v} value={v} className="text-white hover:bg-white/5">{l}</SelectItem>)}
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-background border-border">
+                  {VISIT_TYPES.map(([v, l]) => <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -119,27 +119,27 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Clinic</Label>
+              <Label className="text-foreground/60 text-xs uppercase tracking-wider">Clinic</Label>
               <Input placeholder="e.g. CityVet" value={form.clinic || ""} onChange={(e) => set("clinic", e.target.value)} className={inputClass} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Veterinarian</Label>
+              <Label className="text-foreground/60 text-xs uppercase tracking-wider">Veterinarian</Label>
               <Input placeholder="Dr.…" value={form.veterinarian || ""} onChange={(e) => set("veterinarian", e.target.value)} className={inputClass} />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Reason for Visit</Label>
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Reason for Visit</Label>
             <Input placeholder="e.g. Flea allergy dermatitis" value={form.reason || ""} onChange={(e) => set("reason", e.target.value)} className={inputClass} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Diagnosis</Label>
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Diagnosis</Label>
             <Input placeholder="Optional" value={form.diagnosis || ""} onChange={(e) => set("diagnosis", e.target.value)} className={inputClass} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Treatments Performed</Label>
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Treatments Performed</Label>
             <Textarea placeholder="e.g. Steroid injection, ear clean…" value={form.treatment || ""} onChange={(e) => set("treatment", e.target.value)} className={`${inputClass} h-16 resize-none`} />
           </div>
 
@@ -149,17 +149,17 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
             {vaccs.map((gv, i) => (
               <div key={i} className={rowWrap}>
                 <Select value={gv.name} onValueChange={(v) => updVacc(i, "name", v)}>
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-9 w-[120px]"><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-[#0f1117] border-white/10">
-                    {VACC_OPTIONS.map(([v, l]) => <SelectItem key={v} value={v} className="text-white hover:bg-white/5">{l}</SelectItem>)}
+                  <SelectTrigger className="bg-muted border-border text-foreground rounded-xl h-9 w-[120px]"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-background border-border">
+                    {VACC_OPTIONS.map(([v, l]) => <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 {gv.name === "custom" && <Input placeholder="Name" value={gv.custom_name || ""} onChange={(e) => updVacc(i, "custom_name", e.target.value)} className={`${rowInput} flex-1`} />}
-                <Input type="date" value={gv.due_date || ""} onChange={(e) => updVacc(i, "due_date", e.target.value)} className={`${rowInput} [color-scheme:dark] flex-1`} title="Due date" />
-                <button type="button" onClick={() => rmVacc(i)} className="text-white/30 hover:text-red-400"><X className="h-4 w-4" /></button>
+                <Input type="date" value={gv.due_date || ""} onChange={(e) => updVacc(i, "due_date", e.target.value)} className={`${rowInput} [color-scheme:light] flex-1`} title="Due date" />
+                <button type="button" onClick={() => rmVacc(i)} className="text-foreground/30 hover:text-destructive"><X className="h-4 w-4" /></button>
               </div>
             ))}
-            {vaccs.length === 0 && <p className="text-[11px] text-white/30">Auto-added to the Vaccinations section when saved.</p>}
+            {vaccs.length === 0 && <p className="text-[11px] text-foreground/30">Auto-added to the Vaccinations section when saved.</p>}
           </div>
 
           {/* Preventives administered */}
@@ -170,20 +170,20 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
                 <div className={rowWrap}>
                   <Input list="visit-prev-presets" placeholder="e.g. Revolution Plus" value={gp.name || ""} onChange={(e) => updPrev(i, "name", e.target.value)} className={`${rowInput} flex-1`} />
                   <Select value={gp.frequency} onValueChange={(v) => updPrev(i, "frequency", v)}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-9 w-[130px]"><SelectValue /></SelectTrigger>
-                    <SelectContent className="bg-[#0f1117] border-white/10">
-                      {PREV_FREQ.map(([v, l]) => <SelectItem key={v} value={v} className="text-white hover:bg-white/5">{l}</SelectItem>)}
+                    <SelectTrigger className="bg-muted border-border text-foreground rounded-xl h-9 w-[130px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-background border-border">
+                      {PREV_FREQ.map(([v, l]) => <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <button type="button" onClick={() => rmPrev(i)} className="text-white/30 hover:text-red-400"><X className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => rmPrev(i)} className="text-foreground/30 hover:text-destructive"><X className="h-4 w-4" /></button>
                 </div>
                 <div className={rowWrap}>
-                  <Input type="date" value={gp.date_given || ""} onChange={(e) => updPrev(i, "date_given", e.target.value)} className={`${rowInput} [color-scheme:dark] flex-1`} title="Date given" />
+                  <Input type="date" value={gp.date_given || ""} onChange={(e) => updPrev(i, "date_given", e.target.value)} className={`${rowInput} [color-scheme:light] flex-1`} title="Date given" />
                   {gp.frequency === "custom" && <Input type="number" min="1" placeholder="days" value={gp.custom_interval_days ?? 30} onChange={(e) => updPrev(i, "custom_interval_days", Number(e.target.value))} className={`${rowInput} w-20`} />}
                 </div>
               </div>
             ))}
-            {prevs.length === 0 && <p className="text-[11px] text-white/30">Auto-added to Preventive Care when saved.</p>}
+            {prevs.length === 0 && <p className="text-[11px] text-foreground/30">Auto-added to Preventive Care when saved.</p>}
             <datalist id="visit-prev-presets">{PREV_PRESETS.map((p) => <option key={p} value={p} />)}</datalist>
           </div>
 
@@ -195,29 +195,29 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
                 <div className={rowWrap}>
                   <Input placeholder="e.g. Animax Cream" value={m.name || ""} onChange={(e) => updMed(i, "name", e.target.value)} className={`${rowInput} flex-1`} />
                   <Select value={m.frequency} onValueChange={(v) => updMed(i, "frequency", v)}>
-                    <SelectTrigger className="bg-white/5 border-white/10 text-white rounded-xl h-9 w-[140px]"><SelectValue /></SelectTrigger>
-                    <SelectContent className="bg-[#0f1117] border-white/10">
-                      {MED_FREQ.map(([v, l]) => <SelectItem key={v} value={v} className="text-white hover:bg-white/5">{l}</SelectItem>)}
+                    <SelectTrigger className="bg-muted border-border text-foreground rounded-xl h-9 w-[140px]"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-background border-border">
+                      {MED_FREQ.map(([v, l]) => <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <button type="button" onClick={() => rmMed(i)} className="text-white/30 hover:text-red-400"><X className="h-4 w-4" /></button>
+                  <button type="button" onClick={() => rmMed(i)} className="text-foreground/30 hover:text-destructive"><X className="h-4 w-4" /></button>
                 </div>
                 <div className={rowWrap}>
-                  <Input type="date" value={m.start_date || ""} onChange={(e) => updMed(i, "start_date", e.target.value)} className={`${rowInput} [color-scheme:dark] flex-1`} title="Start" />
-                  <Input type="date" value={m.end_date || ""} onChange={(e) => updMed(i, "end_date", e.target.value)} className={`${rowInput} [color-scheme:dark] flex-1`} title="End" />
+                  <Input type="date" value={m.start_date || ""} onChange={(e) => updMed(i, "start_date", e.target.value)} className={`${rowInput} [color-scheme:light] flex-1`} title="Start" />
+                  <Input type="date" value={m.end_date || ""} onChange={(e) => updMed(i, "end_date", e.target.value)} className={`${rowInput} [color-scheme:light] flex-1`} title="End" />
                 </div>
               </div>
             ))}
-            {meds.length === 0 && <p className="text-[11px] text-white/30">You can add these to active medications from the visit card.</p>}
+            {meds.length === 0 && <p className="text-[11px] text-foreground/30">You can add these to active medications from the visit card.</p>}
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Follow-up Instructions</Label>
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Follow-up Instructions</Label>
             <Textarea placeholder="Optional" value={form.follow_up_instructions || ""} onChange={(e) => set("follow_up_instructions", e.target.value)} className={`${inputClass} h-16 resize-none`} />
           </div>
 
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Notes</Label>
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Notes</Label>
             <Textarea placeholder="Optional" value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} className={`${inputClass} h-16 resize-none`} />
           </div>
 
@@ -228,22 +228,22 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
               {atts.map((a, i) => (
                 <div key={i} className="flex items-center gap-2 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   <span className="text-base">{a.type === "image" ? "🖼️" : "📄"}</span>
-                  <span className="text-xs text-white/70 max-w-[120px] truncate">{a.name}</span>
-                  <button type="button" onClick={() => rmAtt(i)} className="text-white/30 hover:text-red-400"><X className="h-3.5 w-3.5" /></button>
+                  <span className="text-xs text-foreground/70 max-w-[120px] truncate">{a.name}</span>
+                  <button type="button" onClick={() => rmAtt(i)} className="text-foreground/30 hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
                 </div>
               ))}
-              <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 text-xs font-semibold text-purple-400 hover:text-purple-300 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(124,58,237,0.1)", border: "1px dashed rgba(124,58,237,0.4)" }}>
+              <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(124,58,237,0.1)", border: "1px dashed rgba(124,58,237,0.4)" }}>
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload
               </button>
               <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf" className="hidden" onChange={handleFile} />
             </div>
-            <p className="text-[10px] text-white/25">PDF, JPG, or PNG — clinical summaries, certificates, lab results, invoices, etc.</p>
+            <p className="text-[10px] text-foreground/25">PDF, JPG, or PNG — clinical summaries, certificates, lab results, invoices, etc.</p>
           </div>
 
-          {error && <p className="text-xs text-red-400 font-medium -mt-1">{error}</p>}
+          {error && <p className="text-xs text-destructive font-medium -mt-1">{error}</p>}
           <DialogFooter className="pt-2 gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-white/50 hover:text-white rounded-xl flex-1">Cancel</Button>
-            <Button type="submit" disabled={saving} className="text-white rounded-xl flex-1 font-bold border-0" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}>{saving ? "Saving…" : item?.id ? "Save Visit" : "Add Visit"}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-foreground/50 hover:text-foreground rounded-xl flex-1">Cancel</Button>
+            <Button type="submit" disabled={saving} className="text-foreground rounded-xl flex-1 font-bold border-0" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}>{saving ? "Saving…" : item?.id ? "Save Visit" : "Add Visit"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

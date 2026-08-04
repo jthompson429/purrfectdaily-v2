@@ -13,7 +13,7 @@ export default function WeightDialog({ open, onOpenChange, item, onSave, profile
   const [saving, setSaving] = useState(false);
   useEffect(() => { setForm(item ? { ...empty, ...item, weight: item.weight ?? "" } : empty); setError(""); }, [item, open]);
   const set = (k, v) => { setForm((f) => ({ ...f, [k]: v })); setError(""); };
-  const inputClass = "bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/20";
+  const inputClass = "bg-muted border-border text-foreground rounded-xl placeholder:text-foreground/20";
   const unit = profileType === "neonatal" ? "g" : "kg";
   const submit = async (e) => {
     e.preventDefault();
@@ -28,27 +28,27 @@ export default function WeightDialog({ open, onOpenChange, item, onSave, profile
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-3xl border-white/10 bg-[#0f1117] max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle className="text-white font-bold text-xl">{item?.id ? "Edit Weight" : "Log Weight"}</DialogTitle></DialogHeader>
+      <DialogContent className="sm:max-w-md rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle className="text-foreground font-bold text-xl">{item?.id ? "Edit Weight" : "Log Weight"}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-3 mt-2">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Weight ({unit})</Label>
+              <Label className="text-foreground/60 text-xs uppercase tracking-wider">Weight ({unit})</Label>
               <Input type="number" step="any" min="0" placeholder="e.g. 4.2" value={form.weight} onChange={(e) => set("weight", e.target.value)} className={inputClass} />
             </div>
             <div className="space-y-1.5">
-              <Label className="text-white/60 text-xs uppercase tracking-wider">Date</Label>
-              <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} className={`${inputClass} [color-scheme:dark]`} />
+              <Label className="text-foreground/60 text-xs uppercase tracking-wider">Date</Label>
+              <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} className={`${inputClass} [color-scheme:light]`} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-white/60 text-xs uppercase tracking-wider">Notes</Label>
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Notes</Label>
             <Textarea placeholder="Optional…" value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} className={`${inputClass} h-16 resize-none`} />
           </div>
           {error && <p className="text-xs text-red-400 font-medium -mt-1">{error}</p>}
           <DialogFooter className="pt-2 gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-white/50 hover:text-white rounded-xl flex-1">Cancel</Button>
-            <Button type="submit" disabled={saving} className="text-white rounded-xl flex-1 font-bold border-0" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}>{saving ? "Saving…" : item?.id ? "Save" : "Add"}</Button>
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-foreground/50 hover:text-foreground rounded-xl flex-1">Cancel</Button>
+            <Button type="submit" disabled={saving} className="text-foreground rounded-xl flex-1 font-bold border-0" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}>{saving ? "Saving…" : item?.id ? "Save" : "Add"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

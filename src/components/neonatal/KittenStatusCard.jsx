@@ -6,7 +6,7 @@ const TONE = {
   green: { bg: "rgba(16,185,129,0.1)", border: "rgba(16,185,129,0.25)" },
   yellow: { bg: "rgba(245,158,11,0.1)", border: "rgba(245,158,11,0.25)" },
   red: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.3)" },
-  gray: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.08)" },
+  gray: { bg: "hsl(var(--muted))", border: "hsl(var(--border))" },
 };
 
 const DOT = {
@@ -38,10 +38,10 @@ export default function KittenStatusCard({ lastFeeding, trend, now, onOpen }) {
         style={{ background: DOT[status.color], transition: "background 300ms ease" }}
       />
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-white/50 font-bold">🐾 Kitten Status</p>
-        <p className="text-sm font-semibold text-white/80 mt-0.5">{line}</p>
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">🐾 Kitten Status</p>
+        <p className="text-sm font-semibold text-foreground/80 mt-0.5">{line}</p>
       </div>
-      <ChevronRight className="h-4 w-4 text-white/30 flex-shrink-0" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
     </motion.button>
   );
 }

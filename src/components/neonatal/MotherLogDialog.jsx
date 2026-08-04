@@ -40,7 +40,7 @@ export default function MotherLogDialog({ open, onOpenChange, onSave }) {
               onChange={(e) => setForm((f) => ({ ...f, date_time: fromLocalInput(e.target.value) }))}
             />
           </div>
-          <div className="rounded-xl divide-y divide-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-xl divide-y divide-border bg-muted">
             <div className="flex items-center justify-between px-3 py-2.5">
               <Label>Ate</Label>
               <Switch checked={form.ate} onCheckedChange={(v) => setForm((f) => ({ ...f, ate: v }))} />

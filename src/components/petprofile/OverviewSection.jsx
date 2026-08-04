@@ -8,8 +8,8 @@ const SITUATION = { indoor: "Indoor", outdoor: "Outdoor", foster: "Foster" };
 function Row({ label, value }) {
   return (
     <div>
-      <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">{label}</p>
-      <p className="text-sm text-white/80">{value || "—"}</p>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">{label}</p>
+      <p className="text-sm text-foreground/80">{value || "—"}</p>
     </div>
   );
 }
@@ -21,10 +21,10 @@ export default function OverviewSection({ pet, onEdit }) {
     : "—";
 
   return (
-    <div className="rounded-2xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+    <div className="rounded-2xl p-4 bg-card border border-border">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-bold text-white uppercase tracking-wider">Overview</h3>
-        <button onClick={onEdit} className="flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 px-2 py-1 rounded-lg" style={{ background: "rgba(124,58,237,0.12)" }}>
+        <h3 className="text-sm font-bold text-foreground uppercase tracking-wider">Overview</h3>
+        <button onClick={onEdit} className="flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 px-2 py-1 rounded-lg bg-primary/10">
           <Pencil className="h-3.5 w-3.5" /> Edit
         </button>
       </div>
@@ -40,7 +40,7 @@ export default function OverviewSection({ pet, onEdit }) {
         <Row label="Current Weight" value={weight} />
       </div>
       {(pet.body_condition_notes || pet.owner_foster_notes || pet.description) && (
-        <div className="mt-3 pt-3 border-t border-white/5 space-y-2">
+        <div className="mt-3 pt-3 border-t border-border space-y-2">
           {pet.body_condition_notes && <Row label="Body Condition Notes" value={pet.body_condition_notes} />}
           {pet.owner_foster_notes && <Row label="Owner / Foster Notes" value={pet.owner_foster_notes} />}
           {pet.description && <Row label="Description" value={pet.description} />}

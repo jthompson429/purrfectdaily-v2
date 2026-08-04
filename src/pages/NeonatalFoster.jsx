@@ -16,7 +16,7 @@ import { buildReport, generateFosterReportPDF } from "@/utils/neonatal";
 
 const QUICK = [
   { key: "feeding", label: "Feeding", icon: Droplet, color: "#3b82f6" },
-  { key: "weight", label: "Weight", icon: Scale, color: "#a78bfa" },
+  { key: "weight", label: "Weight", icon: Scale, color: "#7209B7" },
   { key: "elimination", label: "Pee/Poop", icon: Droplets, color: "#10b981" },
   { key: "mother", label: "Mother", icon: Cat, color: "#f59e0b" },
 ];
@@ -63,22 +63,22 @@ export default function NeonatalFoster() {
   const handleGenerateReport = () => generateFosterReportPDF(kitten, feedings, weights, eliminations, motherLogs);
 
   return (
-    <div className="min-h-full" style={{ background: "#0f1117" }}>
+    <div className="min-h-full bg-background">
       <div className="relative max-w-lg mx-auto px-4 pt-6 pb-6">
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.2), rgba(59,130,246,0.2))", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <Cat className="h-6 w-6 text-purple-300" />
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/15 border border-border">
+            <Cat className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1">
-            <h1 className="text-2xl font-black text-white">Neonatal Foster</h1>
-            <p className="text-white/40 text-xs">{kitten ? kitten.name : "No kitten profile yet"}</p>
+            <h1 className="text-2xl font-black text-foreground font-heading">Neonatal Foster</h1>
+            <p className="text-muted-foreground text-xs">{kitten ? kitten.name : "No kitten profile yet"}</p>
           </div>
           {kitten && (
             <div className="flex gap-1">
-              <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white/70 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
                 <Pencil className="h-4 w-4" />
               </button>
-              <button onClick={handleExport} className="h-9 w-9 rounded-xl flex items-center justify-center text-white/40 hover:text-white/70 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+              <button onClick={handleExport} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
                 <Download className="h-4 w-4" />
               </button>
             </div>
@@ -89,18 +89,18 @@ export default function NeonatalFoster() {
           <>
             <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={() => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
             <div className="grid grid-cols-2 gap-2 mt-3">
-              <Link to="/neonatal/growth" className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-white/80" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <TrendingUp className="h-4 w-4 text-purple-400" /> Growth Chart
+              <Link to="/neonatal/growth" className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-foreground/80 bg-card border border-border">
+                <TrendingUp className="h-4 w-4 text-primary" /> Growth Chart
               </Link>
-              <button onClick={handleGenerateReport} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-white" style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}>
+              <button onClick={handleGenerateReport} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-primary-foreground bg-primary">
                 <FileText className="h-4 w-4" /> Foster Report
               </button>
             </div>
           </>
         ) : (
-          <button onClick={() => setDialog("profile")} className="w-full py-8 rounded-2xl mb-4" style={{ background: "rgba(255,255,255,0.04)", border: "1px dashed rgba(255,255,255,0.15)" }}>
-            <p className="text-white/60 font-bold text-sm">+ Create Neonatal Kitten Profile</p>
-            <p className="text-white/30 text-xs mt-1">Required to start logging care</p>
+          <button onClick={() => setDialog("profile")} className="w-full py-8 rounded-2xl mb-4 bg-card border border-dashed border-border">
+            <p className="text-foreground/80 font-bold text-sm">+ Create Neonatal Kitten Profile</p>
+            <p className="text-muted-foreground text-xs mt-1">Required to start logging care</p>
           </button>
         )}
 
@@ -111,16 +111,15 @@ export default function NeonatalFoster() {
               whileTap={{ scale: 0.95 }}
               onClick={() => setDialog(key)}
               disabled={!kitten}
-              className="rounded-2xl py-3 flex flex-col items-center gap-1.5 disabled:opacity-30"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+              className="rounded-2xl py-3 flex flex-col items-center gap-1.5 disabled:opacity-40 bg-card border border-border"
             >
               <Icon className="h-5 w-5" style={{ color }} />
-              <span className="text-[10px] font-bold text-white/70">{label}</span>
+              <span className="text-[10px] font-bold text-muted-foreground">{label}</span>
             </motion.button>
           ))}
         </div>
 
-        <p className="text-xs font-bold text-white/50 uppercase tracking-wider mb-2 px-1">Recent Activity</p>
+        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Recent Activity</p>
         <ActivityList feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} />
       </div>
 

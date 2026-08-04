@@ -46,7 +46,7 @@ export default function EliminationDialog({ open, onOpenChange, onSave }) {
               onChange={(e) => setForm((f) => ({ ...f, date_time: fromLocalInput(e.target.value) }))}
             />
           </div>
-          <div className="rounded-xl divide-y divide-white/5" style={{ background: "rgba(255,255,255,0.03)" }}>
+          <div className="rounded-xl divide-y divide-border bg-muted">
             <ToggleRow label="Urinated" checked={form.urinated} onChange={(v) => setForm((f) => ({ ...f, urinated: v }))} />
             <ToggleRow label="Defecated" checked={form.defecated} onChange={(v) => setForm((f) => ({ ...f, defecated: v }))} />
             <ToggleRow label="Stimulated by human" checked={form.stimulated_by_human} onChange={(v) => setForm((f) => ({ ...f, stimulated_by_human: v }))} />

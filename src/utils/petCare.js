@@ -150,5 +150,5 @@ export const COLOR_MAP = {
   red: { bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.3)", text: "text-red-400", bar: "bg-red-400" },
   purple: { bg: "rgba(168,85,247,0.12)", border: "rgba(168,85,247,0.3)", text: "text-purple-400", bar: "bg-purple-400" },
   blue: { bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.3)", text: "text-blue-400", bar: "bg-blue-400" },
-  muted: { bg: "rgba(255,255,255,0.04)", border: "rgba(255,255,255,0.08)", text: "text-white/50", bar: "bg-white/30" },
+  muted: { bg: "rgba(0,0,0,0.04)", border: "rgba(0,0,0,0.08)", text: "text-muted-foreground", bar: "bg-muted-foreground/30" },
 };
