@@ -1,0 +1,187 @@
+{
+  "name": "CareTask",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "pet_id": {
+      "type": "string"
+    },
+    "assignment_type": {
+      "type": "string",
+      "enum": [
+        "pet",
+        "area",
+        "general"
+      ],
+      "default": "pet"
+    },
+    "area": {
+      "type": "string",
+      "description": "Area name for area-assigned tasks"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "feeding",
+        "medication",
+        "water",
+        "litter",
+        "hygiene",
+        "quarantine",
+        "house_check",
+        "other"
+      ],
+      "default": "other"
+    },
+    "care_type": {
+      "type": "string",
+      "enum": [
+        "critical_medical",
+        "routine",
+        "optional"
+      ],
+      "default": "routine"
+    },
+    "instructions": {
+      "type": "string"
+    },
+    "scheduled_time": {
+      "type": "string",
+      "enum": [
+        "morning",
+        "afternoon",
+        "evening",
+        "bedtime",
+        "anytime"
+      ],
+      "default": "anytime"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "once_daily",
+        "twice_daily",
+        "custom_dates",
+        "date_range",
+        "every_day"
+      ],
+      "default": "every_day"
+    },
+    "schedule_frequency": {
+      "type": "string",
+      "enum": [
+        "daily",
+        "weekly",
+        "monthly"
+      ],
+      "default": "daily",
+      "description": "How often the task appears on the daily care list"
+    },
+    "weekday": {
+      "type": "number",
+      "description": "Day of week (0=Sunday) when schedule_frequency is weekly"
+    },
+    "month_day": {
+      "type": "number",
+      "description": "Day of month (1-31) when schedule_frequency is monthly"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "schedule_rule": {
+      "type": "string"
+    },
+    "requires_photo": {
+      "type": "boolean",
+      "default": false
+    },
+    "proof_instructions": {
+      "type": "string"
+    },
+    "warning_text": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "normal"
+      ],
+      "default": "normal"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

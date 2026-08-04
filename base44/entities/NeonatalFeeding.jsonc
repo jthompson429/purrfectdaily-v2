@@ -1,0 +1,107 @@
+{
+  "name": "NeonatalFeeding",
+  "type": "object",
+  "properties": {
+    "kitten_id": {
+      "type": "string",
+      "description": "Associated neonatal kitten"
+    },
+    "date_time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "amount_ml": {
+      "type": "number",
+      "default": 0
+    },
+    "method": {
+      "type": "string",
+      "enum": [
+        "syringe",
+        "bottle",
+        "nursing",
+        "mixed"
+      ],
+      "default": "syringe"
+    },
+    "nursing_observed": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "maybe"
+      ],
+      "default": "maybe"
+    },
+    "suck_strength": {
+      "type": "string",
+      "enum": [
+        "strong",
+        "weak",
+        "none"
+      ],
+      "default": "strong"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "date_time"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

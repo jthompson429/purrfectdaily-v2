@@ -1,0 +1,120 @@
+{
+  "name": "CatTask",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Mission title"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "todo",
+        "done"
+      ],
+      "default": "todo"
+    },
+    "time_to_complete": {
+      "type": "string",
+      "description": "Estimated time"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "normal"
+      ],
+      "default": "normal",
+      "description": "Mission priority level"
+    },
+    "xp_reward": {
+      "type": "number",
+      "description": "XP points rewarded on completion",
+      "default": 50
+    },
+    "requires_photo": {
+      "type": "boolean",
+      "description": "Whether proof photo is required",
+      "default": false
+    },
+    "completion_photo": {
+      "type": "string",
+      "description": "URL of the proof photo"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "feeding",
+        "grooming",
+        "health",
+        "play",
+        "hygiene",
+        "other"
+      ],
+      "default": "other"
+    },
+    "streak_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

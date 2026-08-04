@@ -1,0 +1,184 @@
+{
+  "name": "PetProfile",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "species": {
+      "type": "string",
+      "enum": [
+        "cat",
+        "dog",
+        "rabbit",
+        "bird",
+        "other"
+      ],
+      "default": "cat"
+    },
+    "breed": {
+      "type": "string"
+    },
+    "sex": {
+      "type": "string",
+      "enum": [
+        "male",
+        "female",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Pet birth date; age is calculated from this"
+    },
+    "color_markings": {
+      "type": "string"
+    },
+    "microchip_number": {
+      "type": "string"
+    },
+    "spayed_neutered": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "no",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "living_situation": {
+      "type": "string",
+      "enum": [
+        "indoor",
+        "outdoor",
+        "foster"
+      ],
+      "default": "indoor"
+    },
+    "profile_type": {
+      "type": "string",
+      "enum": [
+        "house_pet",
+        "foster",
+        "neonatal",
+        "nursing_mother",
+        "senior"
+      ],
+      "default": "house_pet"
+    },
+    "description": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "care_level": {
+      "type": "string",
+      "enum": [
+        "routine",
+        "special",
+        "critical"
+      ],
+      "default": "routine"
+    },
+    "quarantine_status": {
+      "type": "boolean",
+      "default": false
+    },
+    "latest_weight": {
+      "type": "number",
+      "description": "Most recent weight in the pet's unit"
+    },
+    "body_condition_notes": {
+      "type": "string"
+    },
+    "owner_foster_notes": {
+      "type": "string"
+    },
+    "health_status": {
+      "type": "string",
+      "enum": [
+        "healthy",
+        "has_issues"
+      ],
+      "default": "healthy"
+    },
+    "health_issues": {
+      "type": "string"
+    },
+    "current_medications": {
+      "type": "string"
+    },
+    "rabies_vaccine_due": {
+      "type": "string",
+      "format": "date"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "sort_order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "name": "PayConfig",
+  "type": "object",
+  "properties": {
+    "daily_pay_amount": {
+      "type": "number",
+      "default": 100,
+      "description": "Amount paid per fully completed care day"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Owner email to receive completion notifications"
+    },
+    "owner_name": {
+      "type": "string",
+      "description": "Owner name shown in notifications"
+    },
+    "trip_start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "First day of the trip / care period"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

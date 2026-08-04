@@ -1,0 +1,341 @@
+import { useState, useEffect } from "react";
+import { base44 } from "@/api/base44Client";
+import { useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Settings, Plus, Pencil, Trash2, DollarSign, Save, Search, Eye, EyeOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import PetFormDialog from "@/components/care/PetFormDialog";
+import TaskFormDialog from "@/components/care/TaskFormDialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { formatBirthDate, formatAge } from "@/utils/pet";
+import { computePetBadges } from "@/utils/petStatus";
+import { assignmentLabel } from "@/utils/assignment";
+import StatusBadge from "@/components/petprofile/StatusBadge";
+
+const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
+const CARE_COLOR = { critical: "text-red-400", special: "text-orange-400", routine: "text-blue-400" };
+const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
+
+export default function Manage() {
+  const [petDialog, setPetDialog] = useState(false);
+  const [taskDialog, setTaskDialog] = useState(false);
+  const [editingPet, setEditingPet] = useState(null);
+  const [editingTask, setEditingTask] = useState(null);
+  const [activeTab, setActiveTab] = useState("pets");
+  const [payForm, setPayForm] = useState(null);
+  const [search, setSearch] = useState("");
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+
+  const { data: pets = [] } = useQuery({ queryKey: ["pets"], queryFn: () => base44.entities.PetProfile.list("sort_order") });
+  const { data: tasks = [] } = useQuery({ queryKey: ["careTasks"], queryFn: () => base44.entities.CareTask.list("sort_order") });
+  const { data: payConfigs = [] } = useQuery({ queryKey: ["payConfig"], queryFn: () => base44.entities.PayConfig.list() });
+  const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives"], queryFn: () => base44.entities.Preventative.list() });
+  const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations"], queryFn: () => base44.entities.Vaccination.list() });
+  const { data: petMedications = [] } = useQuery({ queryKey: ["allPetMedications"], queryFn: () => base44.entities.PetMedication.list() });
+  const payConfig = payConfigs[0] || null;
+
+  useEffect(() => {
+    if (payConfig && payForm === null) setPayForm({ ...payConfig });
+  }, [payConfig]);
+
+  const createPet = useMutation({ mutationFn: d => base44.entities.PetProfile.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+  const updatePet = useMutation({ mutationFn: ({ id, data }) => base44.entities.PetProfile.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+  const deletePet = useMutation({ mutationFn: id => base44.entities.PetProfile.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+
+  const createTask = useMutation({ mutationFn: d => base44.entities.CareTask.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+  const updateTask = useMutation({ mutationFn: ({ id, data }) => base44.entities.CareTask.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+  const deleteTask = useMutation({ mutationFn: id => base44.entities.CareTask.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+
+  const createPayConfig = useMutation({ mutationFn: d => base44.entities.PayConfig.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["payConfig"] }) });
+  const updatePayConfig = useMutation({ mutationFn: ({ id, data }) => base44.entities.PayConfig.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["payConfig"] }) });
+
+  const handleSavePet = async (formData, id) => {
+    if (id) await updatePet.mutateAsync({ id, data: formData });
+    else await createPet.mutateAsync(formData);
+    setPetDialog(false); setEditingPet(null);
+  };
+
+  const handleSaveTask = async (formData, id) => {
+    if (id) await updateTask.mutateAsync({ id, data: formData });
+    else await createTask.mutateAsync(formData);
+    setTaskDialog(false); setEditingTask(null);
+  };
+
+  const handleSavePayConfig = async () => {
+    if (!payForm) return;
+    const data = {
+      daily_pay_amount: parseFloat(payForm.daily_pay_amount) || 100,
+      owner_email: payForm.owner_email || "",
+      owner_name: payForm.owner_name || "",
+      trip_start_date: payForm.trip_start_date || "",
+      notes: payForm.notes || "",
+    };
+    if (payConfig?.id) await updatePayConfig.mutateAsync({ id: payConfig.id, data });
+    else await createPayConfig.mutateAsync(data);
+  };
+
+  const getPetName = (id) => pets.find(p => p.id === id)?.name || "";
+  const q = search.trim().toLowerCase();
+  const filteredPets = q
+    ? pets.filter((p) => {
+        const badges = computePetBadges(p, preventatives.filter((x) => x.pet_id === p.id), vaccinations.filter((x) => x.pet_id === p.id), petMedications.filter((x) => x.pet_id === p.id));
+        const hay = [p.name, p.species, p.breed, p.current_medications, ...badges.map((b) => b.label)].join(" ").toLowerCase();
+        return hay.includes(q);
+      })
+    : pets;
+
+  return (
+    <div className="min-h-full" style={{ background: "#0f1117" }}>
+      <div className="relative max-w-lg mx-auto px-4 pt-6 pb-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <Settings className="h-6 w-6 text-white/60" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-white">Pet Profiles</h1>
+            <p className="text-white/40 text-xs">Care profiles for your pets</p>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1.5 mb-6 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.04)" }}>
+          {[["pets","Profiles"],["tasks","Care Tasks"],["pay","Pay & Alerts"]].map(([v,l]) => (
+            <button key={v} onClick={() => setActiveTab(v)}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === v ? "text-white" : "text-white/30"}`}
+              style={activeTab === v ? { background: "linear-gradient(135deg, #7c3aed, #3b82f6)" } : {}}>
+              {l}
+            </button>
+          ))}
+        </div>
+
+        {/* Pet Profiles home */}
+        {activeTab === "pets" && (
+          <div>
+            {pets.length > 0 && (
+              <div className="relative mb-3">
+                <Search className="h-4 w-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, status, medication…"
+                  className="pl-9 bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/30"
+                />
+              </div>
+            )}
+            <div className="space-y-3 mb-4">
+              <AnimatePresence>
+                {filteredPets.map((pet) => {
+                  const badges = computePetBadges(
+                    pet,
+                    preventatives.filter((p) => p.pet_id === pet.id),
+                    vaccinations.filter((v) => v.pet_id === pet.id),
+                    petMedications.filter((m) => m.pet_id === pet.id)
+                  );
+                  return (
+                    <motion.div key={pet.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      onClick={() => navigate(`/pets/${pet.id}`)}
+                      className="rounded-2xl p-4 flex items-center gap-3 cursor-pointer hover:bg-white/[0.06] transition-colors"
+                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
+                        {pet.photo_url ? (
+                          <img src={pet.photo_url} alt={pet.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-2xl" style={{ background: "rgba(124,58,237,0.15)" }}>
+                            {SPECIES_EMOJI[pet.species] || "🐾"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white text-sm">{pet.name}</p>
+                        <p className="text-xs text-white/40 capitalize">
+                          {pet.species}{pet.sex && pet.sex !== "unknown" ? ` · ${pet.sex}` : ""}{pet.birth_date ? ` · ${formatAge(pet.birth_date)}` : ""}
+                        </p>
+                        {pet.latest_weight != null && pet.latest_weight !== "" && (
+                          <p className="text-xs text-white/30">{pet.latest_weight} {pet.profile_type === "neonatal" ? "g" : "kg"}</p>
+                        )}
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {badges.map((b) => <StatusBadge key={b.key} badge={b} />)}
+                        </div>
+                      </div>
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button onClick={() => { setEditingPet(pet); setPetDialog(true); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => deletePet.mutate(pet.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {pets.length === 0 && (
+                <div className="flex flex-col items-center py-12 text-center">
+                  <div className="text-5xl mb-3">🐾</div>
+                  <p className="text-white/40 text-sm">No pets added yet</p>
+                </div>
+              )}
+              {pets.length > 0 && filteredPets.length === 0 && (
+                <p className="text-white/40 text-sm text-center py-8">No pets match "{search}"</p>
+              )}
+            </div>
+            <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setEditingPet(null); setPetDialog(true); }}
+              className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(255,255,255,0.15)" }}>
+              <Plus className="h-4 w-4" /> Add Pet
+            </motion.button>
+          </div>
+        )}
+
+        {/* Tasks tab */}
+        {activeTab === "tasks" && (
+          <div>
+            <p className="text-[10px] text-white/25 mb-2 px-1">Tap the eye icon to pause a task (hidden from the daily list) without deleting it.</p>
+            <div className="space-y-2 mb-4">
+              <AnimatePresence>
+                {tasks.map(task => {
+                  const isOff = task.active === false;
+                  return (
+                  <motion.div key={task.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="rounded-2xl p-3.5 flex items-center gap-3"
+                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", opacity: isOff ? 0.45 : 1 }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                      style={{ background: task.care_type === "critical_medical" ? "rgba(239,68,68,0.15)" : "rgba(255,255,255,0.06)" }}>
+                      {CATEGORY_EMOJI[task.category] || "⭐"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white text-sm truncate">{task.title}</p>
+                      <p className="text-xs text-white/30">
+                        {assignmentLabel(task, pets)} · {task.care_type?.replace("_", " ")} {task.requires_photo ? "· 📸" : ""}
+                        {isOff ? " · Off" : ""}
+                      </p>
+                    </div>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => updateTask.mutate({ id: task.id, data: { active: isOff } })}
+                        title={isOff ? "Turn on" : "Turn off"}
+                        className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all"
+                        style={{ background: "rgba(255,255,255,0.05)" }}>
+                        {isOff ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                      </button>
+                      <button onClick={() => { setEditingTask(task); setTaskDialog(true); }} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => deleteTask.mutate(task.id)} className="h-8 w-8 rounded-xl flex items-center justify-center text-white/30 hover:text-red-400 transition-all" style={{ background: "rgba(255,255,255,0.05)" }}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+              {tasks.length === 0 && (
+                <div className="flex flex-col items-center py-12 text-center">
+                  <div className="text-5xl mb-3">📋</div>
+                  <p className="text-white/40 text-sm">No care tasks yet</p>
+                </div>
+              )}
+            </div>
+            <motion.button whileTap={{ scale: 0.96 }} onClick={() => { setEditingTask(null); setTaskDialog(true); }}
+              className="w-full py-4 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+              style={{ background: "rgba(255,255,255,0.06)", border: "1px dashed rgba(255,255,255,0.15)" }}>
+              <Plus className="h-4 w-4" /> Add Care Task
+            </motion.button>
+          </div>
+        )}
+
+        {/* Pay & Alerts tab */}
+        {activeTab === "pay" && (
+          <div>
+            <div className="rounded-2xl overflow-hidden mb-4"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div className="px-4 py-3 flex items-center gap-2"
+                style={{ background: "rgba(255,255,255,0.04)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                <DollarSign className="h-4 w-4 text-green-400" />
+                <span className="text-sm font-bold text-white">Trip Pay Configuration</span>
+              </div>
+              <div className="p-4 space-y-4">
+                {payForm === null ? (
+                  <div className="text-center py-4">
+                    <button
+                      onClick={() => setPayForm({ daily_pay_amount: 100, owner_email: "", owner_name: "", trip_start_date: "", notes: "" })}
+                      className="text-sm text-purple-400 hover:text-purple-300 font-semibold"
+                    >
+                      + Set up pay configuration
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label className="text-white/50 text-xs uppercase tracking-wider">Daily Pay Amount ($)</Label>
+                      <Input
+                        type="number"
+                        value={payForm.daily_pay_amount ?? 100}
+                        onChange={e => setPayForm(f => ({ ...f, daily_pay_amount: e.target.value }))}
+                        className="bg-white/5 border-white/10 text-white rounded-xl"
+                        placeholder="100"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-white/50 text-xs uppercase tracking-wider">Owner Name</Label>
+                      <Input
+                        value={payForm.owner_name || ""}
+                        onChange={e => setPayForm(f => ({ ...f, owner_name: e.target.value }))}
+                        className="bg-white/5 border-white/10 text-white rounded-xl"
+                        placeholder="e.g. Sarah"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-white/50 text-xs uppercase tracking-wider">Owner Email (for notifications)</Label>
+                      <Input
+                        type="email"
+                        value={payForm.owner_email || ""}
+                        onChange={e => setPayForm(f => ({ ...f, owner_email: e.target.value }))}
+                        className="bg-white/5 border-white/10 text-white rounded-xl"
+                        placeholder="owner@email.com"
+                      />
+                      <p className="text-[10px] text-white/25">Completion and problem reports will be emailed here automatically</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-white/50 text-xs uppercase tracking-wider">Trip Start Date</Label>
+                      <Input
+                        type="date"
+                        value={payForm.trip_start_date || ""}
+                        onChange={e => setPayForm(f => ({ ...f, trip_start_date: e.target.value }))}
+                        className="bg-white/5 border-white/10 text-white rounded-xl"
+                      />
+                    </div>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleSavePayConfig}
+                      className="w-full py-3 rounded-2xl font-bold text-white flex items-center justify-center gap-2"
+                      style={{ background: "linear-gradient(135deg, #7c3aed, #3b82f6)" }}
+                    >
+                      <Save className="h-4 w-4" /> Save Configuration
+                    </motion.button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="rounded-2xl p-4"
+              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <p className="text-xs font-bold text-white/50 uppercase tracking-wider mb-3">How this works</p>
+              <ul className="space-y-2 text-xs text-white/35 leading-relaxed">
+                <li>• When all required tasks + proof photos are complete, an automatic email is sent to the owner.</li>
+                <li>• If a problem is reported on any task, the owner is notified by email immediately.</li>
+                <li>• The caregiver can also tap <strong className="text-white/50">"Send Completion Message"</strong> on the summary screen to send a manual email from their own mail app.</li>
+                <li>• Daily pay is locked until all required tasks and required proof photos are complete for the day.</li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <PetFormDialog open={petDialog} onOpenChange={setPetDialog} pet={editingPet} onSave={handleSavePet} />
+      <TaskFormDialog open={taskDialog} onOpenChange={setTaskDialog} task={editingTask} pets={pets} onSave={handleSaveTask} />
+    </div>
+  );
+}

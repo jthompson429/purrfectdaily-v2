@@ -1,0 +1,88 @@
+{
+  "name": "NeonatalKitten",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name or temporary ID"
+    },
+    "birth_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Estimated date/time of birth"
+    },
+    "current_weight_g": {
+      "type": "number",
+      "description": "Current weight in grams"
+    },
+    "mother_present": {
+      "type": "boolean",
+      "default": true
+    },
+    "supplementing_kmr": {
+      "type": "boolean",
+      "default": false
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
