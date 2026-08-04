@@ -7,6 +7,37 @@
         "admin",
         "user"
       ]
+    },
+    "active_workspace_id": {
+      "type": "string",
+      "description": "The workspace currently active for this user"
+    },
+    "active_workspace_role": {
+      "type": "string",
+      "enum": [
+        "owner",
+        "admin",
+        "caregiver",
+        "viewer"
+      ],
+      "description": "Role in the active workspace"
+    },
+    "workspace_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "All workspace IDs this user belongs to"
+    },
+    "can_write_workspace": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether user can create/update records in active workspace (false for viewer)"
+    },
+    "can_delete_workspace": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether user can delete records in active workspace (false for viewer/caregiver)"
     }
   },
   "required": [
