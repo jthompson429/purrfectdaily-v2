@@ -2,6 +2,10 @@
   "name": "PetMedication",
   "type": "object",
   "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "Workspace this medication belongs to"
+    },
     "pet_id": {
       "type": "string"
     },
@@ -61,61 +65,29 @@
   "required": [
     "pet_id",
     "medication_name",
-    "start_date"
+    "start_date",
+    "workspace_id"
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "user"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "update": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     }
   }
 }
