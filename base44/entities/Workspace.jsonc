@@ -43,12 +43,12 @@
   ],
   "rls": {
     "create": {
-      "owner_user_id": "{{user.id}}"
+      "data.owner_user_id": "{{user.id}}"
     },
     "read": {
       "$or": [
         {
-          "owner_user_id": "{{user.id}}"
+          "data.owner_user_id": "{{user.id}}"
         },
         {
           "data.member_user_ids": {
@@ -58,8 +58,8 @@
           }
         },
         {
-          "user_condition": {
-            "role": "admin"
+          "id": {
+            "$in": "{{user.data.workspace_ids}}"
           }
         }
       ]
@@ -67,7 +67,7 @@
     "update": {
       "$or": [
         {
-          "owner_user_id": "{{user.id}}"
+          "data.owner_user_id": "{{user.id}}"
         },
         {
           "user_condition": {
@@ -77,16 +77,7 @@
       ]
     },
     "delete": {
-      "$or": [
-        {
-          "owner_user_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.owner_user_id": "{{user.id}}"
     }
   }
 }
