@@ -2,6 +2,10 @@
   "name": "EmergencyInfo",
   "type": "object",
   "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "Workspace this emergency info belongs to"
+    },
     "contact_name": {
       "type": "string"
     },
@@ -31,61 +35,29 @@
     }
   },
   "required": [
-    "contact_name"
+    "contact_name",
+    "workspace_id"
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "read": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "user"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "update": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "created_by": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     }
   }
 }
