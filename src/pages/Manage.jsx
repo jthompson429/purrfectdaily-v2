@@ -77,7 +77,7 @@ export default function Manage() {
 
         {/* Tabs */}
         <div className="flex gap-1.5 mb-6 p-1 rounded-2xl" style={{ background: "rgba(255,255,255,0.04)" }}>
-          {[["pets","Profiles"],["tasks","Care Tasks"],["pay","Pay & Alerts"]].map(([v,l]) => (
+          {[["pets","Profiles"],["tasks","Care Tasks"],["pay","Notifications"]].map(([v,l]) => (
             <button key={v} onClick={() => setActiveTab(v)}
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === v ? "text-white" : "text-white/30"}`}
               style={activeTab === v ? { background: "linear-gradient(135deg, #7c3aed, #3b82f6)" } : {}}>
