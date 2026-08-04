@@ -2,6 +2,10 @@
   "name": "NeonatalMotherLog",
   "type": "object",
   "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "Workspace this mother log belongs to"
+    },
     "kitten_id": {
       "type": "string",
       "description": "Associated neonatal kitten (mother of)"
@@ -35,61 +39,29 @@
     }
   },
   "required": [
-    "date_time"
+    "date_time",
+    "workspace_id"
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "read": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        },
-        {
-          "user_condition": {
-            "role": "user"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "update": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     },
     "delete": {
-      "$or": [
-        {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
     }
   }
 }
