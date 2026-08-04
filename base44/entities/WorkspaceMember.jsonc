@@ -40,16 +40,7 @@
   ],
   "rls": {
     "create": {
-      "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "data.workspace_id": {
-            "$in": "{{user.data.workspace_ids}}"
-          }
-        }
-      ]
+      "data.__rls_block": true
     },
     "read": {
       "$or": [
@@ -64,28 +55,10 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "data.workspace_id": {
-            "$in": "{{user.data.workspace_ids}}"
-          }
-        }
-      ]
+      "data.__rls_block": true
     },
     "delete": {
-      "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "data.workspace_id": {
-            "$in": "{{user.data.workspace_ids}}"
-          }
-        }
-      ]
+      "data.__rls_block": true
     }
   }
 }
