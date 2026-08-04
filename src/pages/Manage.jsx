@@ -228,7 +228,6 @@ export default function Manage() {
                 <li>• When all required tasks + proof photos are complete, an automatic email is sent to the owner.</li>
                 <li>• If a problem is reported on any task, the owner is notified by email immediately.</li>
                 <li>• The caregiver can also tap <strong className="text-foreground/70">"Send Completion Message"</strong> on the summary screen to send a manual email from their own mail app.</li>
-                <li>• Daily pay is locked until all required tasks and required proof photos are complete for the day.</li>
               </ul>
             </div>
           </div>
