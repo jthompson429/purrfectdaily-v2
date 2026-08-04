@@ -14,6 +14,7 @@ import TaskFormDialog from "@/components/care/TaskFormDialog";
 import AssignmentMigrationDialog from "@/components/care/AssignmentMigrationDialog";
 import { getMedicationStatus } from "@/lib/dateUtils";
 import { taskAssignmentType, isGroupName, ASSIGNMENT_ICON } from "@/utils/assignment";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
@@ -53,6 +54,7 @@ function isTaskFullyDone(task, log) {
 }
 
 export default function Dashboard() {
+  const { activeWorkspaceId, canWrite } = useWorkspace();
   const [taskDialog, setTaskDialog] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [showSummary, setShowSummary] = useState(false);
@@ -68,33 +70,33 @@ export default function Dashboard() {
   });
 
   const { data: pets = [] } = useQuery({
-    queryKey: ["pets"],
-    queryFn: () => base44.entities.PetProfile.list("sort_order"),
+    queryKey: ["pets", activeWorkspaceId],
+    queryFn: () => base44.entities.PetProfile.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
   });
 
   const { data: tasks = [], isLoading } = useQuery({
-    queryKey: ["careTasks"],
-    queryFn: () => base44.entities.CareTask.list("sort_order"),
+    queryKey: ["careTasks", activeWorkspaceId],
+    queryFn: () => base44.entities.CareTask.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
   });
 
   const { data: logs = [] } = useQuery({
-    queryKey: ["completionLogs", TODAY],
-    queryFn: () => base44.entities.CompletionLog.filter({ completion_date: TODAY }),
+    queryKey: ["completionLogs", TODAY, activeWorkspaceId],
+    queryFn: () => base44.entities.CompletionLog.filter({ workspace_id: activeWorkspaceId, completion_date: TODAY }),
   });
 
   const { data: meds = [] } = useQuery({
-    queryKey: ["medications"],
-    queryFn: () => base44.entities.MedicationSchedule.list(),
+    queryKey: ["medications", activeWorkspaceId],
+    queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }),
   });
 
   const { data: payConfigs = [] } = useQuery({
-    queryKey: ["payConfig"],
-    queryFn: () => base44.entities.PayConfig.list(),
+    queryKey: ["payConfig", activeWorkspaceId],
+    queryFn: () => base44.entities.PayConfig.filter({ workspace_id: activeWorkspaceId }),
   });
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ["dailyNotifications", TODAY],
-    queryFn: () => base44.entities.DailyNotification.filter({ notification_date: TODAY }),
+    queryKey: ["dailyNotifications", TODAY, activeWorkspaceId],
+    queryFn: () => base44.entities.DailyNotification.filter({ workspace_id: activeWorkspaceId, notification_date: TODAY }),
   });
 
   const payConfig = payConfigs[0] || null;
@@ -128,7 +130,7 @@ export default function Dashboard() {
   };
 
   const createLog = useMutation({
-    mutationFn: (data) => base44.entities.CompletionLog.create(data),
+    mutationFn: (data) => base44.entities.CompletionLog.create({ ...data, workspace_id: activeWorkspaceId }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["completionLogs", TODAY] }); },
   });
 
@@ -138,7 +140,7 @@ export default function Dashboard() {
   });
 
   const createTask = useMutation({
-    mutationFn: (data) => base44.entities.CareTask.create(data),
+    mutationFn: (data) => base44.entities.CareTask.create({ ...data, workspace_id: activeWorkspaceId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }),
   });
 
@@ -148,7 +150,7 @@ export default function Dashboard() {
   });
 
   const createNotification = useMutation({
-    mutationFn: (data) => base44.entities.DailyNotification.create(data),
+    mutationFn: (data) => base44.entities.DailyNotification.create({ ...data, workspace_id: activeWorkspaceId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dailyNotifications", TODAY] }),
   });
 
@@ -511,6 +513,7 @@ export default function Dashboard() {
       </div>
 
       {/* FAB */}
+      {canWrite && (
       <div className="fixed bottom-24 right-5 z-40">
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -521,6 +524,7 @@ export default function Dashboard() {
           <Plus className="h-6 w-6" />
         </motion.button>
       </div>
+      )}
 
       <TaskFormDialog
         open={taskDialog}

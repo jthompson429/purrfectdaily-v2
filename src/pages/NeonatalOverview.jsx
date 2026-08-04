@@ -11,8 +11,10 @@ import KittenProfileDialog from "@/components/neonatal/KittenProfileDialog";
 import GroupDialog from "@/components/neonatal/GroupDialog";
 import BatchLogDialog from "@/components/neonatal/BatchLogDialog";
 import { neonatalDashboardStats, kittensByGroup, GROUP_TYPE_LABELS, timeAgo } from "@/utils/neonatal";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 export default function NeonatalOverview() {
+  const { activeWorkspaceId, canWrite } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(null);
   const [editingKitten, setEditingKitten] = useState(null);
@@ -24,16 +26,16 @@ export default function NeonatalOverview() {
     return () => clearInterval(id);
   }, []);
 
-  const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens"], queryFn: () => base44.entities.NeonatalKitten.list() });
-  const { data: groups = [] } = useQuery({ queryKey: ["neonatalGroups"], queryFn: () => base44.entities.NeonatalGroup.list() });
-  const { data: feedings = [] } = useQuery({ queryKey: ["neonatalFeedings"], queryFn: () => base44.entities.NeonatalFeeding.list("-date_time", 300) });
-  const { data: weights = [] } = useQuery({ queryKey: ["neonatalWeights"], queryFn: () => base44.entities.NeonatalWeight.list("-date_time", 300) });
-  const { data: eliminations = [] } = useQuery({ queryKey: ["neonatalEliminations"], queryFn: () => base44.entities.NeonatalElimination.list("-date_time", 300) });
-  const { data: motherLogs = [] } = useQuery({ queryKey: ["neonatalMotherLogs"], queryFn: () => base44.entities.NeonatalMotherLog.list("-date_time", 300) });
+  const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens", activeWorkspaceId], queryFn: () => base44.entities.NeonatalKitten.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: groups = [] } = useQuery({ queryKey: ["neonatalGroups", activeWorkspaceId], queryFn: () => base44.entities.NeonatalGroup.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: feedings = [] } = useQuery({ queryKey: ["neonatalFeedings", activeWorkspaceId], queryFn: () => base44.entities.NeonatalFeeding.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300) });
+  const { data: weights = [] } = useQuery({ queryKey: ["neonatalWeights", activeWorkspaceId], queryFn: () => base44.entities.NeonatalWeight.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300) });
+  const { data: eliminations = [] } = useQuery({ queryKey: ["neonatalEliminations", activeWorkspaceId], queryFn: () => base44.entities.NeonatalElimination.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300) });
+  const { data: motherLogs = [] } = useQuery({ queryKey: ["neonatalMotherLogs", activeWorkspaceId], queryFn: () => base44.entities.NeonatalMotherLog.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300) });
 
-  const createKitten = useMutation({ mutationFn: (d) => base44.entities.NeonatalKitten.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
+  const createKitten = useMutation({ mutationFn: (d) => base44.entities.NeonatalKitten.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
   const updateKitten = useMutation({ mutationFn: ({ id, data }) => base44.entities.NeonatalKitten.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
-  const createGroup = useMutation({ mutationFn: (d) => base44.entities.NeonatalGroup.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
+  const createGroup = useMutation({ mutationFn: (d) => base44.entities.NeonatalGroup.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
   const updateGroup = useMutation({ mutationFn: ({ id, data }) => base44.entities.NeonatalGroup.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
 
   const stats = useMemo(() => neonatalDashboardStats(kittens, feedings, weights, eliminations, now), [kittens, feedings, weights, eliminations, now]);
@@ -70,13 +72,13 @@ export default function NeonatalOverview() {
 
   const handleBatchSave = async (careType, records) => {
     if (careType === "feeding") {
-      await base44.entities.NeonatalFeeding.bulkCreate(records);
+      await base44.entities.NeonatalFeeding.bulkCreate(records.map(r => ({ ...r, workspace_id: activeWorkspaceId })));
       qc.invalidateQueries({ queryKey: ["neonatalFeedings"] });
     } else if (careType === "weight") {
-      await base44.entities.NeonatalWeight.bulkCreate(records);
+      await base44.entities.NeonatalWeight.bulkCreate(records.map(r => ({ ...r, workspace_id: activeWorkspaceId })));
       qc.invalidateQueries({ queryKey: ["neonatalWeights"] });
     } else if (careType === "elimination") {
-      await base44.entities.NeonatalElimination.bulkCreate(records);
+      await base44.entities.NeonatalElimination.bulkCreate(records.map(r => ({ ...r, workspace_id: activeWorkspaceId })));
       qc.invalidateQueries({ queryKey: ["neonatalEliminations"] });
     } else if (careType === "observation") {
       await Promise.all(records.map((r) => {

@@ -5,13 +5,15 @@ import { ShieldPlus, Pencil, Trash2 } from "lucide-react";
 import SectionCard from "./SectionCard";
 import PreventativeDialog from "./PreventativeDialog";
 import { preventativeStatus, fmtShort, frequencyLabel, COLOR_MAP } from "@/utils/petCare";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 export default function PreventativeSection({ petId }) {
+  const { activeWorkspaceId } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const { data: items = [] } = useQuery({ queryKey: ["preventatives", petId], queryFn: () => base44.entities.Preventative.filter({ pet_id: petId }, "-date_given") });
-  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? base44.entities.Preventative.update(id, data) : base44.entities.Preventative.create({ ...data, pet_id: petId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
+  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? base44.entities.Preventative.update(id, data) : base44.entities.Preventative.create({ ...data, pet_id: petId, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
   const remove = useMutation({ mutationFn: (id) => base44.entities.Preventative.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["preventatives", petId] }) });
   const handleSave = async (data, id) => { await upsert.mutateAsync({ id, data }); setDialog(false); setEditing(null); };
 

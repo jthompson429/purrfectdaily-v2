@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
 import { weightTrend } from "@/utils/neonatal";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 const RANGES = [
   { key: "24h", label: "24h", ms: 24 * 60 * 60 * 1000 },
@@ -23,11 +24,12 @@ function Stat({ label, value, valueColor }) {
 }
 
 export default function NeonatalGrowth() {
+  const { activeWorkspaceId } = useWorkspace();
   const { kittenId } = useParams();
   const [range, setRange] = useState("7d");
 
-  const { data: allWeights = [] } = useQuery({ queryKey: ["neonatalWeights"], queryFn: () => base44.entities.NeonatalWeight.list("-date_time", 500) });
-  const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens"], queryFn: () => base44.entities.NeonatalKitten.list() });
+  const { data: allWeights = [] } = useQuery({ queryKey: ["neonatalWeights", activeWorkspaceId], queryFn: () => base44.entities.NeonatalWeight.filter({ workspace_id: activeWorkspaceId }, "-date_time", 500) });
+  const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens", activeWorkspaceId], queryFn: () => base44.entities.NeonatalKitten.filter({ workspace_id: activeWorkspaceId }) });
 
   const kitten = kittens.find((k) => k.id === kittenId) || null;
   const weights = allWeights.filter((w) => w.kitten_id === kittenId);

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 const TYPE_CONFIG = {
   owner: { label: "Owner", color: "text-primary", bg: "bg-primary/15", emoji: "👤" },
@@ -73,16 +74,17 @@ function ContactDialog({ open, onOpenChange, contact, onSave }) {
 }
 
 export default function Emergency() {
+  const { activeWorkspaceId, canWrite } = useWorkspace();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const qc = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
-    queryKey: ["emergency"],
-    queryFn: () => base44.entities.EmergencyInfo.list("sort_order"),
+    queryKey: ["emergency", activeWorkspaceId],
+    queryFn: () => base44.entities.EmergencyInfo.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
   });
 
-  const create = useMutation({ mutationFn: d => base44.entities.EmergencyInfo.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
+  const create = useMutation({ mutationFn: d => base44.entities.EmergencyInfo.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
   const update = useMutation({ mutationFn: ({ id, data }) => base44.entities.EmergencyInfo.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
   const remove = useMutation({ mutationFn: id => base44.entities.EmergencyInfo.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
 
@@ -168,6 +170,7 @@ export default function Emergency() {
           )}
         </div>
 
+        {canWrite && (
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => { setEditing(null); setDialog(true); }}
@@ -175,6 +178,7 @@ export default function Emergency() {
         >
           <Plus className="h-4 w-4" /> Add Contact
         </motion.button>
+        )}
       </div>
 
       <ContactDialog open={dialog} onOpenChange={setDialog} contact={editing} onSave={handleSave} />

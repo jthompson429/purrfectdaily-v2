@@ -16,6 +16,7 @@ import NeonatalOverview from './pages/NeonatalOverview';
 import NeonatalFoster from './pages/NeonatalFoster';
 import NeonatalGrowth from './pages/NeonatalGrowth';
 import NeonatalGroupView from './pages/NeonatalGroupView';
+import WorkspaceSettings from './pages/WorkspaceSettings';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
           <Route path="/neonatal/kitten/:kittenId" element={<NeonatalFoster />} />
           <Route path="/neonatal/kitten/:kittenId/growth" element={<NeonatalGrowth />} />
           <Route path="/neonatal/group/:groupId" element={<NeonatalGroupView />} />
+          <Route path="/workspace-settings" element={<WorkspaceSettings />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />

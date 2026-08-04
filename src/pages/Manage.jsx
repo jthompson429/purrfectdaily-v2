@@ -11,11 +11,13 @@ import { formatBirthDate, formatAge } from "@/utils/pet";
 import { computePetBadges } from "@/utils/petStatus";
 import { assignmentLabel } from "@/utils/assignment";
 import StatusBadge from "@/components/petprofile/StatusBadge";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
 const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
 
 export default function Manage() {
+  const { activeWorkspaceId, canWrite, canDelete } = useWorkspace();
   const [petDialog, setPetDialog] = useState(false);
   const [taskDialog, setTaskDialog] = useState(false);
   const [editingPet, setEditingPet] = useState(null);
@@ -25,17 +27,17 @@ export default function Manage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
 
-  const { data: pets = [] } = useQuery({ queryKey: ["pets"], queryFn: () => base44.entities.PetProfile.list("sort_order") });
-  const { data: tasks = [] } = useQuery({ queryKey: ["careTasks"], queryFn: () => base44.entities.CareTask.list("sort_order") });
-  const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives"], queryFn: () => base44.entities.Preventative.list() });
-  const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations"], queryFn: () => base44.entities.Vaccination.list() });
-  const { data: petMedications = [] } = useQuery({ queryKey: ["allPetMedications"], queryFn: () => base44.entities.PetMedication.list() });
+  const { data: pets = [] } = useQuery({ queryKey: ["pets", activeWorkspaceId], queryFn: () => base44.entities.PetProfile.filter({ workspace_id: activeWorkspaceId }, "sort_order") });
+  const { data: tasks = [] } = useQuery({ queryKey: ["careTasks", activeWorkspaceId], queryFn: () => base44.entities.CareTask.filter({ workspace_id: activeWorkspaceId }, "sort_order") });
+  const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives", activeWorkspaceId], queryFn: () => base44.entities.Preventative.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations", activeWorkspaceId], queryFn: () => base44.entities.Vaccination.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: petMedications = [] } = useQuery({ queryKey: ["allPetMedications", activeWorkspaceId], queryFn: () => base44.entities.PetMedication.filter({ workspace_id: activeWorkspaceId }) });
 
-  const createPet = useMutation({ mutationFn: d => base44.entities.PetProfile.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
+  const createPet = useMutation({ mutationFn: d => base44.entities.PetProfile.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
   const updatePet = useMutation({ mutationFn: ({ id, data }) => base44.entities.PetProfile.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
   const deletePet = useMutation({ mutationFn: id => base44.entities.PetProfile.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
 
-  const createTask = useMutation({ mutationFn: d => base44.entities.CareTask.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
+  const createTask = useMutation({ mutationFn: d => base44.entities.CareTask.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
   const updateTask = useMutation({ mutationFn: ({ id, data }) => base44.entities.CareTask.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
   const deleteTask = useMutation({ mutationFn: id => base44.entities.CareTask.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["careTasks"] }) });
 

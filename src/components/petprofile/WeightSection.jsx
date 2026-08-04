@@ -6,14 +6,16 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import SectionCard from "./SectionCard";
 import WeightDialog from "./WeightDialog";
 import { fmtShort, todayStr } from "@/utils/petCare";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 export default function WeightSection({ petId, profileType }) {
+  const { activeWorkspaceId } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const { data: items = [] } = useQuery({ queryKey: ["weightLogs", petId], queryFn: () => base44.entities.WeightLog.filter({ pet_id: petId }, "-date") });
   const upsert = useMutation({
-    mutationFn: ({ id, data }) => id ? base44.entities.WeightLog.update(id, data) : base44.entities.WeightLog.create({ ...data, pet_id: petId }),
+    mutationFn: ({ id, data }) => id ? base44.entities.WeightLog.update(id, data) : base44.entities.WeightLog.create({ ...data, pet_id: petId, workspace_id: activeWorkspaceId }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["weightLogs", petId] }); qc.invalidateQueries({ queryKey: ["pet", petId] }); }
   });
   const remove = useMutation({ mutationFn: (id) => base44.entities.WeightLog.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] }) });

@@ -40,9 +40,16 @@
   ],
   "rls": {
     "create": {
-      "data.workspace_id": {
-        "$in": "{{user.data.workspace_ids}}"
-      }
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.workspace_id": {
+            "$in": "{{user.data.workspace_ids}}"
+          }
+        }
+      ]
     },
     "read": {
       "$or": [

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { getMedicationStatus } from "@/lib/dateUtils";
+import { useWorkspace } from "@/lib/workspaceContext";
 import { format } from "date-fns";
 
 const empty = {
@@ -123,14 +124,15 @@ function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
 const ROUTE_EMOJI = { oral: "💊", eye_drop: "👁️", food: "🍖", topical: "🧴", other: "💉" };
 
 export default function Medications() {
+  const { activeWorkspaceId, canWrite } = useWorkspace();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const qc = useQueryClient();
 
-  const { data: meds = [] } = useQuery({ queryKey: ["medications"], queryFn: () => base44.entities.MedicationSchedule.list() });
-  const { data: pets = [] } = useQuery({ queryKey: ["pets"], queryFn: () => base44.entities.PetProfile.list() });
+  const { data: meds = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: pets = [] } = useQuery({ queryKey: ["pets", activeWorkspaceId], queryFn: () => base44.entities.PetProfile.filter({ workspace_id: activeWorkspaceId }) });
 
-  const create = useMutation({ mutationFn: d => base44.entities.MedicationSchedule.create(d), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
+  const create = useMutation({ mutationFn: d => base44.entities.MedicationSchedule.create({ ...d, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
   const update = useMutation({ mutationFn: ({ id, data }) => base44.entities.MedicationSchedule.update(id, data), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
   const remove = useMutation({ mutationFn: id => base44.entities.MedicationSchedule.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
 
@@ -256,6 +258,7 @@ export default function Medications() {
           )}
         </div>
 
+        {canWrite && (
         <motion.button
           whileTap={{ scale: 0.96 }}
           onClick={() => { setEditing(null); setDialog(true); }}
@@ -263,6 +266,7 @@ export default function Medications() {
         >
           <Plus className="h-4 w-4" /> Add Medication
         </motion.button>
+        )}
       </div>
 
       <MedFormDialog open={dialog} onOpenChange={setDialog} med={editing} pets={pets} onSave={handleSave} />

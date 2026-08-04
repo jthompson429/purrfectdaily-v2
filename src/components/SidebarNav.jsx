@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Cat, Pill, Phone, Settings, X, PawPrint } from "lucide-react";
+import { Home, Cat, Pill, Phone, Settings, X, PawPrint, Building2 } from "lucide-react";
 
 const GROUPS = [
   {
@@ -27,7 +27,7 @@ const GROUPS = [
   },
   {
     label: "Admin",
-    items: [{ icon: Settings, label: "Manage", path: "/manage" }],
+    items: [{ icon: Settings, label: "Manage", path: "/manage" }, { icon: Building2, label: "Workspace", path: "/workspace-settings" }],
   },
 ];
 

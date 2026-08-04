@@ -5,15 +5,17 @@ import { Syringe, Pencil, Trash2 } from "lucide-react";
 import SectionCard from "./SectionCard";
 import VaccinationDialog from "./VaccinationDialog";
 import { vaccinationStatus, fmtShort, COLOR_MAP } from "@/utils/petCare";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 const VAC_LABEL = (v) => v.name === "custom" ? (v.custom_name || "Custom Vaccine") : v.name.toUpperCase();
 
 export default function VaccinationSection({ petId }) {
+  const { activeWorkspaceId } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const { data: items = [] } = useQuery({ queryKey: ["vaccinations", petId], queryFn: () => base44.entities.Vaccination.filter({ pet_id: petId }, "-date_given") });
-  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? base44.entities.Vaccination.update(id, data) : base44.entities.Vaccination.create(data), onSuccess: () => qc.invalidateQueries({ queryKey: ["vaccinations", petId] }) });
+  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? base44.entities.Vaccination.update(id, data) : base44.entities.Vaccination.create({ ...data, workspace_id: activeWorkspaceId }), onSuccess: () => qc.invalidateQueries({ queryKey: ["vaccinations", petId] }) });
   const remove = useMutation({ mutationFn: (id) => base44.entities.Vaccination.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["vaccinations", petId] }) });
   const handleSave = async (data, id) => {
     try {

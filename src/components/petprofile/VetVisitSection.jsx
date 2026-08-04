@@ -6,8 +6,10 @@ import SectionCard from "./SectionCard";
 import VisitRecordDialog from "./VisitRecordDialog";
 import VisitCard from "./VisitCard";
 import AttachmentViewer from "./AttachmentViewer";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 export default function VetVisitSection({ petId }) {
+  const { activeWorkspaceId } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -15,14 +17,14 @@ export default function VetVisitSection({ petId }) {
   const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ pet_id: petId }, "-date") });
   const items = Array.isArray(data) ? data : [];
   const upsert = useMutation({
-    mutationFn: ({ id, data }) => id ? base44.entities.VetVisit.update(id, data) : base44.entities.VetVisit.create(data),
+    mutationFn: ({ id, data }) => id ? base44.entities.VetVisit.update(id, data) : base44.entities.VetVisit.create({ ...data, workspace_id: activeWorkspaceId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] })
   });
   const remove = useMutation({ mutationFn: (id) => base44.entities.VetVisit.delete(id), onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] }) });
 
   const handleSave = async (data, id) => {
     try {
-    const saved = id ? await base44.entities.VetVisit.update(id, data) : await base44.entities.VetVisit.create({ ...data, pet_id: petId });
+    const saved = id ? await base44.entities.VetVisit.update(id, data) : await base44.entities.VetVisit.create({ ...data, pet_id: petId, workspace_id: activeWorkspaceId });
     const visitDate = saved?.date || data.date;
 
     const givenV = data.vaccinations_given || [];
@@ -31,7 +33,7 @@ export default function VetVisitSection({ petId }) {
       for (const gv of givenV) {
         const exists = existing.find((v) => v.name === gv.name && v.date_given === visitDate && (gv.name !== "custom" || v.custom_name === (gv.custom_name || "")));
         if (!exists) {
-          await base44.entities.Vaccination.create({ pet_id: petId, name: gv.name, custom_name: gv.custom_name || "", date_given: visitDate, due_date: gv.due_date || "", veterinarian: saved?.veterinarian || "" });
+          await base44.entities.Vaccination.create({ pet_id: petId, name: gv.name, custom_name: gv.custom_name || "", date_given: visitDate, due_date: gv.due_date || "", veterinarian: saved?.veterinarian || "", workspace_id: activeWorkspaceId });
         }
       }
       qc.invalidateQueries({ queryKey: ["vaccinations", petId] });
@@ -44,7 +46,7 @@ export default function VetVisitSection({ petId }) {
         const dg = gp.date_given || visitDate;
         const exists = existingP.find((p) => p.name === gp.name && p.date_given === dg);
         if (!exists) {
-          await base44.entities.Preventative.create({ pet_id: petId, name: gp.name, date_given: dg, frequency: gp.frequency || "monthly", custom_interval_days: gp.custom_interval_days || 30 });
+          await base44.entities.Preventative.create({ pet_id: petId, name: gp.name, date_given: dg, frequency: gp.frequency || "monthly", custom_interval_days: gp.custom_interval_days || 30, workspace_id: activeWorkspaceId });
         }
       }
       qc.invalidateQueries({ queryKey: ["preventatives", petId] });
@@ -62,6 +64,7 @@ export default function VetVisitSection({ petId }) {
     for (const m of meds) {
       await base44.entities.PetMedication.create({
         pet_id: petId,
+        workspace_id: activeWorkspaceId,
         medication_name: m.name,
         frequency: m.frequency || "twice_daily",
         start_date: m.start_date || visit.date,
