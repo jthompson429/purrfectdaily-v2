@@ -48,9 +48,7 @@
   ],
   "rls": {
     "create": {
-      "data.workspace_id": {
-        "$in": "{{user.data.workspace_ids}}"
-      }
+      "data.__rls_block": true
     },
     "read": {
       "$or": [
@@ -65,21 +63,10 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.email": "{{user.email}}"
-        },
-        {
-          "data.workspace_id": {
-            "$in": "{{user.data.workspace_ids}}"
-          }
-        }
-      ]
+      "data.__rls_block": true
     },
     "delete": {
-      "data.workspace_id": {
-        "$in": "{{user.data.workspace_ids}}"
-      }
+      "data.__rls_block": true
     }
   }
 }
