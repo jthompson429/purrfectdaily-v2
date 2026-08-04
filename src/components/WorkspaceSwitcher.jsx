@@ -17,10 +17,10 @@ export default function WorkspaceSwitcher() {
   const roleColors = { owner: "text-primary", admin: "text-primary", caregiver: "text-muted-foreground", viewer: "text-muted-foreground" };
 
   return (
-    <div className="border-b border-border bg-card/60 backdrop-blur px-4 py-2 flex items-center justify-between">
+    <div className="relative z-50 border-b border-border bg-card px-4 py-2 flex items-center justify-between">
       <div className="relative" ref={ref}>
         <button
-          onClick={() => setOpen(!open)}
+          onClick={(e) => { e.stopPropagation(); setOpen(prev => !prev); }}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
         >
           <Building2 className="h-4 w-4 text-primary" />
