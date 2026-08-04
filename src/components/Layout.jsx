@@ -1,13 +1,21 @@
 import { Outlet } from "react-router-dom";
 import BottomNav from "@/components/care/BottomNav";
+import SidebarNav from "@/components/SidebarNav";
 
 export default function Layout() {
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <main className="flex-1 overflow-y-auto">
-        <Outlet />
-      </main>
-      <BottomNav />
+    <div className="flex h-screen bg-background">
+      <aside className="hidden lg:flex shrink-0 h-full">
+        <SidebarNav />
+      </aside>
+      <div className="flex flex-col flex-1 min-w-0">
+        <main className="flex-1 overflow-y-auto">
+          <Outlet />
+        </main>
+        <div className="lg:hidden shrink-0">
+          <BottomNav />
+        </div>
+      </div>
     </div>
   );
 }
