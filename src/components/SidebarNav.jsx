@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Cat, Pill, Settings, X, PawPrint, Building2, ClipboardList } from "lucide-react";
+import { useClipboardUnseenCount } from "@/hooks/useClipboardUnseenCount";
 
 const GROUPS = [
   {
@@ -36,6 +37,7 @@ export default function SidebarNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const [openLabel, setOpenLabel] = useState(null);
+  const clipboardUnseenCount = useClipboardUnseenCount();
 
   // Close submenu on route change
   useEffect(() => {
@@ -115,7 +117,7 @@ export default function SidebarNav() {
                   return (
                     <li className="sn3n-item" key={item.label}>
                       <button
-                        className="sn3n-btn"
+                        className="sn3n-btn relative"
                         type="button"
                         aria-current={active ? "page" : undefined}
                         aria-haspopup={item.sub ? "true" : undefined}
@@ -125,6 +127,14 @@ export default function SidebarNav() {
                         onClick={() => handleBtnClick(item)}
                       >
                         <Icon className="w-5 h-5" />
+                        {item.path === "/clipboard" && clipboardUnseenCount > 0 && (
+                          <span
+                            className="absolute right-1 top-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black leading-none text-destructive-foreground"
+                            aria-label={`${clipboardUnseenCount} unseen clipboard ${clipboardUnseenCount === 1 ? "entry" : "entries"}`}
+                          >
+                            {clipboardUnseenCount > 99 ? "99+" : clipboardUnseenCount}
+                          </span>
+                        )}
                       </button>
                     </li>
                   );
