@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
@@ -22,6 +22,11 @@ export default function WorkspaceSettings() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [editName, setEditName] = useState("");
+  const [urgentInstructions, setUrgentInstructions] = useState("");
+
+  useEffect(() => {
+    setUrgentInstructions(activeWorkspace?.urgent_medical_instructions || "");
+  }, [activeWorkspace?.urgent_medical_instructions]);
 
   const { data: members = [] } = useQuery({
     queryKey: ["workspace-members", activeWorkspaceId],
@@ -110,6 +115,13 @@ export default function WorkspaceSettings() {
     toast({ title: "Workspace updated" });
   };
 
+  const handleSaveUrgentInstructions = () => {
+    updateWs.mutate({
+      data: { urgent_medical_instructions: urgentInstructions.trim() },
+    });
+    toast({ title: "Urgent-care instructions updated" });
+  };
+
   const handleAcceptInvitation = async (inv) => {
     await acceptInvitation(inv);
     toast({ title: "Invitation accepted" });
@@ -138,6 +150,42 @@ export default function WorkspaceSettings() {
             <Label className="text-xs text-muted-foreground">Owner</Label>
             <p className="text-sm font-medium mt-0.5">{activeWorkspace?.owner_email}</p>
           </div>
+        </section>
+
+        {/* Urgent medical escalation */}
+        <section className="rounded-2xl border border-destructive/20 bg-card p-5 space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-lg bg-destructive/10 p-2">
+              <BellRing className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Urgent Medical Escalation</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Instructions shown when someone marks a Digital Clipboard entry Urgent. Phone contacts are managed on the Emergency page.
+              </p>
+            </div>
+          </div>
+          <textarea
+            value={urgentInstructions}
+            onChange={(event) => setUrgentInstructions(event.target.value)}
+            disabled={!canManageMembers}
+            maxLength={500}
+            rows={4}
+            className="w-full rounded-xl border bg-background px-3 py-2 text-sm"
+            placeholder="Example: Call the rescue coordinator or an approved veterinarian immediately. Do not rely solely on app or email notifications."
+          />
+          {canManageMembers && (
+            <Button
+              size="sm"
+              onClick={handleSaveUrgentInstructions}
+              disabled={updateWs.isPending}
+            >
+              Save instructions
+            </Button>
+          )}
+          {!canManageMembers && (
+            <p className="text-xs text-muted-foreground">Only workspace Owners and Admins can change these instructions.</p>
+          )}
         </section>
 
         {/* Pending Invitations for current user */}
