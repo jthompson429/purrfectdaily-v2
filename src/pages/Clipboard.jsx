@@ -73,6 +73,21 @@ export default function Clipboard() {
     queryFn: () => base44.auth.me(),
   });
 
+  const { data: workspaceSettings } = useQuery({
+    queryKey: ["workspace-settings", activeWorkspaceId],
+    queryFn: () => base44.entities.Workspace.get(activeWorkspaceId),
+    enabled: Boolean(activeWorkspaceId),
+  });
+
+  const { data: emergencyContacts = [] } = useQuery({
+    queryKey: ["emergency", activeWorkspaceId],
+    queryFn: () => base44.entities.EmergencyInfo.filter(
+      { workspace_id: activeWorkspaceId },
+      "sort_order"
+    ),
+    enabled: Boolean(activeWorkspaceId),
+  });
+
   const { data: pets = [] } = useQuery({
     queryKey: ["pets", activeWorkspaceId],
     queryFn: () => base44.entities.PetProfile.filter(
@@ -538,6 +553,33 @@ export default function Clipboard() {
                 />
               </div>
             </div>
+            {form.priority === "urgent" && (
+              <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-destructive">Urgent entries do not replace a phone call</p>
+                    <p className="mt-1 text-xs leading-relaxed text-foreground">
+                      {workspaceSettings?.urgent_medical_instructions ||
+                        "Follow your organization’s emergency contact procedure. Do not rely solely on app or email notifications."}
+                    </p>
+                    {emergencyContacts.some((contact) => contact.phone) && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {emergencyContacts.filter((contact) => contact.phone).map((contact) => (
+                          <a
+                            key={contact.id}
+                            href={`tel:${contact.phone}`}
+                            className="rounded-lg border border-destructive/25 bg-background px-2.5 py-1.5 text-xs font-bold text-destructive"
+                          >
+                            Call {contact.contact_name}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
             <label className="flex items-center gap-2 rounded-xl border p-3 text-sm">
               <input
                 type="checkbox"
