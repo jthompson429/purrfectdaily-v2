@@ -76,7 +76,7 @@ export default function Clipboard() {
   const { data: pets = [] } = useQuery({
     queryKey: ["pets", activeWorkspaceId],
     queryFn: () => base44.entities.PetProfile.filter(
-      { workspace_id: activeWorkspaceId, active: true },
+      { workspace_id: activeWorkspaceId },
       "sort_order"
     ),
     enabled: Boolean(activeWorkspaceId),
