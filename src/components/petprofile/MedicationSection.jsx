@@ -14,9 +14,9 @@ export default function MedicationSection({ petId }) {
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
-  const { data: items = [] } = useQuery({ queryKey: ["petMedications", petId], queryFn: () => base44.entities.PetMedication.filter({ pet_id: petId }, "-start_date") });
-  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? wsUpdate("PetMedication", id, data, activeWorkspaceId) : wsCreate("PetMedication", { ...data, pet_id: petId }, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["petMedications", petId] }) });
-  const remove = useMutation({ mutationFn: (id) => wsDelete("PetMedication", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["petMedications", petId] }) });
+  const { data: items = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId, petId], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-start_date") });
+  const upsert = useMutation({ mutationFn: ({ id, data }) => id ? wsUpdate("MedicationSchedule", id, data, activeWorkspaceId) : wsCreate("MedicationSchedule", { ...data, pet_id: petId }, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
+  const remove = useMutation({ mutationFn: (id) => wsDelete("MedicationSchedule", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }) });
   const handleSave = async (data, id) => { await upsert.mutateAsync({ id, data }); setDialog(false); setEditing(null); };
 
   const today = todayStr();
