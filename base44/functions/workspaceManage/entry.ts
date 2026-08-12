@@ -63,7 +63,6 @@ export default async function(req) {
         role: "owner",
         status: "active",
         clipboard_in_app_alerts: true,
-        clipboard_email_alerts: false,
       });
       // Sync user entity
       await base44.asServiceRole.entities.User.update(user.id, {
@@ -234,7 +233,6 @@ export default async function(req) {
         role: inv.role,
         status: "active",
         clipboard_in_app_alerts: true,
-        clipboard_email_alerts: false,
       });
       // Update invitation
       await base44.asServiceRole.entities.WorkspaceInvitation.update(invitationId, {
