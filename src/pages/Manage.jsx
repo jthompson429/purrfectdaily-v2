@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PetFormDialog from "@/components/care/PetFormDialog";
 import TaskFormDialog from "@/components/care/TaskFormDialog";
 import { Input } from "@/components/ui/input";
-import { formatBirthDate, formatAge } from "@/utils/pet";
+import { formatAge } from "@/utils/pet";
 import { computePetBadges } from "@/utils/petStatus";
 import { assignmentLabel } from "@/utils/assignment";
 import StatusBadge from "@/components/petprofile/StatusBadge";
