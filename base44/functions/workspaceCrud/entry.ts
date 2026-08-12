@@ -6,7 +6,7 @@ const CRUD_ENTITIES = [
   "DailyNotification", "MedicationSchedule", "PetMedication", "Preventative",
   "Vaccination", "VetVisit", "WeightLog", "NeonatalKitten", "NeonatalGroup",
   "NeonatalFeeding", "NeonatalWeight", "NeonatalElimination", "NeonatalMotherLog",
-  "CatTask",
+  "CatTask", "ClipboardEntry",
 ];
 
 async function auditLog(base44, wsId, user, action, entityType, entityId) {
