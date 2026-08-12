@@ -32,7 +32,7 @@ export default function Manage() {
   const { data: tasks = [] } = useQuery({ queryKey: ["careTasks", activeWorkspaceId], queryFn: () => base44.entities.CareTask.filter({ workspace_id: activeWorkspaceId }, "sort_order") });
   const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives", activeWorkspaceId], queryFn: () => base44.entities.Preventative.filter({ workspace_id: activeWorkspaceId }) });
   const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations", activeWorkspaceId], queryFn: () => base44.entities.Vaccination.filter({ workspace_id: activeWorkspaceId }) });
-  const { data: petMedications = [] } = useQuery({ queryKey: ["allPetMedications", activeWorkspaceId], queryFn: () => base44.entities.PetMedication.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: medications = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }) });
 
   const createPet = useMutation({ mutationFn: d => wsCreate("PetProfile", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
   const updatePet = useMutation({ mutationFn: ({ id, data }) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
@@ -58,7 +58,7 @@ export default function Manage() {
   const q = search.trim().toLowerCase();
   const filteredPets = q
     ? pets.filter((p) => {
-        const badges = computePetBadges(p, preventatives.filter((x) => x.pet_id === p.id), vaccinations.filter((x) => x.pet_id === p.id), petMedications.filter((x) => x.pet_id === p.id));
+        const badges = computePetBadges(p, preventatives.filter((x) => x.pet_id === p.id), vaccinations.filter((x) => x.pet_id === p.id), medications.filter((x) => x.pet_id === p.id));
         const hay = [p.name, p.species, p.breed, p.current_medications, ...badges.map((b) => b.label)].join(" ").toLowerCase();
         return hay.includes(q);
       })
@@ -108,7 +108,7 @@ export default function Manage() {
                     pet,
                     preventatives.filter((p) => p.pet_id === pet.id),
                     vaccinations.filter((v) => v.pet_id === pet.id),
-                    petMedications.filter((m) => m.pet_id === pet.id)
+                    medications.filter((m) => m.pet_id === pet.id)
                   );
                   return (
                     <motion.div key={pet.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
