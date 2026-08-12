@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Building2, Check, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useWorkspace } from "@/lib/workspaceContext";
+import ClipboardNotificationCenter from "@/components/ClipboardNotificationCenter";
 
 export default function WorkspaceSwitcher() {
   const { activeWorkspaceId, activeWorkspaceName, activeWorkspaceRole, workspaces, switchWorkspace } = useWorkspace();
@@ -56,7 +57,10 @@ export default function WorkspaceSwitcher() {
           </div>
         )}
       </div>
-      <span className={`text-xs capitalize font-medium ${roleColors[activeWorkspaceRole]}`}>{activeWorkspaceRole}</span>
+      <div className="flex items-center gap-2">
+        <ClipboardNotificationCenter />
+        <span className={`text-xs capitalize font-medium ${roleColors[activeWorkspaceRole]}`}>{activeWorkspaceRole}</span>
+      </div>
     </div>
   );
 }
