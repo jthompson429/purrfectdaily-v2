@@ -1,12 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Pill, Phone, Settings, Cat } from "lucide-react";
+import { Home, Pill, Phone, Cat, ClipboardList } from "lucide-react";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "Today" },
+  { path: "/clipboard", icon: ClipboardList, label: "Clipboard" },
   { path: "/medications", icon: Pill, label: "Meds" },
   { path: "/emergency", icon: Phone, label: "Emergency" },
   { path: "/neonatal", icon: Cat, label: "Neonatal" },
-  { path: "/manage", icon: Settings, label: "Profiles" },
 ];
 
 export default function BottomNav() {
