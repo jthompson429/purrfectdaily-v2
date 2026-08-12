@@ -8,23 +8,23 @@ import { useClipboardUnseenCount } from "@/hooks/useClipboardUnseenCount";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "Today" },
-  { path: "/manage", icon: Settings, label: "Profiles" },
-  { path: "/medications", icon: Pill, label: "Meds" },
+  { path: "/clipboard", icon: ClipboardList, label: "Clipboard", showsClipboardBadge: true },
+  { path: "/neonatal", icon: Cat, label: "Neonatal" },
   { path: "/emergency", icon: Phone, label: "Emergency" },
 ];
 
 const MORE_ITEMS = [
   {
-    path: "/clipboard",
-    icon: ClipboardList,
-    label: "Digital Clipboard",
-    description: "Observations and handoffs",
+    path: "/manage",
+    icon: Settings,
+    label: "Profiles",
+    description: "Pet profiles, care tasks, and notifications",
   },
   {
-    path: "/neonatal",
-    icon: Cat,
-    label: "Neonatal",
-    description: "Foster groups and growth",
+    path: "/medications",
+    icon: Pill,
+    label: "Meds",
+    description: "Medication schedules and records",
   },
   {
     path: "/workspace-settings",
@@ -37,6 +37,15 @@ const MORE_ITEMS = [
 function isActive(pathname, path) {
   if (path === "/") return pathname === "/";
   return pathname === path || pathname.startsWith(path + "/");
+}
+
+function CountBadge({ count, className = "" }) {
+  if (count <= 0) return null;
+  return (
+    <span className={`absolute flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black leading-none text-destructive-foreground ${className}`}>
+      {count > 99 ? "99+" : count}
+    </span>
+  );
 }
 
 export default function BottomNav() {
@@ -86,13 +95,8 @@ export default function BottomNav() {
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${active ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
                   >
-                    <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-primary/15" : "bg-muted"}`}>
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-primary/15" : "bg-muted"}`}>
                       <Icon className="h-5 w-5" />
-                      {path === "/clipboard" && clipboardUnseenCount > 0 && (
-                        <span className="absolute -right-1 -top-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black leading-none text-destructive-foreground">
-                          {clipboardUnseenCount > 99 ? "99+" : clipboardUnseenCount}
-                        </span>
-                      )}
                     </div>
                     <div>
                       <p className="text-sm font-bold">{label}</p>
@@ -108,12 +112,23 @@ export default function BottomNav() {
 
       <div className="relative z-50 shrink-0 px-4 pb-safe bg-background/95 backdrop-blur-xl border-t border-border">
         <div className="max-w-lg mx-auto flex items-center justify-around py-3">
-          {NAV_ITEMS.map(({ path, icon: Icon, label }) => {
+          {NAV_ITEMS.map(({ path, icon: Icon, label, showsClipboardBadge }) => {
             const active = isActive(pathname, path);
+            const accessibleLabel = showsClipboardBadge && clipboardUnseenCount > 0
+              ? `${label}, ${clipboardUnseenCount} unseen ${clipboardUnseenCount === 1 ? "entry" : "entries"}`
+              : label;
             return (
-              <Link key={path} to={path} className="flex flex-col items-center gap-1 min-w-[58px] py-1">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${active ? "bg-primary/15" : ""}`}>
+              <Link
+                key={path}
+                to={path}
+                aria-label={accessibleLabel}
+                className="flex flex-col items-center gap-1 min-w-[58px] py-1"
+              >
+                <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all ${active ? "bg-primary/15" : ""}`}>
                   <Icon className={`h-5 w-5 transition-colors ${active ? "text-primary" : "text-muted-foreground/60"}`} />
+                  {showsClipboardBadge && (
+                    <CountBadge count={clipboardUnseenCount} className="right-0 top-0" />
+                  )}
                 </div>
                 <span className={`text-[10px] font-medium transition-colors ${active ? "text-primary" : "text-muted-foreground/60"}`}>
                   {label}
@@ -124,19 +139,12 @@ export default function BottomNav() {
           <button
             type="button"
             aria-expanded={moreOpen}
-            aria-label={clipboardUnseenCount > 0
-              ? `More navigation, ${clipboardUnseenCount} unseen clipboard ${clipboardUnseenCount === 1 ? "entry" : "entries"}`
-              : "More navigation"}
+            aria-label="More navigation"
             onClick={() => setMoreOpen((open) => !open)}
             className="flex flex-col items-center gap-1 min-w-[58px] py-1"
           >
-            <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all ${moreOpen || moreActive ? "bg-primary/15" : ""}`}>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${moreOpen || moreActive ? "bg-primary/15" : ""}`}>
               <MoreHorizontal className={`h-5 w-5 transition-colors ${moreOpen || moreActive ? "text-primary" : "text-muted-foreground/60"}`} />
-              {clipboardUnseenCount > 0 && (
-                <span className="absolute right-0 top-0 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black leading-none text-destructive-foreground">
-                  {clipboardUnseenCount > 99 ? "99+" : clipboardUnseenCount}
-                </span>
-              )}
             </div>
             <span className={`text-[10px] font-medium transition-colors ${moreOpen || moreActive ? "text-primary" : "text-muted-foreground/60"}`}>
               More
