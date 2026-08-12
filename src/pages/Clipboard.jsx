@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle, Check, ClipboardList, Clock3, Filter, MapPin,
-  MessageSquarePlus, Pin, PinOff, Plus, UserRound,
+  MessageSquarePlus, Pencil, Pin, PinOff, Plus, UserRound,
 } from "lucide-react";
 
 import { base44 } from "@/api/base44Client";
@@ -44,17 +44,28 @@ function formatWhen(value) {
   });
 }
 
+function toLocalDateTimeValue(value) {
+  const date = value ? new Date(value) : new Date();
+  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+  return date.toISOString().slice(0, 16);
+}
+
+function emptyForm() {
+  return {
+    title: "", details: "", pet_id: "", category: "observation",
+    priority: "normal", pinned: false, occurred_at: localDateTimeValue(),
+  };
+}
+
 export default function Clipboard() {
   const { activeWorkspaceId, activeWorkspaceName, canWrite } = useWorkspace();
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEntry, setEditingEntry] = useState(null);
   const [view, setView] = useState("open");
   const [petFilter, setPetFilter] = useState("all");
   const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    title: "", details: "", pet_id: "", category: "observation",
-    priority: "normal", pinned: false, occurred_at: localDateTimeValue(),
-  });
+  const [form, setForm] = useState(emptyForm);
 
   const { data: user } = useQuery({
     queryKey: ["me"],
@@ -90,10 +101,8 @@ export default function Clipboard() {
       refresh();
       setDialogOpen(false);
       setError("");
-      setForm({
-        title: "", details: "", pet_id: "", category: "observation",
-        priority: "normal", pinned: false, occurred_at: localDateTimeValue(),
-      });
+      setEditingEntry(null);
+      setForm(emptyForm());
     },
     onError: (e) => setError(e.message),
   });
@@ -101,6 +110,18 @@ export default function Clipboard() {
   const updateEntry = useMutation({
     mutationFn: ({ id, data }) => wsUpdate("ClipboardEntry", id, data, activeWorkspaceId),
     onSuccess: refresh,
+  });
+
+  const saveEdit = useMutation({
+    mutationFn: ({ id, data }) => wsUpdate("ClipboardEntry", id, data, activeWorkspaceId),
+    onSuccess: () => {
+      refresh();
+      setDialogOpen(false);
+      setEditingEntry(null);
+      setError("");
+      setForm(emptyForm());
+    },
+    onError: (e) => setError(e.message),
   });
 
   const petById = useMemo(
@@ -133,16 +154,47 @@ export default function Clipboard() {
       setError("Add a short title and the information others need to know.");
       return;
     }
-    createEntry.mutate({
+    const entryData = {
       ...form,
       title: form.title.trim(),
       details: form.details.trim(),
       pet_id: form.pet_id || "",
-      status: "open",
       occurred_at: new Date(form.occurred_at).toISOString(),
+    };
+
+    if (editingEntry) {
+      saveEdit.mutate({ id: editingEntry.id, data: entryData });
+      return;
+    }
+
+    createEntry.mutate({
+      ...entryData,
+      status: "open",
       created_by_id: user?.id || "",
       created_by_name: user?.full_name || user?.email || "Workspace member",
     });
+  };
+
+  const openNewEntry = () => {
+    setEditingEntry(null);
+    setForm(emptyForm());
+    setError("");
+    setDialogOpen(true);
+  };
+
+  const openEditEntry = (entry) => {
+    setEditingEntry(entry);
+    setForm({
+      title: entry.title || "",
+      details: entry.details || "",
+      pet_id: entry.pet_id || "",
+      category: entry.category || "observation",
+      priority: entry.priority || "normal",
+      pinned: Boolean(entry.pinned),
+      occurred_at: toLocalDateTimeValue(entry.occurred_at || entry.created_date),
+    });
+    setError("");
+    setDialogOpen(true);
   };
 
   const resolve = (entry) => updateEntry.mutate({
@@ -184,7 +236,7 @@ export default function Clipboard() {
             </p>
           </div>
           {canWrite && (
-            <Button onClick={() => setDialogOpen(true)} className="rounded-xl shrink-0">
+            <Button onClick={openNewEntry} className="rounded-xl shrink-0">
               <Plus className="h-4 w-4" /> Add entry
             </Button>
           )}
@@ -266,15 +318,25 @@ export default function Clipboard() {
                       <h2 className="font-black text-base leading-tight">{entry.title}</h2>
                     </div>
                     {canWrite && (
-                      <button
-                        onClick={() => togglePin(entry)}
-                        disabled={updateEntry.isPending}
-                        className="p-2 rounded-lg text-muted-foreground hover:bg-muted"
-                        aria-label={entry.pinned ? "Unpin entry" : "Pin entry"}
-                        title={entry.pinned ? "Unpin" : "Pin"}
-                      >
-                        {entry.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
-                      </button>
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => openEditEntry(entry)}
+                          className="p-2 rounded-lg text-muted-foreground hover:bg-muted"
+                          aria-label="Edit entry"
+                          title="Edit"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => togglePin(entry)}
+                          disabled={updateEntry.isPending}
+                          className="p-2 rounded-lg text-muted-foreground hover:bg-muted"
+                          aria-label={entry.pinned ? "Unpin entry" : "Pin entry"}
+                          title={entry.pinned ? "Unpin" : "Pin"}
+                        >
+                          {entry.pinned ? <PinOff className="h-4 w-4" /> : <Pin className="h-4 w-4" />}
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -311,12 +373,21 @@ export default function Clipboard() {
         )}
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) setError(""); }}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => {
+        setDialogOpen(open);
+        if (!open) {
+          setEditingEntry(null);
+          setError("");
+          setForm(emptyForm());
+        }
+      }}>
         <DialogContent className="sm:rounded-2xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add clipboard entry</DialogTitle>
+            <DialogTitle>{editingEntry ? "Edit clipboard entry" : "Add clipboard entry"}</DialogTitle>
             <DialogDescription>
-              Record something the next caregiver or workspace member needs to see.
+              {editingEntry
+                ? "Update this shared entry. The workspace audit log will record the change."
+                : "Record something the next caregiver or workspace member needs to see."}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submit} className="space-y-4">
@@ -396,8 +467,10 @@ export default function Clipboard() {
             {error && <p className="text-sm text-destructive">{error}</p>}
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={createEntry.isPending}>
-                {createEntry.isPending ? "Saving…" : "Add to clipboard"}
+              <Button type="submit" disabled={createEntry.isPending || saveEdit.isPending}>
+                {createEntry.isPending || saveEdit.isPending
+                  ? "Saving…"
+                  : editingEntry ? "Save changes" : "Add to clipboard"}
               </Button>
             </DialogFooter>
           </form>
