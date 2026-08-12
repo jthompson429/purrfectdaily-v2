@@ -17,6 +17,7 @@ import NeonatalFoster from './pages/NeonatalFoster';
 import NeonatalGrowth from './pages/NeonatalGrowth';
 import NeonatalGroupView from './pages/NeonatalGroupView';
 import WorkspaceSettings from './pages/WorkspaceSettings';
+import Clipboard from './pages/Clipboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -59,6 +60,7 @@ const AuthenticatedApp = () => {
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/emergency" element={<Emergency />} />
+          <Route path="/clipboard" element={<Clipboard />} />
           <Route path="/medications" element={<Medications />} />
           <Route path="/manage" element={<Manage />} />
           <Route path="/pets/:id" element={<PetProfile />} />
