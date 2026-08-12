@@ -4,6 +4,7 @@ import {
   Building2, Cat, ClipboardList, Home, MoreHorizontal,
   Phone, Pill, Settings, X,
 } from "lucide-react";
+import { useClipboardUnseenCount } from "@/hooks/useClipboardUnseenCount";
 
 const NAV_ITEMS = [
   { path: "/", icon: Home, label: "Today" },
@@ -41,6 +42,7 @@ function isActive(pathname, path) {
 export default function BottomNav() {
   const { pathname } = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
+  const clipboardUnseenCount = useClipboardUnseenCount();
   const moreActive = MORE_ITEMS.some((item) => isActive(pathname, item.path));
 
   useEffect(() => {
@@ -84,8 +86,13 @@ export default function BottomNav() {
                     onClick={() => setMoreOpen(false)}
                     className={`flex items-center gap-3 rounded-xl p-3 transition-colors ${active ? "bg-primary/10 text-primary" : "hover:bg-muted"}`}
                   >
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-primary/15" : "bg-muted"}`}>
+                    <div className={`relative flex h-10 w-10 items-center justify-center rounded-xl ${active ? "bg-primary/15" : "bg-muted"}`}>
                       <Icon className="h-5 w-5" />
+                      {path === "/clipboard" && clipboardUnseenCount > 0 && (
+                        <span className="absolute -right-1 -top-1 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black leading-none text-destructive-foreground">
+                          {clipboardUnseenCount > 99 ? "99+" : clipboardUnseenCount}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <p className="text-sm font-bold">{label}</p>
@@ -117,12 +124,19 @@ export default function BottomNav() {
           <button
             type="button"
             aria-expanded={moreOpen}
-            aria-label="More navigation"
+            aria-label={clipboardUnseenCount > 0
+              ? `More navigation, ${clipboardUnseenCount} unseen clipboard ${clipboardUnseenCount === 1 ? "entry" : "entries"}`
+              : "More navigation"}
             onClick={() => setMoreOpen((open) => !open)}
             className="flex flex-col items-center gap-1 min-w-[58px] py-1"
           >
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${moreOpen || moreActive ? "bg-primary/15" : ""}`}>
+            <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center transition-all ${moreOpen || moreActive ? "bg-primary/15" : ""}`}>
               <MoreHorizontal className={`h-5 w-5 transition-colors ${moreOpen || moreActive ? "text-primary" : "text-muted-foreground/60"}`} />
+              {clipboardUnseenCount > 0 && (
+                <span className="absolute right-0 top-0 flex min-w-4 h-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-black leading-none text-destructive-foreground">
+                  {clipboardUnseenCount > 99 ? "99+" : clipboardUnseenCount}
+                </span>
+              )}
             </div>
             <span className={`text-[10px] font-medium transition-colors ${moreOpen || moreActive ? "text-primary" : "text-muted-foreground/60"}`}>
               More
