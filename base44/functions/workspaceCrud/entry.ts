@@ -31,6 +31,34 @@ async function getMembership(base44, wsId, userId) {
   return memberships[0] || null;
 }
 
+async function notifyUrgentClipboardEntry(base44, wsId, entry, excludeNotifiedUserIds = new Set()) {
+  const members = await base44.asServiceRole.entities.WorkspaceMember.filter({
+    workspace_id: wsId,
+    status: "active",
+  });
+  const createdAt = new Date().toISOString();
+  const notifications = members
+    .filter(
+      (member) =>
+        Boolean(member.user_id) &&
+        member.clipboard_in_app_alerts !== false &&
+        !excludeNotifiedUserIds.has(member.user_id),
+    )
+    .map((member) => ({
+      workspace_id: wsId,
+      recipient_user_id: member.user_id,
+      entry_id: entry.id,
+      title: entry.title || "Urgent clipboard entry",
+      message: entry.details || "An urgent item was added to the Digital Clipboard.",
+      priority: "urgent",
+      created_at: createdAt,
+      read: false,
+    }));
+  if (notifications.length > 0) {
+    await base44.asServiceRole.entities.ClipboardNotification.bulkCreate(notifications);
+  }
+}
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -60,29 +88,10 @@ export default async function(req) {
       }
       const result = await entityApi.create({ ...data, workspace_id: wsId });
 
-      // Urgent Clipboard entries create persistent in-app notifications for
-      // every active workspace member. Important and normal entries stay quiet.
+      // Important and normal entries stay quiet. Urgent delivery follows
+      // each active member's workspace-managed in-app preference.
       if (entity === "ClipboardEntry" && data?.priority === "urgent") {
-        const members = await base44.asServiceRole.entities.WorkspaceMember.filter({
-          workspace_id: wsId,
-          status: "active",
-        });
-        const createdAt = new Date().toISOString();
-        const notifications = members
-          .filter((member) => Boolean(member.user_id))
-          .map((member) => ({
-            workspace_id: wsId,
-            recipient_user_id: member.user_id,
-            entry_id: result.id,
-            title: data.title || "Urgent clipboard entry",
-            message: data.details || "An urgent item was added to the Digital Clipboard.",
-            priority: "urgent",
-            created_at: createdAt,
-            read: false,
-          }));
-        if (notifications.length > 0) {
-          await base44.asServiceRole.entities.ClipboardNotification.bulkCreate(notifications);
-        }
+        await notifyUrgentClipboardEntry(base44, wsId, result);
       }
 
       await auditLog(base44, wsId, user, `create_${entity}`, entity, result.id);
@@ -132,10 +141,6 @@ export default async function(req) {
         data?.priority === "urgent" &&
         record.priority !== "urgent"
       ) {
-        const members = await base44.asServiceRole.entities.WorkspaceMember.filter({
-          workspace_id: wsId,
-          status: "active",
-        });
         const existingNotifications =
           await base44.asServiceRole.entities.ClipboardNotification.filter({
             workspace_id: wsId,
@@ -144,29 +149,7 @@ export default async function(req) {
         const notifiedUserIds = new Set(
           existingNotifications.map((notification) => notification.recipient_user_id),
         );
-        const createdAt = new Date().toISOString();
-        const notifications = members
-          .filter(
-            (member) =>
-              Boolean(member.user_id) && !notifiedUserIds.has(member.user_id),
-          )
-          .map((member) => ({
-            workspace_id: wsId,
-            recipient_user_id: member.user_id,
-            entry_id: id,
-            title: result.title || "Urgent clipboard entry",
-            message:
-              result.details ||
-              "An urgent item was added to the Digital Clipboard.",
-            priority: "urgent",
-            created_at: createdAt,
-            read: false,
-          }));
-        if (notifications.length > 0) {
-          await base44.asServiceRole.entities.ClipboardNotification.bulkCreate(
-            notifications,
-          );
-        }
+        await notifyUrgentClipboardEntry(base44, wsId, result, notifiedUserIds);
       }
 
       await auditLog(base44, wsId, user, `update_${entity}`, entity, id);
