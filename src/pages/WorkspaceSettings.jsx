@@ -5,12 +5,13 @@ import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import InviteDialog from "@/components/workspace/InviteDialog";
 import { wsManage } from "@/lib/workspaceApi";
-import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, Shield, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, BellRing, Clock, CheckCircle, XCircle } from "lucide-react";
 
 const ROLE_LABELS = { owner: "Owner", admin: "Admin", caregiver: "Caregiver", viewer: "Viewer" };
 
@@ -58,6 +59,26 @@ export default function WorkspaceSettings() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] });
       toast({ title: "Member removed" });
+    },
+  });
+
+  const updateClipboardAlerts = useMutation({
+    mutationFn: ({ memberId, enabled }) =>
+      wsManage("updateClipboardNotifications", {
+        memberId,
+        inApp: enabled,
+        workspace_id: activeWorkspaceId,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] });
+      toast({ title: "Clipboard alert recipients updated" });
+    },
+    onError: (error) => {
+      toast({
+        title: "Could not update alerts",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -133,6 +154,56 @@ export default function WorkspaceSettings() {
             ))}
           </section>
         )}
+
+        {/* Urgent Clipboard alerts */}
+        <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 rounded-lg bg-destructive/10 p-2">
+              <BellRing className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Urgent Clipboard Alerts</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Choose who receives persistent in-app alerts when an entry is marked Urgent.
+              </p>
+            </div>
+          </div>
+          <div className="divide-y divide-border/50">
+            {members.filter((member) => member.status === "active").map((member) => {
+              const enabled = member.clipboard_in_app_alerts !== false;
+              return (
+                <div key={member.id} className="flex items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{member.display_name || member.email}</p>
+                    <p className="truncate text-xs text-muted-foreground">{ROLE_LABELS[member.role] || member.role}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor={`clipboard-alert-${member.id}`} className="text-xs text-muted-foreground">
+                      {enabled ? "Receives alerts" : "Alerts off"}
+                    </Label>
+                    <Switch
+                      id={`clipboard-alert-${member.id}`}
+                      checked={enabled}
+                      disabled={!canManageMembers || updateClipboardAlerts.isPending}
+                      onCheckedChange={(checked) =>
+                        updateClipboardAlerts.mutate({ memberId: member.id, enabled: checked })
+                      }
+                      aria-label={`${enabled ? "Disable" : "Enable"} urgent Clipboard alerts for ${member.display_name || member.email}`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          {!canManageMembers && (
+            <p className="text-xs text-muted-foreground">Only workspace Owners and Admins can change alert recipients.</p>
+          )}
+          <div className="rounded-xl bg-muted/60 px-3 py-2.5">
+            <p className="text-xs text-muted-foreground">
+              Email delivery is off. Clipboard entries can contain private medical or care details, so email requires a separate privacy choice.
+            </p>
+          </div>
+        </section>
 
         {/* Members */}
         <section className="rounded-2xl border border-border bg-card p-5 space-y-3">
