@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  AlertTriangle, Check, ClipboardList, Clock3, Filter, MapPin,
+  AlertTriangle, Check, ClipboardList, Clock3, Eye, Filter, MapPin,
   MessageSquarePlus, Pencil, Pin, PinOff, Plus, UserRound,
 } from "lucide-react";
 
@@ -65,6 +65,7 @@ export default function Clipboard() {
   const [view, setView] = useState("open");
   const [petFilter, setPetFilter] = useState("all");
   const [error, setError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [form, setForm] = useState(emptyForm);
 
   const { data: user } = useQuery({
@@ -87,6 +88,16 @@ export default function Clipboard() {
       { workspace_id: activeWorkspaceId },
       "-occurred_at",
       250
+    ),
+    enabled: Boolean(activeWorkspaceId),
+  });
+
+  const { data: acknowledgements = [] } = useQuery({
+    queryKey: ["clipboardAcknowledgements", activeWorkspaceId],
+    queryFn: () => base44.entities.ClipboardAcknowledgement.filter(
+      { workspace_id: activeWorkspaceId },
+      "seen_at",
+      500
     ),
     enabled: Boolean(activeWorkspaceId),
   });
@@ -124,10 +135,36 @@ export default function Clipboard() {
     onError: (e) => setError(e.message),
   });
 
+  const acknowledgeEntry = useMutation({
+    mutationFn: async (entryId) => {
+      const response = await base44.functions.invoke("clipboard-acknowledge", {
+        entry_id: entryId,
+        workspace_id: activeWorkspaceId,
+      });
+      return response.data?.data;
+    },
+    onMutate: () => setActionError(""),
+    onSuccess: () => qc.invalidateQueries({
+      queryKey: ["clipboardAcknowledgements", activeWorkspaceId],
+    }),
+    onError: (e) => {
+      const message = e?.response?.data?.error || e?.message || "Unable to mark this entry as seen.";
+      setActionError(message);
+    },
+  });
+
   const petById = useMemo(
     () => Object.fromEntries(pets.map((pet) => [pet.id, pet])),
     [pets]
   );
+
+  const acknowledgementsByEntry = useMemo(() => {
+    const grouped = {};
+    acknowledgements.forEach((acknowledgement) => {
+      (grouped[acknowledgement.entry_id] ||= []).push(acknowledgement);
+    });
+    return grouped;
+  }, [acknowledgements]);
 
   const visibleEntries = useMemo(() => {
     return entries
@@ -255,6 +292,12 @@ export default function Clipboard() {
           </div>
         </div>
 
+        {actionError && (
+          <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">
+            {actionError}
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-2 mb-5">
           <div className="flex rounded-xl bg-muted p-1">
             {[
@@ -299,6 +342,10 @@ export default function Clipboard() {
           <div className="space-y-3">
             {visibleEntries.map((entry) => {
               const pet = petById[entry.pet_id];
+              const entryAcknowledgements = acknowledgementsByEntry[entry.id] || [];
+              const currentUserHasSeen = entryAcknowledgements.some(
+                (acknowledgement) => acknowledgement.user_id === user?.id
+              );
               return (
                 <article key={entry.id} className={`rounded-2xl border p-4 shadow-sm ${PRIORITY_STYLES[entry.priority] || PRIORITY_STYLES.normal}`}>
                   <div className="flex items-start gap-3">
@@ -314,6 +361,11 @@ export default function Clipboard() {
                         <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                           {CATEGORIES[entry.category] || "Other"}
                         </span>
+                        {entry.status === "open" && !currentUserHasSeen && (
+                          <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
+                            Unseen
+                          </span>
+                        )}
                       </div>
                       <h2 className="font-black text-base leading-tight">{entry.title}</h2>
                     </div>
@@ -348,23 +400,52 @@ export default function Clipboard() {
                     <span className="inline-flex items-center gap-1"><UserRound className="h-3.5 w-3.5" />{entry.created_by_name || "Workspace member"}</span>
                   </div>
 
+                  {entryAcknowledgements.length > 0 && (
+                    <details className="mt-4 rounded-xl bg-muted/60 px-3 py-2">
+                      <summary className="cursor-pointer text-xs font-bold text-muted-foreground">
+                        Seen by {entryAcknowledgements.length} {entryAcknowledgements.length === 1 ? "person" : "people"}
+                      </summary>
+                      <ul className="mt-2 space-y-1.5">
+                        {entryAcknowledgements.map((acknowledgement) => (
+                          <li key={acknowledgement.id} className="flex items-center justify-between gap-3 text-xs">
+                            <span className="font-medium">{acknowledgement.user_name || "Workspace member"}</span>
+                            <span className="text-muted-foreground">{formatWhen(acknowledgement.seen_at)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </details>
+                  )}
+
                   <div className="flex items-center justify-between gap-3 mt-4 pt-3 border-t">
                     {entry.status === "resolved" ? (
                       <p className="text-xs text-muted-foreground">
                         Resolved{entry.resolved_by_name ? ` by ${entry.resolved_by_name}` : ""}
                       </p>
                     ) : <span />}
-                    {canWrite && (
-                      entry.status === "open" ? (
-                        <Button variant="outline" size="sm" onClick={() => resolve(entry)} disabled={updateEntry.isPending}>
-                          <Check className="h-4 w-4" /> Resolve
+                    <div className="flex flex-wrap justify-end gap-2">
+                      {!currentUserHasSeen && (
+                        <Button
+                          variant={entry.priority === "urgent" ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => acknowledgeEntry.mutate(entry.id)}
+                          disabled={acknowledgeEntry.isPending}
+                        >
+                          <Eye className="h-4 w-4" />
+                          {acknowledgeEntry.isPending ? "Saving…" : "Mark as seen"}
                         </Button>
-                      ) : (
-                        <Button variant="ghost" size="sm" onClick={() => reopen(entry)} disabled={updateEntry.isPending}>
-                          Reopen
-                        </Button>
-                      )
-                    )}
+                      )}
+                      {canWrite && (
+                        entry.status === "open" ? (
+                          <Button variant="outline" size="sm" onClick={() => resolve(entry)} disabled={updateEntry.isPending}>
+                            <Check className="h-4 w-4" /> Resolve
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="sm" onClick={() => reopen(entry)} disabled={updateEntry.isPending}>
+                            Reopen
+                          </Button>
+                        )
+                      )}
+                    </div>
                   </div>
                 </article>
               );
