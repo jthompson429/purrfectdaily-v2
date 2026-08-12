@@ -6,7 +6,7 @@ const CRUD_ENTITIES = [
   "DailyNotification", "MedicationSchedule", "PetMedication", "Preventative",
   "Vaccination", "VetVisit", "WeightLog", "NeonatalKitten", "NeonatalGroup",
   "NeonatalFeeding", "NeonatalWeight", "NeonatalElimination", "NeonatalMotherLog",
-  "CatTask", "ClipboardEntry",
+  "CatTask", "ClipboardEntry", "ClipboardNotification",
 ];
 
 async function auditLog(base44, wsId, user, action, entityType, entityId) {
@@ -59,6 +59,32 @@ export default async function(req) {
         return Response.json({ error: "You have read-only access to this workspace." }, { status: 403 });
       }
       const result = await entityApi.create({ ...data, workspace_id: wsId });
+
+      // Urgent Clipboard entries create persistent in-app notifications for
+      // every active workspace member. Important and normal entries stay quiet.
+      if (entity === "ClipboardEntry" && data?.priority === "urgent") {
+        const members = await base44.asServiceRole.entities.WorkspaceMember.filter({
+          workspace_id: wsId,
+          status: "active",
+        });
+        const createdAt = new Date().toISOString();
+        const notifications = members
+          .filter((member) => Boolean(member.user_id))
+          .map((member) => ({
+            workspace_id: wsId,
+            recipient_user_id: member.user_id,
+            entry_id: result.id,
+            title: data.title || "Urgent clipboard entry",
+            message: data.details || "An urgent item was added to the Digital Clipboard.",
+            priority: "urgent",
+            created_at: createdAt,
+            read: false,
+          }));
+        if (notifications.length > 0) {
+          await base44.asServiceRole.entities.ClipboardNotification.bulkCreate(notifications);
+        }
+      }
+
       await auditLog(base44, wsId, user, `create_${entity}`, entity, result.id);
       return Response.json({ data: result });
     }
