@@ -63,6 +63,7 @@ export default async function(req) {
         role: "owner",
         status: "active",
         clipboard_in_app_alerts: true,
+        clipboard_email_alerts: false,
       });
       // Sync user entity
       await base44.asServiceRole.entities.User.update(user.id, {
@@ -138,13 +139,14 @@ export default async function(req) {
       if (!canManageMembers(role)) {
         return Response.json({ error: "Only workspace Owners and Admins can manage notification preferences." }, { status: 403 });
       }
-      const { memberId, inApp } = body;
+      const { memberId, inApp, email } = body;
       const member = await base44.asServiceRole.entities.WorkspaceMember.get(memberId);
       if (!member || member.workspace_id !== wsId || member.status !== "active") {
         return Response.json({ error: "Active member not found in this workspace." }, { status: 404 });
       }
       const preferences = {
         clipboard_in_app_alerts: Boolean(inApp),
+        clipboard_email_alerts: Boolean(email),
       };
       await base44.asServiceRole.entities.WorkspaceMember.update(memberId, preferences);
       await auditLog(
@@ -154,7 +156,7 @@ export default async function(req) {
         "clipboard_notification_preferences_updated",
         "WorkspaceMember",
         memberId,
-        `Updated urgent Clipboard in-app alerts for ${member.email}: ${preferences.clipboard_in_app_alerts ? "on" : "off"}`,
+        `Updated urgent Clipboard alerts for ${member.email}: in-app ${preferences.clipboard_in_app_alerts ? "on" : "off"}, generic email ${preferences.clipboard_email_alerts ? "on" : "off"}`,
       );
       return Response.json({ data: { ok: true, ...preferences } });
     }
@@ -233,6 +235,7 @@ export default async function(req) {
         role: inv.role,
         status: "active",
         clipboard_in_app_alerts: true,
+        clipboard_email_alerts: false,
       });
       // Update invitation
       await base44.asServiceRole.entities.WorkspaceInvitation.update(invitationId, {
