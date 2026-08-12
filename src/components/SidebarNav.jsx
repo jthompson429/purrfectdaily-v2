@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Cat, Pill, Phone, Settings, X, PawPrint, Building2 } from "lucide-react";
+import { Home, Cat, Pill, Phone, Settings, X, PawPrint, Building2, ClipboardList } from "lucide-react";
 
 const GROUPS = [
   {
     label: "Care",
     items: [
       { icon: Home, label: "Today", path: "/" },
+      { icon: ClipboardList, label: "Clipboard", path: "/clipboard" },
       {
         icon: Cat,
         label: "Pets",
