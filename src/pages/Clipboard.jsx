@@ -27,8 +27,8 @@ const CATEGORIES = {
 
 const PRIORITY_STYLES = {
   normal: "border-border bg-card",
-  important: "border-amber-500/35 bg-amber-500/5",
-  urgent: "border-destructive/40 bg-destructive/5",
+  important: "border-amber-500/60 bg-amber-500/10 shadow-md shadow-amber-500/10 ring-1 ring-amber-500/15",
+  urgent: "border-destructive/55 bg-destructive/10 shadow-md shadow-destructive/10 ring-1 ring-destructive/15",
 };
 
 function localDateTimeValue() {
