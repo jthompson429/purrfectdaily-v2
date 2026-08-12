@@ -68,6 +68,23 @@
     },
     "resolved_by_name": {
       "type": "string"
+    },
+    "phone_followup_completed": {
+      "type": "boolean",
+      "default": false
+    },
+    "phone_followup_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "phone_followup_by_id": {
+      "type": "string"
+    },
+    "phone_followup_by_name": {
+      "type": "string"
+    },
+    "phone_followup_note": {
+      "type": "string"
     }
   },
   "required": [
