@@ -124,6 +124,51 @@ export default async function(req) {
         return Response.json({ error: "Record not found in this workspace." }, { status: 404 });
       }
       const result = await entityApi.update(id, data);
+
+      // Escalating an existing Clipboard entry to urgent creates the same
+      // member notifications as creating it urgent.
+      if (
+        entity === "ClipboardEntry" &&
+        data?.priority === "urgent" &&
+        record.priority !== "urgent"
+      ) {
+        const members = await base44.asServiceRole.entities.WorkspaceMember.filter({
+          workspace_id: wsId,
+          status: "active",
+        });
+        const existingNotifications =
+          await base44.asServiceRole.entities.ClipboardNotification.filter({
+            workspace_id: wsId,
+            entry_id: id,
+          });
+        const notifiedUserIds = new Set(
+          existingNotifications.map((notification) => notification.recipient_user_id),
+        );
+        const createdAt = new Date().toISOString();
+        const notifications = members
+          .filter(
+            (member) =>
+              Boolean(member.user_id) && !notifiedUserIds.has(member.user_id),
+          )
+          .map((member) => ({
+            workspace_id: wsId,
+            recipient_user_id: member.user_id,
+            entry_id: id,
+            title: result.title || "Urgent clipboard entry",
+            message:
+              result.details ||
+              "An urgent item was added to the Digital Clipboard.",
+            priority: "urgent",
+            created_at: createdAt,
+            read: false,
+          }));
+        if (notifications.length > 0) {
+          await base44.asServiceRole.entities.ClipboardNotification.bulkCreate(
+            notifications,
+          );
+        }
+      }
+
       await auditLog(base44, wsId, user, `update_${entity}`, entity, id);
       return Response.json({ data: result });
     }
