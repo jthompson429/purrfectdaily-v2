@@ -63,10 +63,11 @@ export default function WorkspaceSettings() {
   });
 
   const updateClipboardAlerts = useMutation({
-    mutationFn: ({ memberId, enabled }) =>
+    mutationFn: ({ memberId, inApp, email }) =>
       wsManage("updateClipboardNotifications", {
         memberId,
-        inApp: enabled,
+        inApp,
+        email,
         workspace_id: activeWorkspaceId,
       }),
     onSuccess: () => {
@@ -164,32 +165,57 @@ export default function WorkspaceSettings() {
             <div>
               <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Urgent Clipboard Alerts</h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Choose who receives persistent in-app alerts when an entry is marked Urgent.
+                Choose who receives in-app alerts and privacy-safe generic email notices when an entry is marked Urgent.
               </p>
             </div>
           </div>
           <div className="divide-y divide-border/50">
             {members.filter((member) => member.status === "active").map((member) => {
-              const enabled = member.clipboard_in_app_alerts !== false;
+              const inAppEnabled = member.clipboard_in_app_alerts !== false;
+              const emailEnabled = member.clipboard_email_alerts === true;
               return (
-                <div key={member.id} className="flex items-center justify-between gap-4 py-3">
+                <div key={member.id} className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">{member.display_name || member.email}</p>
                     <p className="truncate text-xs text-muted-foreground">{ROLE_LABELS[member.role] || member.role}</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor={`clipboard-alert-${member.id}`} className="text-xs text-muted-foreground">
-                      {enabled ? "Receives alerts" : "Alerts off"}
-                    </Label>
-                    <Switch
-                      id={`clipboard-alert-${member.id}`}
-                      checked={enabled}
-                      disabled={!canManageMembers || updateClipboardAlerts.isPending}
-                      onCheckedChange={(checked) =>
-                        updateClipboardAlerts.mutate({ memberId: member.id, enabled: checked })
-                      }
-                      aria-label={`${enabled ? "Disable" : "Enable"} urgent Clipboard alerts for ${member.display_name || member.email}`}
-                    />
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`clipboard-in-app-${member.id}`} className="text-xs text-muted-foreground">
+                        In-app
+                      </Label>
+                      <Switch
+                        id={`clipboard-in-app-${member.id}`}
+                        checked={inAppEnabled}
+                        disabled={!canManageMembers || updateClipboardAlerts.isPending}
+                        onCheckedChange={(checked) =>
+                          updateClipboardAlerts.mutate({
+                            memberId: member.id,
+                            inApp: checked,
+                            email: emailEnabled,
+                          })
+                        }
+                        aria-label={`${inAppEnabled ? "Disable" : "Enable"} urgent in-app Clipboard alerts for ${member.display_name || member.email}`}
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor={`clipboard-email-${member.id}`} className="text-xs text-muted-foreground">
+                        Email
+                      </Label>
+                      <Switch
+                        id={`clipboard-email-${member.id}`}
+                        checked={emailEnabled}
+                        disabled={!canManageMembers || updateClipboardAlerts.isPending}
+                        onCheckedChange={(checked) =>
+                          updateClipboardAlerts.mutate({
+                            memberId: member.id,
+                            inApp: inAppEnabled,
+                            email: checked,
+                          })
+                        }
+                        aria-label={`${emailEnabled ? "Disable" : "Enable"} generic urgent Clipboard email notices for ${member.display_name || member.email}`}
+                      />
+                    </div>
                   </div>
                 </div>
               );
@@ -200,7 +226,7 @@ export default function WorkspaceSettings() {
           )}
           <div className="rounded-xl bg-muted/60 px-3 py-2.5">
             <p className="text-xs text-muted-foreground">
-              Email delivery is off. Clipboard entries can contain private medical or care details, so email requires a separate privacy choice.
+              Email notices are off by default and contain no Clipboard details, pet names, workspace names, or medical information. Recipients must sign in to review the urgent item securely.
             </p>
           </div>
         </section>
