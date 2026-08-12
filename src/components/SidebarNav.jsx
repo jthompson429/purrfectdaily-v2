@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Cat, Pill, Phone, Settings, X, PawPrint, Building2, ClipboardList } from "lucide-react";
+import { Home, Cat, Pill, Settings, X, PawPrint, Building2, ClipboardList } from "lucide-react";
 
 const GROUPS = [
   {
