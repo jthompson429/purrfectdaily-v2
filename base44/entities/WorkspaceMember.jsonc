@@ -36,6 +36,11 @@
       "type": "boolean",
       "default": true,
       "description": "Receive urgent Digital Clipboard notifications in the app"
+    },
+    "clipboard_email_alerts": {
+      "type": "boolean",
+      "default": false,
+      "description": "Receive privacy-safe generic email notices for urgent Digital Clipboard entries"
     }
   },
   "required": [
