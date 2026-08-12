@@ -1,0 +1,47 @@
+{
+  "name": "ClipboardAcknowledgement",
+  "type": "object",
+  "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "Workspace this acknowledgement belongs to"
+    },
+    "entry_id": {
+      "type": "string",
+      "description": "Acknowledged clipboard entry"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Member who acknowledged the entry"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "seen_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "entry_id",
+    "user_id",
+    "seen_at"
+  ],
+  "rls": {
+    "create": {
+      "data.__rls_block": true
+    },
+    "read": {
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
+    },
+    "update": {
+      "data.__rls_block": true
+    },
+    "delete": {
+      "data.__rls_block": true
+    }
+  }
+}
