@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import InviteDialog from "@/components/workspace/InviteDialog";
 import { wsManage } from "@/lib/workspaceApi";
@@ -16,7 +16,7 @@ import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, BellRing, Clock, CheckCir
 const ROLE_LABELS = { owner: "Owner", admin: "Admin", caregiver: "Caregiver", viewer: "Viewer" };
 
 export default function WorkspaceSettings() {
-  const { activeWorkspaceId, activeWorkspace, activeWorkspaceRole, canManageMembers, isOwner, writeAuditLog, pendingInvitations, acceptInvitation } = useWorkspace();
+  const { activeWorkspaceId, activeWorkspace, canManageMembers, isOwner, pendingInvitations, acceptInvitation } = useWorkspace();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);
