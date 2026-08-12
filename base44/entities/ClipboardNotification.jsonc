@@ -1,0 +1,71 @@
+{
+  "name": "ClipboardNotification",
+  "type": "object",
+  "properties": {
+    "workspace_id": {
+      "type": "string"
+    },
+    "recipient_user_id": {
+      "type": "string"
+    },
+    "entry_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "urgent"
+      ],
+      "default": "urgent"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "read_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "recipient_user_id",
+    "entry_id",
+    "title",
+    "message",
+    "created_at"
+  ],
+  "rls": {
+    "create": {
+      "data.__rls_block": true
+    },
+    "read": {
+      "$and": [
+        {
+          "data.workspace_id": {
+            "$in": "{{user.data.workspace_ids}}"
+          }
+        },
+        {
+          "data.recipient_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "data.__rls_block": true
+    },
+    "delete": {
+      "data.__rls_block": true
+    }
+  }
+}
