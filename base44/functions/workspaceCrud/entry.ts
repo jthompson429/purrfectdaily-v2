@@ -57,6 +57,31 @@ async function notifyUrgentClipboardEntry(base44, wsId, entry, excludeNotifiedUs
   if (notifications.length > 0) {
     await base44.asServiceRole.entities.ClipboardNotification.bulkCreate(notifications);
   }
+
+  // Privacy-safe email delivery is independently opt-in. Never include the
+  // workspace, pet, author, entry title, entry details, or timestamps here.
+  const emailRecipients = members.filter(
+    (member) =>
+      Boolean(member.email) &&
+      member.clipboard_email_alerts === true &&
+      !excludeNotifiedUserIds.has(member.user_id),
+  );
+  if (emailRecipients.length > 0) {
+    await Promise.allSettled(
+      emailRecipients.map((member) =>
+        base44.integrations.Core.SendEmail({
+          to: member.email,
+          subject: "An urgent Digital Clipboard item needs review",
+          body: [
+            "<p>An urgent Digital Clipboard item needs review in Purrfect Daily.</p>",
+            "<p>Sign in to Purrfect Daily to view it securely.</p>",
+            "<p>This email intentionally does not include Clipboard details.</p>",
+          ].join(""),
+          from_name: "Purrfect Daily",
+        }),
+      ),
+    );
+  }
 }
 
 export default async function(req) {
