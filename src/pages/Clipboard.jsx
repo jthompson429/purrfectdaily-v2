@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   AlertTriangle, Check, ClipboardList, Clock3, Eye, Filter, MapPin,
-  MessageSquarePlus, Pencil, Pin, PinOff, Plus, UserRound,
+  MessageSquarePlus, Pencil, Phone, Pin, PinOff, Plus, UserRound,
 } from "lucide-react";
 
 import { base44 } from "@/api/base44Client";
@@ -66,6 +66,8 @@ export default function Clipboard() {
   const [petFilter, setPetFilter] = useState("all");
   const [error, setError] = useState("");
   const [actionError, setActionError] = useState("");
+  const [phoneEntry, setPhoneEntry] = useState(null);
+  const [phoneNote, setPhoneNote] = useState("");
   const [form, setForm] = useState(emptyForm);
 
   const { data: user } = useQuery({
@@ -276,6 +278,28 @@ export default function Clipboard() {
     data: { pinned: !entry.pinned },
   });
 
+  const recordPhoneFollowup = () => {
+    if (!phoneEntry) return;
+    updateEntry.mutate(
+      {
+        id: phoneEntry.id,
+        data: {
+          phone_followup_completed: true,
+          phone_followup_at: new Date().toISOString(),
+          phone_followup_by_id: user?.id || "",
+          phone_followup_by_name: user?.full_name || user?.email || "Workspace member",
+          phone_followup_note: phoneNote.trim(),
+        },
+      },
+      {
+        onSuccess: () => {
+          setPhoneEntry(null);
+          setPhoneNote("");
+        },
+      }
+    );
+  };
+
   return (
     <div className="min-h-full bg-background">
       <div className="max-w-3xl mx-auto px-4 py-5 pb-24">
@@ -378,6 +402,16 @@ export default function Clipboard() {
                         <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
                           {CATEGORIES[entry.category] || "Other"}
                         </span>
+                        {entry.priority === "urgent" && !entry.phone_followup_completed && (
+                          <span className="rounded-full bg-destructive px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-destructive-foreground">
+                            Phone follow-up needed
+                          </span>
+                        )}
+                        {entry.priority === "urgent" && entry.phone_followup_completed && (
+                          <span className="rounded-full bg-emerald-600/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                            Phone follow-up recorded
+                          </span>
+                        )}
                         {entry.status === "open" && !currentUserHasSeen && (
                           <span className="rounded-full bg-primary/12 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-primary">
                             Unseen
@@ -417,6 +451,18 @@ export default function Clipboard() {
                     <span className="inline-flex items-center gap-1"><UserRound className="h-3.5 w-3.5" />{entry.created_by_name || "Workspace member"}</span>
                   </div>
 
+                  {entry.priority === "urgent" && entry.phone_followup_completed && (
+                    <div className="mt-4 rounded-xl border border-emerald-600/20 bg-emerald-600/10 px-3 py-2 text-xs">
+                      <p className="font-bold text-emerald-700 dark:text-emerald-400">
+                        Phone follow-up recorded{entry.phone_followup_by_name ? ` by ${entry.phone_followup_by_name}` : ""}
+                        {entry.phone_followup_at ? ` · ${formatWhen(entry.phone_followup_at)}` : ""}
+                      </p>
+                      {entry.phone_followup_note && (
+                        <p className="mt-1 text-foreground">{entry.phone_followup_note}</p>
+                      )}
+                    </div>
+                  )}
+
                   {entryAcknowledgements.length > 0 && (
                     <details className="mt-4 rounded-xl bg-muted/60 px-3 py-2">
                       <summary className="cursor-pointer text-xs font-bold text-muted-foreground">
@@ -440,6 +486,18 @@ export default function Clipboard() {
                       </p>
                     ) : <span />}
                     <div className="flex flex-wrap justify-end gap-2">
+                      {canWrite && entry.priority === "urgent" && !entry.phone_followup_completed && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setPhoneEntry(entry);
+                            setPhoneNote("");
+                          }}
+                        >
+                          <Phone className="h-4 w-4" /> Record phone follow-up
+                        </Button>
+                      )}
                       {!currentUserHasSeen && (
                         <Button
                           variant={entry.priority === "urgent" ? "default" : "outline"}
@@ -470,6 +528,39 @@ export default function Clipboard() {
           </div>
         )}
       </div>
+
+      <Dialog open={Boolean(phoneEntry)} onOpenChange={(open) => {
+        if (!open) {
+          setPhoneEntry(null);
+          setPhoneNote("");
+        }
+      }}>
+        <DialogContent className="sm:rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Record phone follow-up</DialogTitle>
+            <DialogDescription>
+              Confirm that the required phone communication occurred. This does not resolve the Clipboard entry.
+            </DialogDescription>
+          </DialogHeader>
+          <div>
+            <label className="text-sm font-bold">Optional note</label>
+            <Textarea
+              value={phoneNote}
+              onChange={(event) => setPhoneNote(event.target.value)}
+              placeholder="Example: Spoke with Ashley; monitoring instructions received."
+              maxLength={300}
+              className="mt-1 min-h-24"
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setPhoneEntry(null)}>Cancel</Button>
+            <Button type="button" onClick={recordPhoneFollowup} disabled={updateEntry.isPending}>
+              <Phone className="h-4 w-4" />
+              {updateEntry.isPending ? "Saving…" : "Confirm phone follow-up"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => {
         setDialogOpen(open);
