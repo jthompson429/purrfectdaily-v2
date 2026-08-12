@@ -1,0 +1,95 @@
+{
+  "name": "ClipboardEntry",
+  "type": "object",
+  "properties": {
+    "workspace_id": {
+      "type": "string",
+      "description": "Workspace this clipboard entry belongs to"
+    },
+    "title": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "pet_id": {
+      "type": "string",
+      "description": "Optional related pet"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "observation",
+        "handoff",
+        "supply",
+        "behavior",
+        "medical",
+        "other"
+      ],
+      "default": "observation"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "normal",
+        "important",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "resolved"
+      ],
+      "default": "open"
+    },
+    "pinned": {
+      "type": "boolean",
+      "default": false
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by_id": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string"
+    },
+    "resolved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved_by_id": {
+      "type": "string"
+    },
+    "resolved_by_name": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "workspace_id",
+    "title",
+    "details",
+    "status"
+  ],
+  "rls": {
+    "create": {
+      "data.__rls_block": true
+    },
+    "read": {
+      "data.workspace_id": {
+        "$in": "{{user.data.workspace_ids}}"
+      }
+    },
+    "update": {
+      "data.__rls_block": true
+    },
+    "delete": {
+      "data.__rls_block": true
+    }
+  }
+}
