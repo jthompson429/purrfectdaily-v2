@@ -63,7 +63,7 @@ export default function VetVisitSection({ petId }) {
   const handleAddMeds = async (visit) => {
     const meds = visit.medications_prescribed || [];
     for (const m of meds) {
-      await wsCreate("PetMedication", {
+      await wsCreate("MedicationSchedule", {
         pet_id: petId,
         medication_name: m.name,
         frequency: m.frequency || "twice_daily",
@@ -72,7 +72,7 @@ export default function VetVisitSection({ petId }) {
       }, activeWorkspaceId);
     }
     await wsUpdate("VetVisit", visit.id, { meds_added: true }, activeWorkspaceId);
-    qc.invalidateQueries({ queryKey: ["petMedications", petId] });
+    qc.invalidateQueries({ queryKey: ["medications"] });
     qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
   };
 
