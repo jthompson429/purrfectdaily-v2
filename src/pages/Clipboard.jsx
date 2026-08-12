@@ -110,6 +110,7 @@ export default function Clipboard() {
     mutationFn: (data) => wsCreate("ClipboardEntry", data, activeWorkspaceId),
     onSuccess: () => {
       refresh();
+      qc.invalidateQueries({ queryKey: ["clipboardNotifications", activeWorkspaceId] });
       setDialogOpen(false);
       setError("");
       setEditingEntry(null);
@@ -127,6 +128,7 @@ export default function Clipboard() {
     mutationFn: ({ id, data }) => wsUpdate("ClipboardEntry", id, data, activeWorkspaceId),
     onSuccess: () => {
       refresh();
+      qc.invalidateQueries({ queryKey: ["clipboardNotifications", activeWorkspaceId] });
       setDialogOpen(false);
       setEditingEntry(null);
       setError("");
