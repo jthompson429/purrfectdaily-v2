@@ -36,6 +36,7 @@ function nextActiveDate(todayStr, activeRanges) {
 
 export function getMedicationStatus(med) {
   const todayStr = format(new Date(), "yyyy-MM-dd");
+  if (med.archived) return { active: false, reason: "completed" };
 
   // Custom date ranges (e.g. Itrafungol on/off cycles)
   if (med.schedule_type === "custom_date_ranges" && med.schedule_rule) {
