@@ -87,6 +87,20 @@ function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
           )}
 
           <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Frequency</Label>
+            <Select value={form.frequency} onValueChange={v => set("frequency", v)}>
+              <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="once_daily">Once Daily</SelectItem>
+                <SelectItem value="twice_daily">Twice Daily</SelectItem>
+                <SelectItem value="thrice_daily">Three Times Daily</SelectItem>
+                <SelectItem value="as_needed">As Needed</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Dosage Instructions</Label>
             <Textarea value={form.dosage_instructions} onChange={e => set("dosage_instructions", e.target.value)} placeholder="e.g. 0.5ml orally, mix in small amount of wet food" className={`${inputClass} h-20 resize-none`} />
           </div>
@@ -102,12 +116,35 @@ function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
             </div>
           </div>
 
-          <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
-            <div>
-              <p className="text-foreground text-sm font-medium">Require Proof Photo</p>
-              <p className="text-muted-foreground text-xs">Photo needed to confirm given</p>
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Notes</Label>
+            <Textarea value={form.notes || ""} onChange={e => set("notes", e.target.value)} placeholder="Optional care notes" className={`${inputClass} h-16 resize-none`} />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
+              <div>
+                <p className="text-foreground text-sm font-medium">Critical Medication</p>
+                <p className="text-muted-foreground text-xs">Emphasize warnings and due doses</p>
+              </div>
+              <Switch checked={form.critical} onCheckedChange={v => set("critical", v)} />
             </div>
-            <Switch checked={form.requires_photo} onCheckedChange={v => set("requires_photo", v)} />
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
+              <div>
+                <p className="text-foreground text-sm font-medium">Require Proof Photo</p>
+                <p className="text-muted-foreground text-xs">Photo needed to confirm given</p>
+              </div>
+              <Switch checked={form.requires_photo} onCheckedChange={v => set("requires_photo", v)} />
+            </div>
+            {med?.id && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
+                <div>
+                  <p className="text-foreground text-sm font-medium">Archive Medication</p>
+                  <p className="text-muted-foreground text-xs">Keep history without showing active doses</p>
+                </div>
+                <Switch checked={form.archived || false} onCheckedChange={v => set("archived", v)} />
+              </div>
+            )}
           </div>
 
           <DialogFooter className="pt-2 gap-2">
