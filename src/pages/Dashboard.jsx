@@ -159,7 +159,13 @@ export default function Dashboard() {
 
   const logByTaskId = useMemo(() => {
     const map = {};
-    logs.forEach(l => { map[l.task_id] = l; });
+    logs.forEach((log) => {
+      const current = map[log.task_id];
+      const shouldReplace = !current
+        || (current.status === "not_applicable" && log.status !== "not_applicable")
+        || new Date(log.completed_at || 0) > new Date(current.completed_at || 0);
+      if (shouldReplace) map[log.task_id] = log;
+    });
     return map;
   }, [logs]);
 
