@@ -9,6 +9,11 @@ import AttachmentViewer from "./AttachmentViewer";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
+const vaccinationKey = (item) =>
+  `${item.name || ""}::${item.name === "custom" ? item.custom_name || "" : ""}`;
+
+const preventativeKey = (item) => (item.name || "").trim().toLowerCase();
+
 export default function VetVisitSection({ petId }) {
   const { activeWorkspaceId } = useWorkspace();
   const qc = useQueryClient();
@@ -17,44 +22,100 @@ export default function VetVisitSection({ petId }) {
   const [viewer, setViewer] = useState(null);
   const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ pet_id: petId }, "-date") });
   const items = Array.isArray(data) ? data : [];
-  const upsert = useMutation({
-    mutationFn: ({ id, data }) => id ? wsUpdate("VetVisit", id, data, activeWorkspaceId) : wsCreate("VetVisit", { ...data }, activeWorkspaceId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] })
+
+  const invalidateVisitCare = () => {
+    qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
+    qc.invalidateQueries({ queryKey: ["vaccinations", petId] });
+    qc.invalidateQueries({ queryKey: ["preventatives", petId] });
+    qc.invalidateQueries({ queryKey: ["allVaccinations", activeWorkspaceId] });
+    qc.invalidateQueries({ queryKey: ["allPreventatives", activeWorkspaceId] });
+  };
+
+  const remove = useMutation({
+    mutationFn: async (id) => {
+      const [vaccinations, preventatives] = await Promise.all([
+        base44.entities.Vaccination.filter({ source_visit_id: id, workspace_id: activeWorkspaceId }),
+        base44.entities.Preventative.filter({ source_visit_id: id, workspace_id: activeWorkspaceId })
+      ]);
+      await Promise.all([
+        ...vaccinations.map((record) => wsDelete("Vaccination", record.id, activeWorkspaceId)),
+        ...preventatives.map((record) => wsDelete("Preventative", record.id, activeWorkspaceId))
+      ]);
+      await wsDelete("VetVisit", id, activeWorkspaceId);
+    },
+    onSuccess: invalidateVisitCare
   });
-  const remove = useMutation({ mutationFn: (id) => wsDelete("VetVisit", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["vetVisits", petId] }) });
+
+  const reconcileVaccinations = async (visit, vaccinationsGiven) => {
+    const linked = await base44.entities.Vaccination.filter({
+      source_visit_id: visit.id,
+      workspace_id: activeWorkspaceId
+    });
+    const unmatched = [...linked];
+    const valid = (vaccinationsGiven || []).filter(
+      (item) => item.name && (item.name !== "custom" || item.custom_name?.trim())
+    );
+
+    for (const item of valid) {
+      const index = unmatched.findIndex((record) => vaccinationKey(record) === vaccinationKey(item));
+      const existing = index >= 0 ? unmatched.splice(index, 1)[0] : null;
+      const payload = {
+        pet_id: petId,
+        source_visit_id: visit.id,
+        name: item.name,
+        custom_name: item.custom_name || "",
+        date_given: visit.date,
+        due_date: item.due_date || "",
+        veterinarian: visit.veterinarian || ""
+      };
+      if (existing) await wsUpdate("Vaccination", existing.id, payload, activeWorkspaceId);
+      else await wsCreate("Vaccination", payload, activeWorkspaceId);
+    }
+
+    await Promise.all(unmatched.map((record) => wsDelete("Vaccination", record.id, activeWorkspaceId)));
+  };
+
+  const reconcilePreventatives = async (visit, preventativesGiven) => {
+    const linked = await base44.entities.Preventative.filter({
+      source_visit_id: visit.id,
+      workspace_id: activeWorkspaceId
+    });
+    const unmatched = [...linked];
+    const valid = (preventativesGiven || []).filter((item) => item.name?.trim());
+
+    for (const item of valid) {
+      const index = unmatched.findIndex((record) => preventativeKey(record) === preventativeKey(item));
+      const existing = index >= 0 ? unmatched.splice(index, 1)[0] : null;
+      const payload = {
+        pet_id: petId,
+        source_visit_id: visit.id,
+        name: item.name.trim(),
+        date_given: item.date_given || visit.date,
+        frequency: item.frequency || "monthly",
+        custom_interval_days: item.custom_interval_days || 30
+      };
+      if (existing) await wsUpdate("Preventative", existing.id, payload, activeWorkspaceId);
+      else await wsCreate("Preventative", payload, activeWorkspaceId);
+    }
+
+    await Promise.all(unmatched.map((record) => wsDelete("Preventative", record.id, activeWorkspaceId)));
+  };
 
   const handleSave = async (data, id) => {
     try {
-    const saved = id ? await wsUpdate("VetVisit", id, data, activeWorkspaceId) : await wsCreate("VetVisit", { ...data, pet_id: petId }, activeWorkspaceId);
-    const visitDate = saved?.date || data.date;
+      const saved = id
+        ? await wsUpdate("VetVisit", id, data, activeWorkspaceId)
+        : await wsCreate("VetVisit", { ...data, pet_id: petId }, activeWorkspaceId);
+      const visit = { ...data, ...saved, id: saved?.id || id, pet_id: petId };
 
-    const givenV = data.vaccinations_given || [];
-    if (givenV.length) {
-      const existing = await base44.entities.Vaccination.filter({ pet_id: petId, workspace_id: activeWorkspaceId });
-      for (const gv of givenV) {
-        const exists = existing.find((v) => v.name === gv.name && v.date_given === visitDate && (gv.name !== "custom" || v.custom_name === (gv.custom_name || "")));
-        if (!exists) {
-          await wsCreate("Vaccination", { pet_id: petId, name: gv.name, custom_name: gv.custom_name || "", date_given: visitDate, due_date: gv.due_date || "", veterinarian: saved?.veterinarian || "" }, activeWorkspaceId);
-        }
-      }
-      qc.invalidateQueries({ queryKey: ["vaccinations", petId] });
-    }
+      await Promise.all([
+        reconcileVaccinations(visit, data.vaccinations_given),
+        reconcilePreventatives(visit, data.preventives_administered)
+      ]);
 
-    const givenP = data.preventives_administered || [];
-    if (givenP.length) {
-      const existingP = await base44.entities.Preventative.filter({ pet_id: petId, workspace_id: activeWorkspaceId });
-      for (const gp of givenP) {
-        const dg = gp.date_given || visitDate;
-        const exists = existingP.find((p) => p.name === gp.name && p.date_given === dg);
-        if (!exists) {
-          await wsCreate("Preventative", { pet_id: petId, name: gp.name, date_given: dg, frequency: gp.frequency || "monthly", custom_interval_days: gp.custom_interval_days || 30 }, activeWorkspaceId);
-        }
-      }
-      qc.invalidateQueries({ queryKey: ["preventatives", petId] });
-    }
-
-    qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
-    setDialog(false); setEditing(null);
+      invalidateVisitCare();
+      setDialog(false);
+      setEditing(null);
     } catch (err) {
       throw new Error(err?.message || "Could not save the veterinary visit. Please try again.");
     }
@@ -92,7 +153,7 @@ export default function VetVisitSection({ petId }) {
               key={v.id}
               visit={v}
               onEdit={() => { setEditing(v); setDialog(true); }}
-              onDelete={() => { if (window.confirm("Delete this visit?")) remove.mutate(v.id); }}
+              onDelete={() => { if (window.confirm("Delete this visit and its linked care records?")) remove.mutate(v.id); }}
               onAddMeds={() => handleAddMeds(v)}
               onOpenAttachment={setViewer}
             />
