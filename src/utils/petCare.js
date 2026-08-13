@@ -64,12 +64,14 @@ export const preventativeStatus = (p) => {
 };
 
 export const vaccinationStatus = (v) => {
-  if (!v.due_date) return { color: "green", label: "Current" };
+  if (!v.due_date) return { color: "muted", label: "No Due Date", daysRemaining: null };
   const due = toLocal(v.due_date);
-  const days = differenceInCalendarDays(due, new Date());
-  if (days < 0) return { color: "red", label: "Overdue" };
-  if (days <= 30) return { color: "yellow", label: "Due Soon" };
-  return { color: "green", label: "Current" };
+  if (!due) return { color: "muted", label: "No Due Date", daysRemaining: null };
+  const daysRemaining = differenceInCalendarDays(due, new Date());
+  if (daysRemaining < 0) return { color: "red", label: "Overdue", daysRemaining };
+  if (daysRemaining === 0) return { color: "yellow", label: "Due Today", daysRemaining };
+  if (daysRemaining <= 30) return { color: "yellow", label: "Due Soon", daysRemaining };
+  return { color: "green", label: "Current", daysRemaining };
 };
 
 export const isMedicationActive = (m) => {
@@ -109,8 +111,11 @@ export const buildReminders = (pet, preventatives, vaccinations, medications, we
   vaccinations.forEach((v) => {
     const st = vaccinationStatus(v);
     const label = v.name === "custom" ? v.custom_name || "Vaccine" : v.name.toUpperCase();
-    if (st.color === "red") out.push({ urgency: 0, label: `${label} overdue` });
-    else if (st.color === "yellow") out.push({ urgency: 3, label: `${label} due soon` });
+    if (st.daysRemaining == null) return;
+    if (st.daysRemaining < 0) out.push({ urgency: 0, label: `${label} overdue` });
+    else if (st.daysRemaining === 0) out.push({ urgency: 1, label: `${label} due today` });
+    else if (st.daysRemaining === 1) out.push({ urgency: 1, label: `${label} due tomorrow` });
+    else if (st.daysRemaining <= 30) out.push({ urgency: 3, label: `${label} due in ${st.daysRemaining} days` });
   });
   medications.forEach((m) => {
     const status = getMedicationStatus(m);
