@@ -46,7 +46,9 @@ export default async function(req: Request) {
       return Response.json({ error: "This medication course is complete." }, { status: 400 });
     }
 
-    const validSlots = SLOTS_BY_FREQUENCY[medication.frequency] || ["morning"];
+    const validSlots = medication.schedule_type === "custom"
+      ? ["as_needed"]
+      : SLOTS_BY_FREQUENCY[medication.frequency] || ["morning"];
     if (!validSlots.includes(slot)) {
       return Response.json({ error: "This dose period is not part of the medication schedule." }, { status: 400 });
     }
