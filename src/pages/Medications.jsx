@@ -18,10 +18,12 @@ import { format } from "date-fns";
 const empty = {
   pet_id: "", medication_name: "", dosage_instructions: "", route: "oral",
   frequency: "once_daily", start_date: format(new Date(), "yyyy-MM-dd"), end_date: "",
-  schedule_type: "daily", active_week_pattern: "1,3,5",
+  schedule_type: "daily", active_week_pattern: "1,3,5", schedule_days: [], custom_schedule_instructions: "",
   off_week_warning: "DO NOT GIVE this medication today — this is an off-week.", critical: true,
   requires_photo: false, notes: "",
 };
+
+const WEEKDAYS = [["S", 0], ["M", 1], ["T", 2], ["W", 3], ["T", 4], ["F", 5], ["S", 6]];
 
 function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
   const [form, setForm] = useState(empty);
@@ -83,6 +85,24 @@ function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
               <p className="text-muted-foreground text-[10px]">Comma-separated week numbers from start date. e.g. "1,3,5" = give in weeks 1,3,5 — skip weeks 2,4</p>
               <Label className="text-muted-foreground text-xs uppercase tracking-wider">Off-Week Warning Message</Label>
               <Textarea value={form.off_week_warning} onChange={e => set("off_week_warning", e.target.value)} className={`${inputClass} h-16 resize-none`} />
+            </div>
+          )}
+          {form.schedule_type === "specific_days" && (
+            <div className="rounded-xl p-3 space-y-2 bg-muted border border-border">
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Days Medication Is Due</Label>
+              <div className="grid grid-cols-7 gap-1">
+                {WEEKDAYS.map(([label, day]) => {
+                  const selected = (form.schedule_days || []).includes(day);
+                  return <button key={day} type="button" onClick={() => set("schedule_days", selected ? form.schedule_days.filter((d) => d !== day) : [...(form.schedule_days || []), day])} className={`h-9 rounded-lg text-xs font-bold border ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border"}`}>{label}</button>;
+                })}
+              </div>
+            </div>
+          )}
+          {(form.schedule_type === "custom" || form.frequency === "custom" || form.frequency === "as_needed") && (
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">{form.frequency === "as_needed" ? "As-Needed Instructions" : "Custom Schedule Instructions"}</Label>
+              <Textarea value={form.custom_schedule_instructions || ""} onChange={e => set("custom_schedule_instructions", e.target.value)} placeholder={form.frequency === "as_needed" ? "When should this medication be given, and what is the maximum frequency?" : "Describe exactly when this medication should be given."} className={`${inputClass} h-20 resize-none`} />
+              <p className="text-muted-foreground text-[10px]">Custom and as-needed medication will not create an automatic required task on Today.</p>
             </div>
           )}
 
@@ -149,7 +169,7 @@ function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
 
           <DialogFooter className="pt-2 gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-muted-foreground rounded-xl flex-1">Cancel</Button>
-            <Button onClick={() => onSave(form, med?.id)} disabled={!form.medication_name.trim()} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">
+            <Button onClick={() => onSave(form, med?.id)} disabled={!form.medication_name.trim() || !form.pet_id || (form.schedule_type === "specific_days" && !(form.schedule_days || []).length) || ((form.schedule_type === "custom" || form.frequency === "custom" || form.frequency === "as_needed") && !form.custom_schedule_instructions.trim())} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">
               {med?.id ? "Save" : "Add Medication"}
             </Button>
           </DialogFooter>
