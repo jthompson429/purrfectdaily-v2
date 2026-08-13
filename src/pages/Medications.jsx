@@ -226,7 +226,8 @@ export default function Medications() {
           <AnimatePresence>
             {meds.map(med => {
               const status = getMedicationStatus(med);
-              const isActive = status.active;
+              const manuallyRecorded = med.schedule_type === "custom" || med.frequency === "custom" || med.frequency === "as_needed";
+              const isActive = status.active && !manuallyRecorded;
               const isOffWeek = status.reason === "off_week";
 
               return (
@@ -256,8 +257,10 @@ export default function Medications() {
                         <>
                           <XCircle className="h-4 w-4 text-muted-foreground" />
                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            {status.reason === "not_started"
-                              ? "Not Started"
+                            {manuallyRecorded && status.reason !== "off_week"
+                              ? "Record As Needed"
+                              : status.reason === "not_started"
+                                ? "Not Started"
                               : status.reason === "not_scheduled"
                                 ? "Not Scheduled Today"
                                 : status.reason === "manual_schedule"
