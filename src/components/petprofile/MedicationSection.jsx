@@ -131,7 +131,8 @@ export default function MedicationSection({ petId }) {
                   const log = logFor(m, slot);
                   const manual = slot === "as_needed";
                   const checked = !manual && log?.status === "done";
-                  const notDue = m.schedule_type === "specific_days" && getMedicationStatus(m).reason === "not_scheduled";
+                  const medicationStatus = getMedicationStatus(m);
+                  const notDue = !medicationStatus.active && medicationStatus.reason !== "manual_schedule";
                   const taskId = medicationTaskId(m.id, slot);
                   const saving = savingDose === taskId;
                   return (
