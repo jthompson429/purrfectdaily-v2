@@ -6,7 +6,7 @@ import SectionCard from "./SectionCard";
 import MedicationDialog from "./MedicationDialog";
 import { isMedicationActive, doseSlots, medicationTaskId, todayStr, fmtShort } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
-import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
+import { wsCreate, wsUpdate, wsDelete, wsRecordMedicationDose } from "@/lib/workspaceApi";
 import { formatTime } from "@/lib/dateUtils";
 
 export default function MedicationSection({ petId }) {
@@ -41,7 +41,7 @@ export default function MedicationSection({ petId }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["medications"] }),
   });
   const createDose = useMutation({
-    mutationFn: (data) => wsCreate("CompletionLog", data, activeWorkspaceId),
+    mutationFn: (data) => wsRecordMedicationDose(data, activeWorkspaceId),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["completionLogs", today, activeWorkspaceId] }),
   });
 
@@ -58,14 +58,11 @@ export default function MedicationSection({ petId }) {
     setSavingDose(taskId);
     try {
       await createDose.mutateAsync({
-        task_id: taskId,
-        pet_id: petId,
+        medication_id: med.id,
+        slot,
         completion_date: today,
-        completed_at: new Date().toISOString(),
-        status: "done",
         photo_url: photoUrl,
         notes: "",
-        completed_by: user?.full_name || user?.email || "",
       });
     } finally {
       setSavingDose("");
