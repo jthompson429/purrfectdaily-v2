@@ -1,4 +1,5 @@
 import { addDays, addMonths, addYears, differenceInCalendarDays, format } from "date-fns";
+import { getMedicationStatus } from "@/lib/dateUtils";
 
 // Date-only strings ("YYYY-MM-DD") parse as UTC midnight; shift to local to avoid off-by-one.
 const toLocal = (iso) => {
@@ -111,8 +112,12 @@ export const buildReminders = (pet, preventatives, vaccinations, medications, we
     if (st.color === "red") out.push({ urgency: 0, label: `${label} overdue` });
     else if (st.color === "yellow") out.push({ urgency: 3, label: `${label} due soon` });
   });
-  medications.filter(isMedicationActive).forEach((m) => {
-    out.push({ urgency: 2, label: `${m.medication_name} dose today` });
+  medications.forEach((m) => {
+    const status = getMedicationStatus(m);
+    const manuallyRecorded = m.schedule_type === "custom" || m.frequency === "custom" || m.frequency === "as_needed";
+    if (status.active && !manuallyRecorded) {
+      out.push({ urgency: 2, label: `${m.medication_name} dose today` });
+    }
   });
   if (weightLogs && weightLogs.length) {
     const sorted = [...weightLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
