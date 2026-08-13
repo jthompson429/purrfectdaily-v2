@@ -54,6 +54,7 @@ export default function MedicationSection({ petId }) {
     const exactId = medicationTaskId(med.id, slot);
     const prefix = `${exactId}_`;
     return logs
+      .filter((log) => log.status === "done")
       .filter((log) => log.task_id === exactId || (slot === "as_needed" && log.task_id.startsWith(prefix)))
       .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
   };
