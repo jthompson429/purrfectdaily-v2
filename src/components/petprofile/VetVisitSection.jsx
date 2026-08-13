@@ -30,7 +30,7 @@ export default function VetVisitSection({ petId }) {
 
     const givenV = data.vaccinations_given || [];
     if (givenV.length) {
-      const existing = await base44.entities.Vaccination.filter({ pet_id: petId });
+      const existing = await base44.entities.Vaccination.filter({ pet_id: petId, workspace_id: activeWorkspaceId });
       for (const gv of givenV) {
         const exists = existing.find((v) => v.name === gv.name && v.date_given === visitDate && (gv.name !== "custom" || v.custom_name === (gv.custom_name || "")));
         if (!exists) {
@@ -42,7 +42,7 @@ export default function VetVisitSection({ petId }) {
 
     const givenP = data.preventives_administered || [];
     if (givenP.length) {
-      const existingP = await base44.entities.Preventative.filter({ pet_id: petId });
+      const existingP = await base44.entities.Preventative.filter({ pet_id: petId, workspace_id: activeWorkspaceId });
       for (const gp of givenP) {
         const dg = gp.date_given || visitDate;
         const exists = existingP.find((p) => p.name === gp.name && p.date_given === dg);
