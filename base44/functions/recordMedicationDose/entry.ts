@@ -5,8 +5,8 @@ const SLOTS_BY_FREQUENCY: Record<string, string[]> = {
   once_daily: ["morning"],
   twice_daily: ["morning", "evening"],
   thrice_daily: ["morning", "afternoon", "evening"],
-  as_needed: ["morning"],
-  custom: ["morning"],
+  as_needed: ["as_needed"],
+  custom: ["as_needed"],
 };
 
 export default async function(req: Request) {
@@ -39,6 +39,13 @@ export default async function(req: Request) {
     const validSlots = SLOTS_BY_FREQUENCY[medication.frequency] || ["morning"];
     if (!validSlots.includes(slot)) {
       return Response.json({ error: "This dose period is not part of the medication schedule." }, { status: 400 });
+    }
+    if (medication.schedule_type === "specific_days") {
+      const scheduleDays = Array.isArray(medication.schedule_days) ? medication.schedule_days : [];
+      const localWeekday = new Date(`${completionDate}T12:00:00`).getDay();
+      if (!scheduleDays.includes(localWeekday)) {
+        return Response.json({ error: "This medication is not scheduled for the selected day." }, { status: 400 });
+      }
     }
     if (medication.requires_photo && !photoUrl) {
       return Response.json({ error: "A proof photo is required for this medication." }, { status: 400 });
