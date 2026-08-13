@@ -180,6 +180,7 @@ function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
 }
 
 const ROUTE_EMOJI = { oral: "💊", eye_drop: "👁️", food: "🍖", topical: "🧴", other: "💉" };
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function Medications() {
   const { activeWorkspaceId, canWrite } = useWorkspace();
@@ -255,7 +256,15 @@ export default function Medications() {
                         <>
                           <XCircle className="h-4 w-4 text-muted-foreground" />
                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            {status.reason === "not_started" ? "Not Started" : "Course Complete"}
+                            {status.reason === "not_started"
+                              ? "Not Started"
+                              : status.reason === "not_scheduled"
+                                ? "Not Scheduled Today"
+                                : status.reason === "manual_schedule"
+                                  ? "Record As Needed"
+                                  : med.archived
+                                    ? "Archived"
+                                    : "Course Complete"}
                           </span>
                         </>
                       )}
@@ -291,6 +300,12 @@ export default function Medications() {
                           )}
                           {med.schedule_type === "alternate_weeks" && (
                             <span className="text-[10px] text-primary">Active weeks: {med.active_week_pattern}</span>
+                          )}
+                          {med.schedule_type === "specific_days" && (
+                            <span className="text-[10px] text-primary">Due: {(med.schedule_days || []).map((day) => DAY_NAMES[day]).join(", ")}</span>
+                          )}
+                          {(med.schedule_type === "custom" || med.frequency === "custom" || med.frequency === "as_needed") && (
+                            <span className="text-[10px] text-primary">Manual schedule</span>
                           )}
                         </div>
                       </div>
