@@ -7,7 +7,7 @@ export const computePetBadges = (pet, preventatives = [], vaccinations = [], med
   if (pet.profile_type === "nursing_mother") badges.push({ key: "nursing", label: "Nursing Mother", dot: "bg-blue-400", text: "text-blue-500" });
   if (pet.profile_type === "senior") badges.push({ key: "senior", label: "Senior Pet", dot: "bg-indigo-400", text: "text-indigo-500" });
 
-  const activeMeds = medications.some(isMedicationActive) || (pet.current_medications && pet.current_medications.trim().length > 0);
+  const activeMeds = medications.some(isMedicationActive);
   if (activeMeds) badges.push({ key: "med", label: "Medication Active", dot: "bg-yellow-400", text: "text-yellow-500" });
 
   const vacOverdue = vaccinations.some((v) => vaccinationStatus(v).color === "red");
