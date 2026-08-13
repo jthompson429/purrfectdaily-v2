@@ -15,7 +15,7 @@ const empty = {
   microchip_number: "", spayed_neutered: "unknown", living_situation: "indoor", profile_type: "house_pet",
   description: "", photo_url: "", care_level: "routine", quarantine_status: false, latest_weight: "",
   body_condition_notes: "", owner_foster_notes: "", health_status: "healthy", health_issues: "",
-  current_medications: "", rabies_vaccine_due: "", notes: "", sort_order: 0
+  rabies_vaccine_due: "", notes: "", sort_order: 0
 };
 
 export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
@@ -224,11 +224,6 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Owner / Foster Notes</Label>
             <Textarea placeholder="Optional…" value={form.owner_foster_notes || ""} onChange={(e) => set("owner_foster_notes", e.target.value)} className={`${inputClass} h-16 resize-none`} />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Current Medications</Label>
-            <Textarea placeholder="List current medications…" value={form.current_medications || ""} onChange={(e) => set("current_medications", e.target.value)} className={`${inputClass} h-16 resize-none`} />
           </div>
 
           <div className="space-y-1.5">
