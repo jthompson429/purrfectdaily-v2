@@ -1,184 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Pill, Plus, CheckCircle2, XCircle, Pencil, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { getMedicationStatus } from "@/lib/dateUtils";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
-import { format } from "date-fns";
 import MedicationHistory from "@/components/medications/MedicationHistory";
-
-const empty = {
-  pet_id: "", medication_name: "", dosage_instructions: "", route: "oral",
-  frequency: "once_daily", start_date: format(new Date(), "yyyy-MM-dd"), end_date: "",
-  schedule_type: "daily", active_week_pattern: "1,3,5", schedule_days: [], custom_schedule_instructions: "",
-  off_week_warning: "DO NOT GIVE this medication today — this is an off-week.", critical: true,
-  requires_photo: false, notes: "",
-};
-
-const WEEKDAYS = [["S", 0], ["M", 1], ["T", 2], ["W", 3], ["T", 4], ["F", 5], ["S", 6]];
-
-function MedFormDialog({ open, onOpenChange, med, pets, onSave }) {
-  const [form, setForm] = useState(empty);
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const inputClass = "bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/50";
-
-  useEffect(() => { setForm(med ? { ...empty, ...med } : empty); }, [med, open]);
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-foreground font-bold text-xl font-heading">{med?.id ? "Edit Medication" : "Add Medication"}</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4 mt-2">
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Medication Name</Label>
-            <Input value={form.medication_name} onChange={e => set("medication_name", e.target.value)} placeholder="e.g. Ringworm Antifungal" className={inputClass} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Pet</Label>
-            <Select value={form.pet_id} onValueChange={v => set("pet_id", v)}>
-              <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue placeholder="Select pet" /></SelectTrigger>
-              <SelectContent className="bg-popover border-border">
-                {pets.map(p => <SelectItem key={p.id} value={p.id} className="text-foreground hover:bg-muted">{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Route</Label>
-              <Select value={form.route} onValueChange={v => set("route", v)}>
-                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  {[["oral","💊 Oral"],["eye_drop","👁️ Eye Drop"],["food","🍖 In Food"],["topical","🧴 Topical"],["other","Other"]].map(([v,l]) => (
-                    <SelectItem key={v} value={v} className="text-foreground hover:bg-muted">{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Schedule</Label>
-              <Select value={form.schedule_type} onValueChange={v => set("schedule_type", v)}>
-                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="daily" className="text-foreground hover:bg-muted">Every Day</SelectItem>
-                  <SelectItem value="alternate_weeks" className="text-foreground hover:bg-muted">Alternate Weeks</SelectItem>
-                  <SelectItem value="specific_days" className="text-foreground hover:bg-muted">Specific Days</SelectItem>
-                  <SelectItem value="custom" className="text-foreground hover:bg-muted">Custom</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {form.schedule_type === "alternate_weeks" && (
-            <div className="rounded-xl p-3 space-y-2 bg-destructive/10 border border-destructive/20">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Active Week Numbers</Label>
-              <Input value={form.active_week_pattern} onChange={e => set("active_week_pattern", e.target.value)} placeholder="e.g. 1,3,5" className={inputClass} />
-              <p className="text-muted-foreground text-[10px]">Comma-separated week numbers from start date. e.g. "1,3,5" = give in weeks 1,3,5 — skip weeks 2,4</p>
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Off-Week Warning Message</Label>
-              <Textarea value={form.off_week_warning} onChange={e => set("off_week_warning", e.target.value)} className={`${inputClass} h-16 resize-none`} />
-            </div>
-          )}
-          {form.schedule_type === "specific_days" && (
-            <div className="rounded-xl p-3 space-y-2 bg-muted border border-border">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Days Medication Is Due</Label>
-              <div className="grid grid-cols-7 gap-1">
-                {WEEKDAYS.map(([label, day]) => {
-                  const selected = (form.schedule_days || []).includes(day);
-                  return <button key={day} type="button" onClick={() => set("schedule_days", selected ? form.schedule_days.filter((d) => d !== day) : [...(form.schedule_days || []), day])} className={`h-9 rounded-lg text-xs font-bold border ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-muted-foreground border-border"}`}>{label}</button>;
-                })}
-              </div>
-            </div>
-          )}
-          {(form.schedule_type === "custom" || form.frequency === "custom" || form.frequency === "as_needed") && (
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">{form.frequency === "as_needed" ? "As-Needed Instructions" : "Custom Schedule Instructions"}</Label>
-              <Textarea value={form.custom_schedule_instructions || ""} onChange={e => set("custom_schedule_instructions", e.target.value)} placeholder={form.frequency === "as_needed" ? "When should this medication be given, and what is the maximum frequency?" : "Describe exactly when this medication should be given."} className={`${inputClass} h-20 resize-none`} />
-              <p className="text-muted-foreground text-[10px]">Custom and as-needed medication will not create an automatic required task on Today.</p>
-            </div>
-          )}
-
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Frequency</Label>
-            <Select value={form.frequency} onValueChange={v => set("frequency", v)}>
-              <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-popover border-border">
-                <SelectItem value="once_daily">Once Daily</SelectItem>
-                <SelectItem value="twice_daily">Twice Daily</SelectItem>
-                <SelectItem value="thrice_daily">Three Times Daily</SelectItem>
-                <SelectItem value="as_needed">As Needed</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Dosage Instructions</Label>
-            <Textarea value={form.dosage_instructions} onChange={e => set("dosage_instructions", e.target.value)} placeholder="e.g. 0.5ml orally, mix in small amount of wet food" className={`${inputClass} h-20 resize-none`} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Start Date</Label>
-              <Input type="date" value={form.start_date} onChange={e => set("start_date", e.target.value)} className={`${inputClass} [color-scheme:light]`} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">End Date</Label>
-              <Input type="date" value={form.end_date} onChange={e => set("end_date", e.target.value)} className={`${inputClass} [color-scheme:light]`} />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Notes</Label>
-            <Textarea value={form.notes || ""} onChange={e => set("notes", e.target.value)} placeholder="Optional care notes" className={`${inputClass} h-16 resize-none`} />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
-              <div>
-                <p className="text-foreground text-sm font-medium">Critical Medication</p>
-                <p className="text-muted-foreground text-xs">Emphasize warnings and due doses</p>
-              </div>
-              <Switch checked={form.critical} onCheckedChange={v => set("critical", v)} />
-            </div>
-            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
-              <div>
-                <p className="text-foreground text-sm font-medium">Require Proof Photo</p>
-                <p className="text-muted-foreground text-xs">Photo needed to confirm given</p>
-              </div>
-              <Switch checked={form.requires_photo} onCheckedChange={v => set("requires_photo", v)} />
-            </div>
-            {med?.id && (
-              <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
-                <div>
-                  <p className="text-foreground text-sm font-medium">Archive Medication</p>
-                  <p className="text-muted-foreground text-xs">Keep history without showing active doses</p>
-                </div>
-                <Switch checked={form.archived || false} onCheckedChange={v => set("archived", v)} />
-              </div>
-            )}
-          </div>
-
-          <DialogFooter className="pt-2 gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-muted-foreground rounded-xl flex-1">Cancel</Button>
-            <Button onClick={() => onSave(form, med?.id)} disabled={!form.medication_name.trim() || !form.pet_id || (form.schedule_type === "specific_days" && !(form.schedule_days || []).length) || ((form.schedule_type === "custom" || form.frequency === "custom" || form.frequency === "as_needed") && !form.custom_schedule_instructions.trim())} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">
-              {med?.id ? "Save" : "Add Medication"}
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import MedicationFormDialog from "@/components/medications/MedicationFormDialog";
 
 const ROUTE_EMOJI = { oral: "💊", eye_drop: "👁️", food: "🍖", topical: "🧴", other: "💉" };
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -348,7 +177,7 @@ export default function Medications() {
         <MedicationHistory medications={meds} pets={pets} />
       </div>
 
-      <MedFormDialog open={dialog} onOpenChange={setDialog} med={editing} pets={pets} onSave={handleSave} />
+      <MedicationFormDialog open={dialog} onOpenChange={setDialog} item={editing} pets={pets} onSave={handleSave} />
     </div>
   );
 }
