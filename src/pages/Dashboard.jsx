@@ -182,7 +182,8 @@ export default function Dashboard() {
     const offMedWarnings = [];
     meds.forEach(med => {
       const status = getMedicationStatus(med);
-      if (status.active) {
+      const manuallyRecorded = med.schedule_type === "custom" || med.frequency === "custom" || med.frequency === "as_needed";
+      if (status.active && !manuallyRecorded) {
         activeMedTasks.push(...medToTasks(med));
       } else if (status.reason === "off_week") {
         offMedWarnings.push(med);
