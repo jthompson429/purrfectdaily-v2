@@ -86,8 +86,9 @@ export default async function(req: Request) {
         task_id: taskId,
         completion_date: completionDate,
       });
-      if (existing.length > 0) {
-        return Response.json({ data: existing[0], already_recorded: true });
+      const activeExisting = existing.find((record) => record.status !== "not_applicable");
+      if (activeExisting) {
+        return Response.json({ data: activeExisting, already_recorded: true });
       }
     }
 
