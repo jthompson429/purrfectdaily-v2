@@ -39,6 +39,8 @@ export default function MedicationDialog({ open, onOpenChange, item, onSave }) {
     e.preventDefault();
     if (!form.medication_name.trim()) { setError("Please enter the medication name."); return; }
     if (!form.start_date) { setError("Please enter the start date."); return; }
+    if (form.schedule_type === "specific_days" && !(form.schedule_days || []).length) { setError("Select at least one day for this medication."); return; }
+    if ((form.schedule_type === "custom" || form.frequency === "custom" || form.frequency === "as_needed") && !form.custom_schedule_instructions.trim()) { setError("Enter the custom or as-needed schedule instructions."); return; }
     setError("");
     setSaving(true);
     try { await onSave(form, item?.id); }
