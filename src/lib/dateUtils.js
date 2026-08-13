@@ -80,12 +80,6 @@ export function getMedicationStatus(med) {
     };
   }
 
-  // Human-defined and PRN schedules remain available in Pet Profiles for
-  // recording, but do not create automatic required work on Today.
-  if (med.schedule_type === "custom" || med.frequency === "custom" || med.frequency === "as_needed") {
-    return { active: false, reason: "manual_schedule" };
-  }
-
   if (med.schedule_type === "alternate_weeks" && med.start_date && med.active_week_pattern) {
     const weekNum = getWeekNumber(med.start_date, new Date());
     const activeWeeks = med.active_week_pattern.split(",").map(w => parseInt(w.trim()));
@@ -100,6 +94,12 @@ export function getMedicationStatus(med) {
       reason: isActive ? "active_week" : "off_week",
       offWarning: "DO NOT GIVE today. This is an off-cycle day in the treatment cycle. Give only on active treatment days shown in the medication schedule.",
     };
+  }
+
+  // Human-defined and PRN schedules remain available in Pet Profiles for
+  // recording, but do not create automatic required work on Today.
+  if (med.schedule_type === "custom" || med.frequency === "custom" || med.frequency === "as_needed") {
+    return { active: false, reason: "manual_schedule" };
   }
 
   return { active: true, reason: "active" };
