@@ -16,7 +16,9 @@ export const computePetBadges = (pet, preventatives = [], vaccinations = [], med
   else if (vacDueSoon) badges.push({ key: "vac_soon", label: "Vaccines Due Soon", dot: "bg-orange-400", text: "text-orange-500" });
 
   const prevOverdue = preventatives.some((p) => preventativeStatus(p).color === "red");
+  const prevDueSoon = preventatives.some((p) => preventativeStatus(p).color === "yellow");
   if (prevOverdue) badges.push({ key: "prev_overdue", label: "Preventive Overdue", dot: "bg-red-400", text: "text-red-500" });
+  else if (prevDueSoon) badges.push({ key: "prev_soon", label: "Preventive Due Soon", dot: "bg-orange-400", text: "text-orange-500" });
 
   if (badges.length === 0 && pet.health_status !== "has_issues") {
     badges.push({ key: "healthy", label: "Healthy", dot: "bg-green-400", text: "text-green-500" });
