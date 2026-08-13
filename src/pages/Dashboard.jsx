@@ -14,6 +14,7 @@ import TaskFormDialog from "@/components/care/TaskFormDialog";
 import AssignmentMigrationDialog from "@/components/care/AssignmentMigrationDialog";
 import { getMedicationStatus } from "@/lib/dateUtils";
 import { taskAssignmentType, isGroupName, ASSIGNMENT_ICON } from "@/utils/assignment";
+import { doseSlots, medicationTaskId } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsBulkUpdate } from "@/lib/workspaceApi";
 
@@ -27,25 +28,26 @@ function taskSortScore(task) {
   return 4;
 }
 
-function medToTask(med) {
-  return {
-    id: `med_${med.id}`,
+function medToTasks(med) {
+  return doseSlots(med).map((slot) => ({
+    id: medicationTaskId(med.id, slot),
     _medId: med.id,
+    _doseSlot: slot,
     title: `Give ${med.medication_name}`,
     pet_id: med.pet_id || "",
     assignment_type: "pet",
     category: "medication",
-    care_type: "critical_medical",
+    care_type: med.critical === false ? "routine" : "critical_medical",
     instructions: med.dosage_instructions || "",
-    scheduled_time: "morning",
+    scheduled_time: slot,
     requires_photo: med.requires_photo || false,
     proof_instructions: med.requires_photo ? "Photo proof of medication given." : "",
     warning_text: "",
-    priority: "critical",
+    priority: med.critical === false ? "normal" : "critical",
     sort_order: -1,
     active: true,
     _isMedTask: true,
-  };
+  }));
 }
 
 function isTaskFullyDone(task, log) {
@@ -181,7 +183,7 @@ export default function Dashboard() {
     meds.forEach(med => {
       const status = getMedicationStatus(med);
       if (status.active) {
-        activeMedTasks.push(medToTask(med));
+        activeMedTasks.push(...medToTasks(med));
       } else if (status.reason === "off_week") {
         offMedWarnings.push(med);
       }
