@@ -54,6 +54,19 @@
     "off_week_warning": {
       "type": "string"
     },
+    "schedule_days": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 6
+      },
+      "description": "Weekdays for specific_days schedules, where 0 is Sunday and 6 is Saturday"
+    },
+    "custom_schedule_instructions": {
+      "type": "string",
+      "description": "Human-readable instructions for schedules that cannot be calculated automatically"
+    },
     "critical": {
       "type": "boolean",
       "default": true
