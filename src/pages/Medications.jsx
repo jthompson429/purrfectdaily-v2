@@ -14,6 +14,7 @@ import { getMedicationStatus } from "@/lib/dateUtils";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 import { format } from "date-fns";
+import MedicationHistory from "@/components/medications/MedicationHistory";
 
 const empty = {
   pet_id: "", medication_name: "", dosage_instructions: "", route: "oral",
@@ -343,6 +344,8 @@ export default function Medications() {
           <Plus className="h-4 w-4" /> Add Medication
         </motion.button>
         )}
+
+        <MedicationHistory medications={meds} pets={pets} />
       </div>
 
       <MedFormDialog open={dialog} onOpenChange={setDialog} med={editing} pets={pets} onSave={handleSave} />
