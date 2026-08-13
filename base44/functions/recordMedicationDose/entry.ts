@@ -36,15 +36,34 @@ export default async function(req: Request) {
       return Response.json({ error: "Medication was not found in this workspace." }, { status: 404 });
     }
 
+    if (medication.archived) {
+      return Response.json({ error: "Archived medication cannot receive new dose records." }, { status: 400 });
+    }
+    if (medication.start_date && completionDate < medication.start_date) {
+      return Response.json({ error: "This medication course has not started." }, { status: 400 });
+    }
+    if (medication.end_date && completionDate > medication.end_date) {
+      return Response.json({ error: "This medication course is complete." }, { status: 400 });
+    }
+
     const validSlots = SLOTS_BY_FREQUENCY[medication.frequency] || ["morning"];
     if (!validSlots.includes(slot)) {
       return Response.json({ error: "This dose period is not part of the medication schedule." }, { status: 400 });
     }
     if (medication.schedule_type === "specific_days") {
       const scheduleDays = Array.isArray(medication.schedule_days) ? medication.schedule_days : [];
-      const localWeekday = new Date(`${completionDate}T12:00:00`).getDay();
+      const localWeekday = new Date(`${completionDate}T12:00:00Z`).getUTCDay();
       if (!scheduleDays.includes(localWeekday)) {
         return Response.json({ error: "This medication is not scheduled for the selected day." }, { status: 400 });
+      }
+    }
+    if (medication.schedule_type === "alternate_weeks" && medication.start_date && medication.active_week_pattern) {
+      const start = new Date(`${medication.start_date}T12:00:00Z`).getTime();
+      const check = new Date(`${completionDate}T12:00:00Z`).getTime();
+      const weekNumber = Math.floor((check - start) / (7 * 24 * 60 * 60 * 1000)) + 1;
+      const activeWeeks = medication.active_week_pattern.split(",").map((value: string) => Number.parseInt(value.trim(), 10));
+      if (!activeWeeks.includes(weekNumber)) {
+        return Response.json({ error: "This medication is currently in an off-week." }, { status: 400 });
       }
     }
     if (medication.requires_photo && !photoUrl) {
