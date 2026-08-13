@@ -1,12 +1,28 @@
 import { useState, useEffect } from "react";
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 
-const empty = { medication_name: "", frequency: "twice_daily", start_date: "", end_date: "", notes: "" };
+const empty = {
+  medication_name: "",
+  dosage_instructions: "",
+  route: "oral",
+  frequency: "once_daily",
+  start_date: format(new Date(), "yyyy-MM-dd"),
+  end_date: "",
+  schedule_type: "daily",
+  active_week_pattern: "1,3,5",
+  off_week_warning: "DO NOT GIVE this medication today — this is an off-week.",
+  critical: true,
+  requires_photo: false,
+  notes: "",
+  archived: false,
+};
 
 export default function MedicationDialog({ open, onOpenChange, item, onSave }) {
   const [form, setForm] = useState(empty);
@@ -30,22 +46,59 @@ export default function MedicationDialog({ open, onOpenChange, item, onSave }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="text-foreground font-bold text-xl font-heading">{item?.id ? "Edit Medication" : "Add Medication"}</DialogTitle></DialogHeader>
-        <form onSubmit={submit} className="space-y-3 mt-2">
+        <form onSubmit={submit} className="space-y-4 mt-2">
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Medication Name</Label>
             <Input placeholder="e.g. Animax Cream" value={form.medication_name} onChange={(e) => set("medication_name", e.target.value)} className={inputClass} />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Route</Label>
+              <Select value={form.route} onValueChange={(v) => set("route", v)}>
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {[["oral","💊 Oral"],["eye_drop","👁️ Eye Drop"],["food","🍖 In Food"],["topical","🧴 Topical"],["other","Other"]].map(([v,l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Frequency</Label>
+              <Select value={form.frequency} onValueChange={(v) => set("frequency", v)}>
+                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="once_daily">Once Daily</SelectItem>
+                  <SelectItem value="twice_daily">Twice Daily</SelectItem>
+                  <SelectItem value="thrice_daily">Three Times Daily</SelectItem>
+                  <SelectItem value="as_needed">As Needed</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="space-y-1.5">
-            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Frequency</Label>
-            <Select value={form.frequency} onValueChange={(v) => set("frequency", v)}>
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Schedule</Label>
+            <Select value={form.schedule_type} onValueChange={(v) => set("schedule_type", v)}>
               <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent className="bg-popover border-border">
-                <SelectItem value="once_daily" className="text-foreground hover:bg-muted">Once Daily</SelectItem>
-                <SelectItem value="twice_daily" className="text-foreground hover:bg-muted">Twice Daily</SelectItem>
-                <SelectItem value="thrice_daily" className="text-foreground hover:bg-muted">Three Times Daily</SelectItem>
-                <SelectItem value="as_needed" className="text-foreground hover:bg-muted">As Needed</SelectItem>
+                <SelectItem value="daily">Every Day</SelectItem>
+                <SelectItem value="alternate_weeks">Alternate Weeks</SelectItem>
+                <SelectItem value="specific_days">Specific Days</SelectItem>
+                <SelectItem value="custom">Custom</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          {form.schedule_type === "alternate_weeks" && (
+            <div className="rounded-xl p-3 space-y-2 bg-destructive/10 border border-destructive/20">
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Active Week Numbers</Label>
+              <Input value={form.active_week_pattern} onChange={(e) => set("active_week_pattern", e.target.value)} placeholder="e.g. 1,3,5" className={inputClass} />
+              <p className="text-muted-foreground text-[10px]">Comma-separated weeks from the start date. Weeks not listed are off-weeks.</p>
+              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Off-Week Warning Message</Label>
+              <Textarea value={form.off_week_warning} onChange={(e) => set("off_week_warning", e.target.value)} className={`${inputClass} h-16 resize-none`} />
+            </div>
+          )}
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Dosage Instructions</Label>
+            <Textarea value={form.dosage_instructions} onChange={(e) => set("dosage_instructions", e.target.value)} placeholder="e.g. 0.5 ml orally with food" className={`${inputClass} h-20 resize-none`} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
@@ -59,12 +112,28 @@ export default function MedicationDialog({ open, onOpenChange, item, onSave }) {
           </div>
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Notes</Label>
-            <Textarea placeholder="Dosage instructions, e.g. apply to left ear…" value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} className={`${inputClass} h-16 resize-none`} />
+            <Textarea value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} placeholder="Optional care notes" className={`${inputClass} h-16 resize-none`} />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
+              <div><p className="text-foreground text-sm font-medium">Critical Medication</p><p className="text-muted-foreground text-xs">Emphasize warnings and due doses</p></div>
+              <Switch checked={form.critical} onCheckedChange={(v) => set("critical", v)} />
+            </div>
+            <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
+              <div><p className="text-foreground text-sm font-medium">Require Proof Photo</p><p className="text-muted-foreground text-xs">Photo needed to confirm given</p></div>
+              <Switch checked={form.requires_photo} onCheckedChange={(v) => set("requires_photo", v)} />
+            </div>
+            {item?.id && (
+              <div className="flex items-center justify-between py-2 px-3 rounded-xl bg-muted">
+                <div><p className="text-foreground text-sm font-medium">Archive Medication</p><p className="text-muted-foreground text-xs">Keep history without showing active doses</p></div>
+                <Switch checked={form.archived} onCheckedChange={(v) => set("archived", v)} />
+              </div>
+            )}
           </div>
           {error && <p className="text-xs text-destructive font-medium -mt-1">{error}</p>}
           <DialogFooter className="pt-2 gap-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-muted-foreground hover:text-foreground rounded-xl flex-1">Cancel</Button>
-            <Button type="submit" disabled={saving} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">{saving ? "Saving…" : item?.id ? "Save" : "Add"}</Button>
+            <Button type="submit" disabled={saving} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">{saving ? "Saving…" : item?.id ? "Save" : "Add Medication"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
