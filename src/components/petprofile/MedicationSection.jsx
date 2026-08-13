@@ -20,7 +20,6 @@ export default function MedicationSection({ petId }) {
   const proofInputRef = useRef(null);
   const today = todayStr();
 
-  const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const { data: items = [] } = useQuery({
     queryKey: ["medications", activeWorkspaceId, petId],
     queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-start_date"),
