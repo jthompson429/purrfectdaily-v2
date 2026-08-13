@@ -47,6 +47,10 @@ export function wsDeleteMany(entity, query, wsId) {
   return callFn("workspaceCrud", { entity, action: "deleteMany", query, workspace_id: wsId });
 }
 
+export function wsRecordMedicationDose(data, wsId) {
+  return callFn("recordMedicationDose", { ...data, workspace_id: wsId });
+}
+
 // ---- Workspace Management ----
 export function wsManage(action, params = {}) {
   return callFn("workspaceManage", { action, ...params });
