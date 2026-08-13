@@ -90,7 +90,9 @@ const doseSlotsFor = (frequency) => {
 };
 export const doseSlots = (med) => doseSlotsFor(med.frequency);
 
-export const getDose = (med, date) => (med.doses || []).find((d) => d.date === date);
+// Medication doses use CompletionLog as their canonical administration record.
+// Keeping the id deterministic lets Today and Pet Profiles read the same record.
+export const medicationTaskId = (medId, slot) => `med_${medId}_${slot}`;
 
 export const buildReminders = (pet, preventatives, vaccinations, medications, weightLogs) => {
   const out = [];
