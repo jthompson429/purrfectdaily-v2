@@ -71,6 +71,21 @@ export function getMedicationStatus(med) {
     return { active: false, reason: "completed" };
   }
 
+  if (med.schedule_type === "specific_days") {
+    const scheduleDays = Array.isArray(med.schedule_days) ? med.schedule_days : [];
+    const dueToday = scheduleDays.includes(new Date().getDay());
+    return {
+      active: dueToday,
+      reason: dueToday ? "scheduled_day" : "not_scheduled",
+    };
+  }
+
+  // Human-defined and PRN schedules remain available in Pet Profiles for
+  // recording, but do not create automatic required work on Today.
+  if (med.schedule_type === "custom" || med.frequency === "custom" || med.frequency === "as_needed") {
+    return { active: false, reason: "manual_schedule" };
+  }
+
   if (med.schedule_type === "alternate_weeks" && med.start_date && med.active_week_pattern) {
     const weekNum = getWeekNumber(med.start_date, new Date());
     const activeWeeks = med.active_week_pattern.split(",").map(w => parseInt(w.trim()));
