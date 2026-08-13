@@ -86,6 +86,7 @@ const doseSlotsFor = (frequency) => {
   if (frequency === "once_daily") return ["morning"];
   if (frequency === "twice_daily") return ["morning", "evening"];
   if (frequency === "thrice_daily") return ["morning", "afternoon", "evening"];
+  if (frequency === "as_needed" || frequency === "custom") return ["as_needed"];
   return ["morning"];
 };
 export const doseSlots = (med) => doseSlotsFor(med.frequency);
