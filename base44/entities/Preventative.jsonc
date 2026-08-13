@@ -32,6 +32,10 @@
     },
     "notes": {
       "type": "string"
+    },
+    "source_visit_id": {
+      "type": "string",
+      "description": "Vet visit that generated this record; blank for independently entered preventatives"
     }
   },
   "required": [
