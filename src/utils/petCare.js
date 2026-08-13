@@ -89,7 +89,7 @@ const doseSlotsFor = (frequency) => {
   if (frequency === "as_needed" || frequency === "custom") return ["as_needed"];
   return ["morning"];
 };
-export const doseSlots = (med) => doseSlotsFor(med.frequency);
+export const doseSlots = (med) => med.schedule_type === "custom" ? ["as_needed"] : doseSlotsFor(med.frequency);
 
 // Medication doses use CompletionLog as their canonical administration record.
 // Keeping the id deterministic lets Today and Pet Profiles read the same record.
