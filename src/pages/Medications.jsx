@@ -257,7 +257,7 @@ export default function Medications() {
                         <>
                           <XCircle className="h-4 w-4 text-muted-foreground" />
                           <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                            {manuallyRecorded && status.reason !== "off_week"
+                            {(status.reason === "manual_schedule" || (manuallyRecorded && status.active))
                               ? "Record As Needed"
                               : status.reason === "not_started"
                                 ? "Not Started"
