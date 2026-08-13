@@ -7,7 +7,7 @@ import MedicationDialog from "./MedicationDialog";
 import { isMedicationActive, doseSlots, medicationTaskId, todayStr, fmtShort } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete, wsRecordMedicationDose } from "@/lib/workspaceApi";
-import { formatTime } from "@/lib/dateUtils";
+import { formatTime, getMedicationStatus } from "@/lib/dateUtils";
 
 export default function MedicationSection({ petId }) {
   const { activeWorkspaceId, canWrite } = useWorkspace();
@@ -50,10 +50,17 @@ export default function MedicationSection({ petId }) {
     setEditing(null);
   };
 
-  const logFor = (med, slot) => logs.find((log) => log.task_id === medicationTaskId(med.id, slot));
+  const logsFor = (med, slot) => {
+    const exactId = medicationTaskId(med.id, slot);
+    const prefix = `${exactId}_`;
+    return logs
+      .filter((log) => log.task_id === exactId || (slot === "as_needed" && log.task_id.startsWith(prefix)))
+      .sort((a, b) => new Date(b.completed_at) - new Date(a.completed_at));
+  };
+  const logFor = (med, slot) => logsFor(med, slot)[0];
   const recordDose = async (med, slot, photoUrl = "") => {
     const taskId = medicationTaskId(med.id, slot);
-    if (logFor(med, slot)?.status === "done") return;
+    if (slot !== "as_needed" && logFor(med, slot)?.status === "done") return;
     setSavingDose(taskId);
     try {
       await createDose.mutateAsync({
@@ -70,7 +77,7 @@ export default function MedicationSection({ petId }) {
   };
 
   const requestDose = (med, slot) => {
-    if (!canWrite || logFor(med, slot)?.status === "done") return;
+    if (!canWrite || (slot !== "as_needed" && logFor(med, slot)?.status === "done")) return;
     if (med.requires_photo) {
       setPendingDose({ med, slot });
       proofInputRef.current?.click();
@@ -110,6 +117,7 @@ export default function MedicationSection({ petId }) {
                   <p className="text-sm font-bold text-foreground">{m.medication_name}</p>
                   <p className="text-[11px] text-muted-foreground capitalize">{(m.frequency || "once_daily").replaceAll("_", " ")} · {fmtShort(m.start_date)}{m.end_date ? ` → ${fmtShort(m.end_date)}` : ""}</p>
                   {m.dosage_instructions && <p className="text-[11px] text-muted-foreground mt-1">{m.dosage_instructions}</p>}
+                  {m.custom_schedule_instructions && <p className="text-[11px] text-primary mt-1">{m.custom_schedule_instructions}</p>}
                 </div>
                 {canWrite && (
                   <div className="flex gap-1 flex-shrink-0">
@@ -121,14 +129,16 @@ export default function MedicationSection({ petId }) {
               <div className="flex gap-2 mt-2">
                 {doseSlots(m).map((slot) => {
                   const log = logFor(m, slot);
-                  const checked = log?.status === "done";
+                  const manual = slot === "as_needed";
+                  const checked = !manual && log?.status === "done";
+                  const notDue = m.schedule_type === "specific_days" && getMedicationStatus(m).reason === "not_scheduled";
                   const taskId = medicationTaskId(m.id, slot);
                   const saving = savingDose === taskId;
                   return (
-                    <button key={slot} onClick={() => requestDose(m, slot)} disabled={!canWrite || checked || saving}
+                    <button key={slot} onClick={() => requestDose(m, slot)} disabled={!canWrite || checked || notDue || saving}
                       className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-[11px] font-semibold capitalize border ${checked ? "bg-green-500/20 border-green-500/40 text-green-600" : "bg-muted border-border text-muted-foreground"} disabled:cursor-default`}>
                       {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : checked ? <Check className="h-3 w-3" /> : m.requires_photo ? <Camera className="h-3 w-3" /> : null}
-                      {slot}
+                      {notDue ? "Not due today" : manual ? "Record dose" : slot}
                     </button>
                   );
                 })}
@@ -136,7 +146,7 @@ export default function MedicationSection({ petId }) {
               {doseSlots(m).map((slot) => {
                 const log = logFor(m, slot);
                 if (log?.status !== "done") return null;
-                return <p key={slot} className="text-[10px] text-muted-foreground mt-1 capitalize">{slot}: recorded {formatTime(log.completed_at)}{log.completed_by ? ` by ${log.completed_by}` : ""}{log.photo_url ? " · proof photo" : ""}</p>;
+                return <p key={slot} className="text-[10px] text-muted-foreground mt-1 capitalize">{slot === "as_needed" ? `${logsFor(m, slot).length} dose${logsFor(m, slot).length === 1 ? "" : "s"} today · latest` : slot}: recorded {formatTime(log.completed_at)}{log.completed_by ? ` by ${log.completed_by}` : ""}{log.photo_url ? " · proof photo" : ""}</p>;
               })}
               {m.requires_photo && <p className="text-[10px] text-amber-600 mt-2">A proof photo is required before each dose can be recorded.</p>}
             </div>
