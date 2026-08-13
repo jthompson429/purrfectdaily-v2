@@ -59,7 +59,8 @@ export default function Manage() {
   const filteredPets = q
     ? pets.filter((p) => {
         const badges = computePetBadges(p, preventatives.filter((x) => x.pet_id === p.id), vaccinations.filter((x) => x.pet_id === p.id), medications.filter((x) => x.pet_id === p.id));
-        const hay = [p.name, p.species, p.breed, p.current_medications, ...badges.map((b) => b.label)].join(" ").toLowerCase();
+        const petMedications = medications.filter((medication) => medication.pet_id === p.id);
+        const hay = [p.name, p.species, p.breed, ...petMedications.map((medication) => medication.medication_name), ...badges.map((b) => b.label)].join(" ").toLowerCase();
         return hay.includes(q);
       })
     : pets;
