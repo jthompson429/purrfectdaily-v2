@@ -21,10 +21,6 @@ export default function VaccinationSection({ petId }) {
   const handleSave = async (data, id) => {
     try {
       await upsert.mutateAsync({ id, data: { ...data, pet_id: petId } });
-      if (data.name === "rabies" && data.due_date) {
-        try { await wsUpdate("PetProfile", petId, { rabies_vaccine_due: data.due_date }, activeWorkspaceId); } catch {}
-        qc.invalidateQueries({ queryKey: ["pet", petId] });
-      }
       setDialog(false); setEditing(null);
     } catch (err) {
       throw new Error(err?.message || "Could not save the vaccination. Please try again.");
