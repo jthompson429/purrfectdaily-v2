@@ -36,6 +36,23 @@
     },
     "completed_by": {
       "type": "string"
+    },
+    "original_status": {
+      "type": "string",
+      "enum": [
+        "done",
+        "skipped",
+        "not_applicable"
+      ]
+    },
+    "corrected_at": {
+      "type": "string"
+    },
+    "corrected_by": {
+      "type": "string"
+    },
+    "correction_reason": {
+      "type": "string"
     }
   },
   "required": [
