@@ -51,6 +51,14 @@ export function wsRecordMedicationDose(data, wsId) {
   return callFn("recordMedicationDose", { ...data, workspace_id: wsId });
 }
 
+export function wsCorrectMedicationDose(completionLogId, reason, wsId) {
+  return callFn("correctMedicationDose", {
+    completion_log_id: completionLogId,
+    reason,
+    workspace_id: wsId,
+  });
+}
+
 // ---- Workspace Management ----
 export function wsManage(action, params = {}) {
   return callFn("workspaceManage", { action, ...params });
