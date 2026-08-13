@@ -17,7 +17,7 @@ import { format } from "date-fns";
 
 const empty = {
   pet_id: "", medication_name: "", dosage_instructions: "", route: "oral",
-  frequency: "once daily", start_date: format(new Date(), "yyyy-MM-dd"), end_date: "",
+  frequency: "once_daily", start_date: format(new Date(), "yyyy-MM-dd"), end_date: "",
   schedule_type: "daily", active_week_pattern: "1,3,5",
   off_week_warning: "DO NOT GIVE this medication today — this is an off-week.", critical: true,
   requires_photo: false, notes: "",
