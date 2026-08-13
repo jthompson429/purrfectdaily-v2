@@ -51,17 +51,25 @@ export default async function(req: Request) {
       return Response.json({ error: "A proof photo is required for this medication." }, { status: 400 });
     }
 
-    const taskId = `med_${medicationId}_${slot}`;
-    const existing = await base44.asServiceRole.entities.CompletionLog.filter({
-      workspace_id: wsId,
-      task_id: taskId,
-      completion_date: completionDate,
-    });
-    if (existing.length > 0) {
-      return Response.json({ data: existing[0], already_recorded: true });
+    const completedAt = new Date().toISOString();
+    const isManualDose = slot === "as_needed";
+    const taskId = isManualDose
+      ? `med_${medicationId}_as_needed_${Date.now()}`
+      : `med_${medicationId}_${slot}`;
+
+    // Scheduled periods are single, idempotent records. PRN/custom doses are
+    // separate administration events and may be recorded more than once a day.
+    if (!isManualDose) {
+      const existing = await base44.asServiceRole.entities.CompletionLog.filter({
+        workspace_id: wsId,
+        task_id: taskId,
+        completion_date: completionDate,
+      });
+      if (existing.length > 0) {
+        return Response.json({ data: existing[0], already_recorded: true });
+      }
     }
 
-    const completedAt = new Date().toISOString();
     const result = await base44.asServiceRole.entities.CompletionLog.create({
       workspace_id: wsId,
       task_id: taskId,
