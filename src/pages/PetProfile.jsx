@@ -34,7 +34,7 @@ export default function PetProfile() {
   const { data: preventatives = [] } = useQuery({ queryKey: ["preventatives", id], queryFn: () => base44.entities.Preventative.filter({ pet_id: id }, "-date_given") });
   const { data: vaccinations = [] } = useQuery({ queryKey: ["vaccinations", id], queryFn: () => base44.entities.Vaccination.filter({ pet_id: id }, "-date_given") });
   const { data: medications = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId, id], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: id }, "-start_date") });
-  const { data: vetVisits = [] } = useQuery({ queryKey: ["vetVisits", id], queryFn: () => base44.entities.VetVisit.filter({ pet_id: id }, "-date") });
+  const { data: vetVisits = [] } = useQuery({ queryKey: ["vetVisits", id], queryFn: () => base44.entities.VetVisit.filter({ workspace_id: activeWorkspaceId, pet_id: id }, "-date") });
   const { data: weightLogs = [] } = useQuery({ queryKey: ["weightLogs", id], queryFn: () => base44.entities.WeightLog.filter({ pet_id: id }, "-date") });
 
   const updatePet = useMutation({ mutationFn: (data) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => { qc.invalidateQueries({ queryKey: ["pet", id] }); qc.invalidateQueries({ queryKey: ["pets"] }); } });
