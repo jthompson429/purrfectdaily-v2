@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Stethoscope, Plus } from "lucide-react";
+import { Stethoscope, Plus, CalendarClock } from "lucide-react";
 import SectionCard from "./SectionCard";
 import VisitRecordDialog from "./VisitRecordDialog";
 import VisitCard from "./VisitCard";
 import AttachmentViewer from "./AttachmentViewer";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
+import { fmtDate, todayStr } from "@/utils/petCare";
 
 const vaccinationKey = (item) =>
   `${item.name || ""}::${item.name === "custom" ? item.custom_name || "" : ""}`;
@@ -28,6 +29,12 @@ export default function VetVisitSection({ petId }) {
     queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-start_date")
   });
   const items = Array.isArray(data) ? data : [];
+  const today = todayStr();
+  const upcomingItems = items.filter((visit) => visit.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+  const historyItems = items.filter((visit) => visit.date < today);
+  const followUps = items
+    .filter((visit) => visit.follow_up_date >= today)
+    .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date));
 
   const invalidateVisitCare = () => {
     qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
@@ -171,6 +178,27 @@ export default function VetVisitSection({ petId }) {
     qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
   };
 
+  const renderVisit = (visit) => {
+    const linked = medicationSchedules.filter((item) => item.source_visit_id === visit.id);
+    const pendingMedicationCount = visit.meds_added && linked.length === 0
+      ? 0
+      : (visit.medications_prescribed || []).filter((prescription) =>
+          prescription.name?.trim() &&
+          !linked.some((item) => prescriptionKey(item) === prescriptionKey(prescription, visit.date))
+        ).length;
+    return (
+      <VisitCard
+        key={visit.id}
+        visit={visit}
+        pendingMedicationCount={pendingMedicationCount}
+        onEdit={() => { setEditing(visit); setDialog(true); }}
+        onDelete={() => { if (window.confirm("Delete this visit and its linked care records?")) remove.mutate(visit.id); }}
+        onAddMeds={() => handleAddMeds(visit)}
+        onOpenAttachment={setViewer}
+      />
+    );
+  };
+
   return (
     <SectionCard title="Veterinary Visits" icon={Stethoscope} onAdd={() => { setEditing(null); setDialog(true); }} addLabel="Add">
       {items.length === 0 ? (
@@ -181,27 +209,35 @@ export default function VetVisitSection({ petId }) {
           </button>
         </div>
       ) : (
-        <div className="space-y-2">
-          {items.map((v) => {
-            const linked = medicationSchedules.filter((item) => item.source_visit_id === v.id);
-            const pendingMedicationCount = v.meds_added && linked.length === 0
-              ? 0
-              : (v.medications_prescribed || []).filter((prescription) =>
-                  prescription.name?.trim() &&
-                  !linked.some((item) => prescriptionKey(item) === prescriptionKey(prescription, v.date))
-                ).length;
-            return (
-            <VisitCard
-              key={v.id}
-              visit={v}
-              pendingMedicationCount={pendingMedicationCount}
-              onEdit={() => { setEditing(v); setDialog(true); }}
-              onDelete={() => { if (window.confirm("Delete this visit and its linked care records?")) remove.mutate(v.id); }}
-              onAddMeds={() => handleAddMeds(v)}
-              onOpenAttachment={setViewer}
-            />
-            );
-          })}
+        <div className="space-y-4">
+          {(upcomingItems.length > 0 || followUps.length > 0) && (
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold px-1">Upcoming & Follow-ups</p>
+              {upcomingItems.map(renderVisit)}
+              {followUps.map((visit) => (
+                <button
+                  key={`follow-up-${visit.id}`}
+                  type="button"
+                  onClick={() => { setEditing(visit); setDialog(true); }}
+                  className="w-full rounded-xl p-3 flex items-start gap-2 text-left bg-orange-500/10 border border-orange-500/25"
+                >
+                  <CalendarClock className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <span className="min-w-0">
+                    <span className="block text-xs font-bold text-foreground">Follow-up {fmtDate(visit.follow_up_date)}</span>
+                    <span className="block text-[11px] text-muted-foreground truncate">
+                      {visit.reason || "Veterinary visit"}{visit.follow_up_instructions ? ` · ${visit.follow_up_instructions}` : ""}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+          {historyItems.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold px-1">Visit History</p>
+              {historyItems.map(renderVisit)}
+            </div>
+          )}
         </div>
       )}
       <VisitRecordDialog open={dialog} onOpenChange={setDialog} item={editing} onSave={handleSave} />
