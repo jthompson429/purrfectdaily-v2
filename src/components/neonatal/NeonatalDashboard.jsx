@@ -40,7 +40,7 @@ export default function NeonatalDashboard({ kitten, feedings, weights, eliminati
   const summary = feedingSummary(feedings);
   const currentWeight = trend.hasData ? trend.latest : (kitten?.current_weight_g ?? null);
   const lastFeeding = f[0] || null;
-  const status = feedingStatus(lastFeeding?.date_time);
+  const status = feedingStatus(lastFeeding?.date_time, kitten?.feeding_interval_hours);
   const tone = TONE[status.tone];
   const countdown = status.due ? status.due.getTime() - now : null;
   const lastPee = e.find((x) => x.urinated) || null;
@@ -49,13 +49,14 @@ export default function NeonatalDashboard({ kitten, feedings, weights, eliminati
 
   return (
     <div className="space-y-3">
-      <KittenStatusCard lastFeeding={lastFeeding} trend={trend} now={now} onOpen={() => setSummaryOpen(true)} />
+      <KittenStatusCard lastFeeding={lastFeeding} trend={trend} now={now} feedingInterval={kitten?.feeding_interval_hours} onOpen={() => setSummaryOpen(true)} />
 
       <RecommendedFeedingCard
         weight={currentWeight}
         fedTodayMl={summary.totalKmr}
         lastFeeding={lastFeeding}
         nursingObserved={motherToday?.nursing_observed === "yes"}
+        intervalHours={kitten?.feeding_interval_hours}
         now={now}
       />
 
