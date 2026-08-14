@@ -13,7 +13,7 @@ import { formatBirthDate, formatAge } from "@/utils/pet";
 const empty = {
   name: "", species: "cat", breed: "", sex: "unknown", birth_date: "", color_markings: "",
   microchip_number: "", spayed_neutered: "unknown", living_situation: "indoor", profile_type: "house_pet",
-  description: "", photo_url: "", care_level: "routine", quarantine_status: false, latest_weight: "",
+  description: "", photo_url: "", care_level: "routine", quarantine_status: false,
   body_condition_notes: "", owner_foster_notes: "", health_status: "healthy", health_issues: "",
   notes: "", sort_order: 0
 };
@@ -45,7 +45,6 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
     setSaving(true);
     try {
       const { id, created_date, updated_date, created_by_id, ...payload } = form;
-      if (payload.latest_weight === "" || payload.latest_weight == null) delete payload.latest_weight;
       await onSave(payload, pet?.id);
     } catch (err) {
       setError(err?.message || "Could not save the profile. Please try again.");
@@ -175,22 +174,16 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Current Weight</Label>
-              <Input type="number" step="any" min="0" placeholder="Optional" value={form.latest_weight ?? ""} onChange={(e) => set("latest_weight", e.target.value === "" ? "" : Number(e.target.value))} className={inputClass} />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-muted-foreground text-xs uppercase tracking-wider">Care Level</Label>
-              <Select value={form.care_level} onValueChange={(v) => set("care_level", v)}>
-                <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="critical" className="text-foreground hover:bg-muted">🔴 Critical</SelectItem>
-                  <SelectItem value="special" className="text-foreground hover:bg-muted">🟠 Special</SelectItem>
-                  <SelectItem value="routine" className="text-foreground hover:bg-muted">🔵 Routine</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Care Level</Label>
+            <Select value={form.care_level} onValueChange={(v) => set("care_level", v)}>
+              <SelectTrigger className="bg-muted border-border text-foreground rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent className="bg-popover border-border">
+                <SelectItem value="critical" className="text-foreground hover:bg-muted">🔴 Critical</SelectItem>
+                <SelectItem value="special" className="text-foreground hover:bg-muted">🟠 Special</SelectItem>
+                <SelectItem value="routine" className="text-foreground hover:bg-muted">🔵 Routine</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
