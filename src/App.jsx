@@ -18,6 +18,7 @@ import NeonatalGrowth from './pages/NeonatalGrowth';
 import NeonatalGroupView from './pages/NeonatalGroupView';
 import WorkspaceSettings from './pages/WorkspaceSettings';
 import Clipboard from './pages/Clipboard';
+import HowTo from './pages/HowTo';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -69,6 +70,7 @@ const AuthenticatedApp = () => {
           <Route path="/neonatal/kitten/:kittenId/growth" element={<NeonatalGrowth />} />
           <Route path="/neonatal/group/:groupId" element={<NeonatalGroupView />} />
           <Route path="/workspace-settings" element={<WorkspaceSettings />} />
+          <Route path="/how-to" element={<HowTo />} />
         </Route>
       </Route>
       <Route path="*" element={<PageNotFound />} />
