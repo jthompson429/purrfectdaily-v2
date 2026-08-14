@@ -385,9 +385,9 @@ export default function Dashboard() {
 
       await base44.integrations.Core.SendEmail({
         to: ownerEmail,
-        subject: `PurrfectDaily: Problem reported — ${taskName}`,
+        subject: `PurrfectDaily: Task couldn’t be completed — ${taskName}`,
         body: [
-          `A problem was reported during today's care.`,
+          `A scheduled care task could not be completed.`,
           ``,
           `Task: ${taskName}`,
           `Pet: ${petName}`,
