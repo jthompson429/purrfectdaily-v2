@@ -276,8 +276,15 @@ export default async function(req) {
       if (!canManageMembers(role)) {
         return Response.json({ error: "Only workspace Owners and Admins can edit workspace settings." }, { status: 403 });
       }
-      const { data } = body;
-      const result = await base44.asServiceRole.entities.Workspace.update(wsId, data);
+      const { data = {} } = body;
+      const allowedFields = ["name", "urgent_medical_instructions", "logo_url"];
+      const safeData = Object.fromEntries(
+        Object.entries(data).filter(([key]) => allowedFields.includes(key))
+      );
+      if (Object.keys(safeData).length === 0) {
+        return Response.json({ error: "No supported workspace settings were provided." }, { status: 400 });
+      }
+      const result = await base44.asServiceRole.entities.Workspace.update(wsId, safeData);
       await auditLog(base44, wsId, user, "workspace_updated", "Workspace", wsId, "Updated workspace settings");
       return Response.json({ data: result });
     }
