@@ -60,8 +60,16 @@ export default function NeonatalOverview() {
   }, [feedings, weights, eliminations, kittenNameMap]);
 
   const handleSaveKitten = async (data) => {
-    if (editingKitten?.id) await updateKitten.mutateAsync({ id: editingKitten.id, data });
-    else await createKitten.mutateAsync(data);
+    const { initial_weight_g: initialWeight, ...profileData } = data;
+    if (editingKitten?.id) {
+      await updateKitten.mutateAsync({ id: editingKitten.id, data: profileData });
+    } else {
+      const created = await createKitten.mutateAsync(profileData);
+      if (initialWeight != null) {
+        await wsCreate("NeonatalWeight", { kitten_id: created.id, date_time: new Date().toISOString(), weight_g: initialWeight, notes: "Initial profile weight" }, activeWorkspaceId);
+        qc.invalidateQueries({ queryKey: ["neonatalWeights", activeWorkspaceId] });
+      }
+    }
     setDialog(null); setEditingKitten(null);
   };
 
@@ -115,7 +123,7 @@ export default function NeonatalOverview() {
         </div>
 
         {/* Action buttons */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        {canWrite && <div className="grid grid-cols-3 gap-2 mb-4">
           <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setEditingKitten(null); setDialog("kitten"); }} className="rounded-2xl py-3 flex flex-col items-center gap-1 bg-card border border-border">
             <Plus className="h-5 w-5 text-primary" />
             <span className="text-[10px] font-bold text-muted-foreground">New Kitten</span>
@@ -128,7 +136,7 @@ export default function NeonatalOverview() {
             <FolderPlus className="h-5 w-5 text-primary" />
             <span className="text-[10px] font-bold text-muted-foreground">New Group</span>
           </motion.button>
-        </div>
+        </div>}
 
         {/* Stats bar */}
         <NeonatalStatsBar stats={stats} />
@@ -151,7 +159,7 @@ export default function NeonatalOverview() {
         <div className="mt-4">
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">All Kittens</p>
           {stats.summaries.length === 0 ? (
-            <button onClick={() => { setEditingKitten(null); setDialog("kitten"); }} className="w-full py-8 rounded-2xl bg-card border border-dashed border-border">
+            <button onClick={() => { if (canWrite) { setEditingKitten(null); setDialog("kitten"); } }} disabled={!canWrite} className="w-full py-8 rounded-2xl bg-card border border-dashed border-border disabled:cursor-default">
               <p className="text-foreground/80 font-bold text-sm">+ Create your first neonatal kitten</p>
               <p className="text-muted-foreground text-xs mt-1">Start tracking care, feedings, and growth</p>
             </button>
@@ -160,12 +168,12 @@ export default function NeonatalOverview() {
               {stats.summaries.map((s) => (
                 <div key={s.kitten.id} className="relative">
                   <KittenSummaryCard summary={s} now={now} />
-                  <button
+                  {canWrite && <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); openEditKitten(s.kitten); }}
                     className="absolute top-2 right-2 w-7 h-7 rounded-lg flex items-center justify-center bg-card/80 border border-border text-muted-foreground hover:text-foreground z-10"
                   >
                     <Pencil className="h-3 w-3" />
-                  </button>
+                  </button>}
                 </div>
               ))}
             </div>
@@ -192,7 +200,7 @@ export default function NeonatalOverview() {
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                     {gk.length > 0 && (
-                      <button onClick={() => openBatchForGroup(gk)} className="w-full mt-1 py-2 rounded-xl text-xs font-bold text-primary bg-primary/8 border border-primary/20">
+                      <button onClick={() => openBatchForGroup(gk)} disabled={!canWrite} className="w-full mt-1 py-2 rounded-xl text-xs font-bold text-primary bg-primary/8 border border-primary/20 disabled:opacity-50 disabled:cursor-default">
                         <Users className="inline h-3.5 w-3.5 mr-1" /> Batch log this group
                       </button>
                     )}
