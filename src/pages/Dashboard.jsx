@@ -2,8 +2,9 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus, PawPrint, ChevronDown, ChevronUp, AlertCircle } from "lucide-react";
-import { format } from "date-fns";
+import { Plus, PawPrint, ChevronDown, ChevronUp, AlertCircle, BellRing, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { differenceInCalendarDays, format } from "date-fns";
 
 import DailyProgressHeader from "@/components/care/DailyProgressHeader";
 import PetSectionHeader from "@/components/care/PetSectionHeader";
@@ -14,7 +15,8 @@ import TaskFormDialog from "@/components/care/TaskFormDialog";
 import AssignmentMigrationDialog from "@/components/care/AssignmentMigrationDialog";
 import { getMedicationStatus } from "@/lib/dateUtils";
 import { taskAssignmentType, isGroupName, ASSIGNMENT_ICON } from "@/utils/assignment";
-import { doseSlots, medicationTaskId } from "@/utils/petCare";
+import { doseSlots, medicationTaskId, preventativeStatus, vaccinationStatus } from "@/utils/petCare";
+import { neonatalDashboardStats } from "@/utils/neonatal";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsBulkUpdate } from "@/lib/workspaceApi";
 
