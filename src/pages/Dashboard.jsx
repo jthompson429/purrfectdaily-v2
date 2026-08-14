@@ -361,7 +361,7 @@ export default function Dashboard() {
 
       base44.integrations.Core.SendEmail({
         to: ownerEmail,
-        subject: "PurrfectDaily: Daily care complete",
+        subject: "PurrTaskDaily: Daily care complete",
         body,
       }).catch(() => {});
     }
@@ -385,7 +385,7 @@ export default function Dashboard() {
 
       await base44.integrations.Core.SendEmail({
         to: ownerEmail,
-        subject: `PurrfectDaily: Task couldn’t be completed — ${taskName}`,
+        subject: `PurrTaskDaily: Task couldn’t be completed — ${taskName}`,
         body: [
           `A scheduled care task could not be completed.`,
           ``,
@@ -470,7 +470,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <PawPrint className="h-5 w-5 text-primary" />
-            <span className="font-black text-foreground text-lg tracking-tight font-heading">PurrfectDaily</span>
+            <span className="font-black text-foreground text-lg tracking-tight font-heading">PurrTaskDaily</span>
           </div>
           <span className="text-[11px] text-muted-foreground font-medium">
             {new Date().toLocaleDateString("en-US", { weekday: "long" })}
