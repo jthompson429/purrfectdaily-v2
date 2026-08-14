@@ -10,7 +10,7 @@ import { base44 } from "@/api/base44Client";
 
 const empty = {
   date: "", clinic: "", veterinarian: "", visit_type: "wellness", reason: "", diagnosis: "",
-  treatment: "", follow_up_instructions: "", notes: "",
+  treatment: "", follow_up_date: "", follow_up_instructions: "", notes: "",
   vaccinations_given: [], medications_prescribed: [], preventives_administered: [], attachments: [], meds_added: false
 };
 
@@ -241,6 +241,12 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
               </div>
             ))}
             {meds.length === 0 && <p className="text-[11px] text-foreground/30">You can add these to active medications from the visit card.</p>}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-foreground/60 text-xs uppercase tracking-wider">Follow-up Date</Label>
+            <Input type="date" value={form.follow_up_date || ""} onChange={(e) => set("follow_up_date", e.target.value)} className={`${inputClass} [color-scheme:light]`} />
+            <p className="text-[10px] text-muted-foreground">Optional — use for a recommended or scheduled recheck.</p>
           </div>
 
           <div className="space-y-1.5">
