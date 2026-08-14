@@ -198,11 +198,12 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
         {isSkipped && (
           <div className="mt-2 px-2.5 py-2 rounded-xl bg-destructive/10 border border-destructive/20">
             <p className="text-xs text-destructive font-medium flex items-center gap-1">
-              <AlertCircle className="h-3 w-3" /> Problem Reported
+              <AlertCircle className="h-3 w-3" /> Couldn’t Complete
             </p>
-            {log?.notes && <p className="text-[10px] text-muted-foreground mt-0.5">"{log.notes}"</p>}
+            {log?.exception_reason && <p className="text-[10px] font-semibold text-foreground/80 mt-1">{EXCEPTION_LABELS[log.exception_reason] || log.exception_reason}</p>}
+            {log?.notes && <p className="text-[10px] text-muted-foreground mt-0.5">"{log.notes}"</p>
             {log?.photo_url && (
-              <img src={log.photo_url} alt="Evidence" className="w-12 h-12 rounded-xl object-cover mt-2 ring-1 ring-destructive/30" />
+              <img src={log.photo_url} alt="Attached context" className="w-12 h-12 rounded-xl object-cover mt-2 ring-1 ring-destructive/30" />
             )}
           </div>
         )}
@@ -299,7 +300,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
                 {/* Optional photo for report */}
                 {reportPhoto ? (
                   <div className="flex items-center gap-2">
-                    <img src={reportPhoto} alt="Evidence" className="w-10 h-10 rounded-xl object-cover ring-1 ring-destructive/30" />
+                    <img src={reportPhoto} alt="Attached context" className="w-10 h-10 rounded-xl object-cover ring-1 ring-destructive/30" />
                     <div>
                       <p className="text-[10px] text-destructive font-medium">Photo attached</p>
                       <button onClick={() => setReportPhoto(null)} className="text-[10px] text-muted-foreground hover:text-destructive">Remove</button>
