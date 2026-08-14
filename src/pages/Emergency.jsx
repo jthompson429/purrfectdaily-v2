@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Phone, Plus, AlertTriangle, Trash2, Pencil } from "lucide-react";
+import { Phone, Plus, AlertTriangle, Trash2, Pencil, ShieldAlert, Pill } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
+import { isMedicationActive } from "@/utils/petCare";
 
 const TYPE_CONFIG = {
   owner: { label: "Owner", color: "text-primary", bg: "bg-primary/15", emoji: "👤" },
@@ -96,26 +97,101 @@ function ContactDialog({ open, onOpenChange, contact, onSave }) {
   );
 }
 
+function PetEmergencyDialog({ open, onOpenChange, pet, onSave }) {
+  const [form, setForm] = useState({ health_issues: "", known_allergies: "", emergency_instructions: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const inputClass = "bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/50";
+
+  useEffect(() => {
+    setForm({
+      health_issues: pet?.health_issues || "",
+      known_allergies: pet?.known_allergies || "",
+      emergency_instructions: pet?.emergency_instructions || "",
+    });
+    setError("");
+  }, [pet, open]);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError("");
+    try {
+      await onSave(form, pet?.id);
+    } catch (err) {
+      setError(err?.message || "Could not save the emergency details. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-foreground font-bold text-xl font-heading">{pet ? `${pet.name} · Emergency Details` : "Emergency Details"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={submit} className="space-y-4 mt-2">
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Health Issues</Label>
+            <Textarea value={form.health_issues} onChange={(event) => setForm((current) => ({ ...current, health_issues: event.target.value }))} placeholder="Chronic conditions or important diagnoses…" className={`${inputClass} h-20 resize-none`} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Known Allergies</Label>
+            <Textarea value={form.known_allergies} onChange={(event) => setForm((current) => ({ ...current, known_allergies: event.target.value }))} placeholder="Medications, foods, or other known reactions…" className={`${inputClass} h-20 resize-none`} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Emergency Instructions</Label>
+            <Textarea value={form.emergency_instructions} onChange={(event) => setForm((current) => ({ ...current, emergency_instructions: event.target.value }))} placeholder="What a caregiver should do or tell the veterinarian…" className={`${inputClass} h-24 resize-none`} />
+          </div>
+          {error && <p className="text-xs text-destructive font-medium" role="alert">{error}</p>}
+          <DialogFooter className="pt-2 gap-2">
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={saving} className="text-muted-foreground rounded-xl flex-1">Cancel</Button>
+            <Button type="submit" disabled={saving} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">{saving ? "Saving…" : "Save"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function Emergency() {
   const { activeWorkspaceId, canWrite } = useWorkspace();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [petDialog, setPetDialog] = useState(false);
+  const [editingPet, setEditingPet] = useState(null);
   const qc = useQueryClient();
 
   const { data: contacts = [] } = useQuery({
     queryKey: ["emergency", activeWorkspaceId],
     queryFn: () => base44.entities.EmergencyInfo.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
   });
+  const { data: pets = [] } = useQuery({
+    queryKey: ["pets", activeWorkspaceId],
+    queryFn: () => base44.entities.PetProfile.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
+  });
+  const { data: medications = [] } = useQuery({
+    queryKey: ["allMedications", activeWorkspaceId],
+    queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }),
+  });
 
   const create = useMutation({ mutationFn: d => wsCreate("EmergencyInfo", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency", activeWorkspaceId] }) });
   const update = useMutation({ mutationFn: ({ id, data }) => wsUpdate("EmergencyInfo", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency", activeWorkspaceId] }) });
   const remove = useMutation({ mutationFn: id => wsDelete("EmergencyInfo", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency", activeWorkspaceId] }) });
+  const updatePet = useMutation({ mutationFn: ({ id, data }) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => { qc.invalidateQueries({ queryKey: ["pets", activeWorkspaceId] }); qc.invalidateQueries({ queryKey: ["pet"] }); } });
 
   const handleSave = async (formData, id) => {
     if (id) await update.mutateAsync({ id, data: formData });
     else await create.mutateAsync(formData);
     setDialog(false);
     setEditing(null);
+  };
+
+  const handleSavePet = async (formData, id) => {
+    await updatePet.mutateAsync({ id, data: formData });
+    setPetDialog(false);
+    setEditingPet(null);
   };
 
   return (
