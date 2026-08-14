@@ -1,6 +1,6 @@
 import { computePetBadges } from "@/utils/petStatus";
 import StatusBadge from "./StatusBadge";
-import { isMedicationActive, vaccinationStatus, preventativeStatus, fmtShort } from "@/utils/petCare";
+import { isMedicationActive, vaccinationStatus, preventativeStatus, fmtShort, todayStr } from "@/utils/petCare";
 
 function Info({ label, value, color }) {
   return (
@@ -23,11 +23,19 @@ export default function CareStatusCard({ pet, preventatives, vaccinations, medic
   const lastPrevSt = lastPrev ? preventativeStatus(lastPrev) : null;
   const nextDue = lastPrevSt?.next ? fmtShort(lastPrevSt.next) : "—";
 
-  const today = new Date(new Date().toDateString());
-  const upcoming = [...vetVisits]
-    .filter((v) => v.date && new Date(v.date) >= today)
-    .sort((a, b) => new Date(a.date) - new Date(b.date))[0];
-  const apptText = upcoming ? `${fmtShort(upcoming.date)}${upcoming.clinic ? ` · ${upcoming.clinic}` : ""}` : "No appointments scheduled";
+  const today = todayStr();
+  const upcomingCandidates = vetVisits.flatMap((visit) => {
+    const candidates = [];
+    if (visit.date && visit.date >= today) {
+      candidates.push({ date: visit.date, label: visit.date === today ? "Today" : fmtShort(visit.date), detail: visit.clinic || "Vet visit" });
+    }
+    if (visit.follow_up_date && visit.follow_up_date >= today) {
+      candidates.push({ date: visit.follow_up_date, label: visit.follow_up_date === today ? "Follow-up today" : `Follow-up ${fmtShort(visit.follow_up_date)}`, detail: visit.clinic || "" });
+    }
+    return candidates;
+  }).sort((a, b) => a.date.localeCompare(b.date));
+  const upcoming = upcomingCandidates[0];
+  const apptText = upcoming ? `${upcoming.label}${upcoming.detail ? ` · ${upcoming.detail}` : ""}` : "No appointments or follow-ups scheduled";
 
   return (
     <div className="rounded-2xl p-4 bg-primary/10 border border-primary/25">
