@@ -20,6 +20,8 @@ const empty = () => ({
 
 export default function GroupDialog({ open, onOpenChange, onSave, group }) {
   const [form, setForm] = useState(empty);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -35,11 +37,20 @@ export default function GroupDialog({ open, onOpenChange, onSave, group }) {
     } else {
       setForm(empty());
     }
+    setError("");
   }, [open, group]);
 
-  const submit = () => {
-    if (!form.group_name.trim()) return;
-    onSave({ ...form });
+  const submit = async () => {
+    if (!form.group_name.trim()) { setError("Please enter a group name."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({ ...form, group_name: form.group_name.trim() });
+    } catch (err) {
+      setError(err?.message || "Could not save the group. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -79,9 +90,10 @@ export default function GroupDialog({ open, onOpenChange, onSave, group }) {
             <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={2} />
           </div>
         </div>
+        {error && <p className="text-xs text-destructive font-medium" role="alert">{error}</p>}
         <div className="pt-2">
-          <Button onClick={submit} className="w-full" disabled={!form.group_name.trim()}>
-            {group ? "Save Changes" : "Create Group"}
+          <Button onClick={submit} className="w-full" disabled={!form.group_name.trim() || saving}>
+            {saving ? "Saving…" : group ? "Save Changes" : "Create Group"}
           </Button>
         </div>
       </DialogContent>
