@@ -5,7 +5,7 @@ import { useWorkspace } from "@/lib/workspaceContext";
 import ClipboardNotificationCenter from "@/components/ClipboardNotificationCenter";
 
 export default function WorkspaceSwitcher() {
-  const { activeWorkspaceId, activeWorkspaceName, activeWorkspaceRole, workspaces, switchWorkspace } = useWorkspace();
+  const { activeWorkspaceId, activeWorkspace, activeWorkspaceName, activeWorkspaceRole, workspaces, switchWorkspace } = useWorkspace();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -24,7 +24,11 @@ export default function WorkspaceSwitcher() {
           onClick={(e) => { e.stopPropagation(); setOpen(prev => !prev); }}
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-muted transition-colors"
         >
-          <Building2 className="h-4 w-4 text-primary" />
+          {activeWorkspace?.logo_url ? (
+            <img src={activeWorkspace.logo_url} alt="" className="h-6 w-6 rounded-md border border-border object-cover" />
+          ) : (
+            <Building2 className="h-4 w-4 text-primary" />
+          )}
           <span className="text-sm font-bold text-foreground font-heading truncate max-w-[200px]">
             {activeWorkspaceName || "No workspace"}
           </span>
@@ -39,9 +43,16 @@ export default function WorkspaceSwitcher() {
                 onClick={() => { switchWorkspace(ws.id); setOpen(false); }}
                 className="w-full flex items-center justify-between px-2 py-2 rounded-lg hover:bg-muted text-left"
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{ws.name}</p>
-                  <p className={`text-xs capitalize ${roleColors[ws.role]}`}>{ws.role}</p>
+                <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                  {ws.logo_url ? (
+                    <img src={ws.logo_url} alt="" className="h-9 w-9 shrink-0 rounded-lg border border-border object-cover" />
+                  ) : (
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted"><Building2 className="h-4 w-4 text-muted-foreground" /></div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{ws.name}</p>
+                    <p className={`text-xs capitalize ${roleColors[ws.role]}`}>{ws.role}</p>
+                  </div>
                 </div>
                 {ws.id === activeWorkspaceId && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
               </button>
