@@ -13,6 +13,8 @@ const vaccinationKey = (item) =>
   `${item.name || ""}::${item.name === "custom" ? item.custom_name || "" : ""}`;
 
 const preventativeKey = (item) => (item.name || "").trim().toLowerCase();
+const prescriptionKey = (item, fallbackDate = "") =>
+  `${(item.medication_name || item.name || "").trim().toLowerCase()}::${item.start_date || fallbackDate}`;
 
 export default function VetVisitSection({ petId }) {
   const { activeWorkspaceId } = useWorkspace();
@@ -21,6 +23,10 @@ export default function VetVisitSection({ petId }) {
   const [editing, setEditing] = useState(null);
   const [viewer, setViewer] = useState(null);
   const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ pet_id: petId }, "-date") });
+  const { data: medicationSchedules = [] } = useQuery({
+    queryKey: ["medications", activeWorkspaceId, petId],
+    queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-start_date")
+  });
   const items = Array.isArray(data) ? data : [];
 
   const invalidateVisitCare = () => {
@@ -103,10 +109,14 @@ export default function VetVisitSection({ petId }) {
 
   const handleSave = async (data, id) => {
     try {
+      const previous = id ? items.find((visit) => visit.id === id) : null;
+      const previousKeys = (previous?.medications_prescribed || []).map((item) => prescriptionKey(item, previous?.date)).sort().join("|");
+      const nextKeys = (data.medications_prescribed || []).map((item) => prescriptionKey(item, data.date)).sort().join("|");
+      const visitData = previous && previousKeys !== nextKeys ? { ...data, meds_added: false } : data;
       const saved = id
-        ? await wsUpdate("VetVisit", id, data, activeWorkspaceId)
-        : await wsCreate("VetVisit", { ...data, pet_id: petId }, activeWorkspaceId);
-      const visit = { ...data, ...saved, id: saved?.id || id, pet_id: petId };
+        ? await wsUpdate("VetVisit", id, visitData, activeWorkspaceId)
+        : await wsCreate("VetVisit", { ...visitData, pet_id: petId }, activeWorkspaceId);
+      const visit = { ...visitData, ...saved, id: saved?.id || id, pet_id: petId };
 
       await Promise.all([
         reconcileVaccinations(visit, data.vaccinations_given),
@@ -122,18 +132,42 @@ export default function VetVisitSection({ petId }) {
   };
 
   const handleAddMeds = async (visit) => {
-    const meds = visit.medications_prescribed || [];
-    for (const m of meds) {
+    const prescriptions = (visit.medications_prescribed || []).filter((item) => item.name?.trim());
+    const linked = medicationSchedules.filter((item) => item.source_visit_id === visit.id);
+    const available = [...linked];
+
+    for (const prescription of prescriptions) {
+      const key = prescriptionKey(prescription, visit.date);
+      const linkedIndex = available.findIndex((item) => prescriptionKey(item) === key);
+      if (linkedIndex >= 0) {
+        available.splice(linkedIndex, 1);
+        continue;
+      }
+
+      const legacyMatch = visit.meds_added
+        ? medicationSchedules.find((item) => !item.source_visit_id && prescriptionKey(item) === key)
+        : null;
+      if (legacyMatch) {
+        await wsUpdate("MedicationSchedule", legacyMatch.id, { source_visit_id: visit.id }, activeWorkspaceId);
+        continue;
+      }
+
       await wsCreate("MedicationSchedule", {
         pet_id: petId,
-        medication_name: m.name,
-        frequency: m.frequency || "twice_daily",
-        start_date: m.start_date || visit.date,
-        end_date: m.end_date || ""
+        source_visit_id: visit.id,
+        medication_name: prescription.name.trim(),
+        frequency: prescription.frequency || "twice_daily",
+        schedule_type: "daily",
+        start_date: prescription.start_date || visit.date,
+        end_date: prescription.end_date || "",
+        critical: true,
+        archived: false
       }, activeWorkspaceId);
     }
+
     await wsUpdate("VetVisit", visit.id, { meds_added: true }, activeWorkspaceId);
-    qc.invalidateQueries({ queryKey: ["medications"] });
+    qc.invalidateQueries({ queryKey: ["medications", activeWorkspaceId, petId] });
+    qc.invalidateQueries({ queryKey: ["medications", activeWorkspaceId] });
     qc.invalidateQueries({ queryKey: ["vetVisits", petId] });
   };
 
@@ -148,16 +182,26 @@ export default function VetVisitSection({ petId }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {items.map((v) => (
+          {items.map((v) => {
+            const linked = medicationSchedules.filter((item) => item.source_visit_id === v.id);
+            const pendingMedicationCount = v.meds_added && linked.length === 0
+              ? 0
+              : (v.medications_prescribed || []).filter((prescription) =>
+                  prescription.name?.trim() &&
+                  !linked.some((item) => prescriptionKey(item) === prescriptionKey(prescription, v.date))
+                ).length;
+            return (
             <VisitCard
               key={v.id}
               visit={v}
+              pendingMedicationCount={pendingMedicationCount}
               onEdit={() => { setEditing(v); setDialog(true); }}
               onDelete={() => { if (window.confirm("Delete this visit and its linked care records?")) remove.mutate(v.id); }}
               onAddMeds={() => handleAddMeds(v)}
               onOpenAttachment={setViewer}
             />
-          ))}
+            );
+          })}
         </div>
       )}
       <VisitRecordDialog open={dialog} onOpenChange={setDialog} item={editing} onSave={handleSave} />
