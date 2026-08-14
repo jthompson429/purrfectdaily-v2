@@ -1,8 +1,8 @@
 import { Bell } from "lucide-react";
 import { buildReminders } from "@/utils/petCare";
 
-export default function RemindersList({ pet, preventatives, vaccinations, medications, weightLogs }) {
-  const reminders = buildReminders(pet, preventatives, vaccinations, medications, weightLogs);
+export default function RemindersList({ pet, preventatives, vaccinations, medications, weightLogs, vetVisits }) {
+  const reminders = buildReminders(pet, preventatives, vaccinations, medications, weightLogs, vetVisits);
   return (
     <div className="rounded-2xl p-4 bg-card border border-border">
       <div className="flex items-center gap-2 mb-3">
