@@ -14,10 +14,11 @@ function Row({ label, value }) {
   );
 }
 
-export default function OverviewSection({ pet, onEdit }) {
+export default function OverviewSection({ pet, weightLogs = [], onEdit }) {
   const spayed = pet.spayed_neutered === "yes" ? "Yes" : pet.spayed_neutered === "no" ? "No" : "Unknown";
-  const weight = pet.latest_weight != null && pet.latest_weight !== ""
-    ? `${pet.latest_weight} ${pet.profile_type === "neonatal" ? "g" : "kg"}`
+  const latestWeight = [...weightLogs].sort((a, b) => b.date.localeCompare(a.date))[0];
+  const weight = latestWeight
+    ? `${latestWeight.weight} ${pet.profile_type === "neonatal" ? "g" : "kg"}`
     : "—";
 
   return (
