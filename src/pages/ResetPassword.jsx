@@ -39,7 +39,7 @@ export default function ResetPassword() {
       <AuthLayout
         icon={AlertTriangle}
         title="Invalid reset link"
-        subtitle="This password reset link is missing or invalid"
+        subtitle="This PurrTask Daily reset link is missing or invalid"
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
             Request a new link
@@ -57,7 +57,7 @@ export default function ResetPassword() {
     <AuthLayout
       icon={Lock}
       title="New password"
-      subtitle="Enter your new password below"
+      subtitle="Enter your new PurrTask Daily password below"
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
