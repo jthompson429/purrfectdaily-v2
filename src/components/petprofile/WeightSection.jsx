@@ -17,9 +17,18 @@ export default function WeightSection({ petId, profileType }) {
   const { data: items = [] } = useQuery({ queryKey: ["weightLogs", petId], queryFn: () => base44.entities.WeightLog.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-date") });
   const upsert = useMutation({
     mutationFn: ({ id, data }) => id ? wsUpdate("WeightLog", id, data, activeWorkspaceId) : wsCreate("WeightLog", { ...data, pet_id: petId }, activeWorkspaceId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] })
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["weightLogs", petId] });
+      qc.invalidateQueries({ queryKey: ["allWeightLogs", activeWorkspaceId] });
+    }
   });
-  const remove = useMutation({ mutationFn: (id) => wsDelete("WeightLog", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] }) });
+  const remove = useMutation({
+    mutationFn: (id) => wsDelete("WeightLog", id, activeWorkspaceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["weightLogs", petId] });
+      qc.invalidateQueries({ queryKey: ["allWeightLogs", activeWorkspaceId] });
+    }
+  });
 
   const handleSave = async (data, id) => {
     await upsert.mutateAsync({ id, data });
