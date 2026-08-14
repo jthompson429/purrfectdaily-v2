@@ -255,6 +255,65 @@ export default function Dashboard() {
   const photoCount = doneLogs.filter(l => l.photo_url).length;
   const problemCount = logs.filter(l => l.status === "skipped").length;
 
+  const attentionItems = useMemo(() => {
+    const items = [];
+    const petName = (petId) => pets.find((pet) => pet.id === petId)?.name || "Pet";
+    const pendingCriticalCare = criticalTasks.filter((task) => !task._isMedTask && !isTaskFullyDone(task, logByTaskId[task.id]));
+    const pendingMedicationDoses = activeMedTasks.filter((task) => !isTaskFullyDone(task, logByTaskId[task.id]));
+
+    if (problemCount > 0) items.push({ key: "problems", urgency: 0, title: `${problemCount} reported care problem${problemCount === 1 ? "" : "s"}`, detail: "Review skipped tasks and caregiver notes", href: "/" });
+    if (pendingCriticalCare.length > 0) items.push({ key: "critical-care", urgency: 0, title: `${pendingCriticalCare.length} critical care task${pendingCriticalCare.length === 1 ? "" : "s"} remaining`, detail: "Complete these before routine care", href: "/" });
+    if (pendingMedicationDoses.length > 0) items.push({ key: "medications", urgency: 1, title: `${pendingMedicationDoses.length} medication dose${pendingMedicationDoses.length === 1 ? "" : "s"} requiring attention`, detail: "Scheduled doses not yet recorded today", href: "/medications" });
+
+    preventatives.forEach((preventative) => {
+      const status = preventativeStatus(preventative);
+      if (status.daysRemaining == null || status.daysRemaining > 7) return;
+      items.push({
+        key: `preventative-${preventative.id}`,
+        urgency: status.daysRemaining < 0 ? 0 : 1,
+        title: `${preventative.name} · ${petName(preventative.pet_id)}`,
+        detail: dueText(status.daysRemaining),
+        href: `/pets/${preventative.pet_id}`,
+      });
+    });
+
+    vaccinations.forEach((vaccination) => {
+      const status = vaccinationStatus(vaccination);
+      if (status.daysRemaining == null || status.daysRemaining > 30) return;
+      const name = vaccination.name === "custom" ? vaccination.custom_name || "Vaccine" : vaccination.name?.toUpperCase() || "Vaccine";
+      items.push({
+        key: `vaccination-${vaccination.id}`,
+        urgency: status.daysRemaining < 0 ? 0 : 2,
+        title: `${name} · ${petName(vaccination.pet_id)}`,
+        detail: dueText(status.daysRemaining),
+        href: `/pets/${vaccination.pet_id}`,
+      });
+    });
+
+    vetVisits.forEach((visit) => {
+      const visitDays = daysFromToday(visit.date);
+      if (visitDays != null && visitDays >= 0 && visitDays <= 7) {
+        items.push({ key: `visit-${visit.id}`, urgency: visitDays <= 1 ? 1 : 2, title: `Veterinary visit · ${petName(visit.pet_id)}`, detail: dueText(visitDays), href: `/pets/${visit.pet_id}` });
+      }
+      const followUpDays = daysFromToday(visit.follow_up_date);
+      if (followUpDays != null && followUpDays <= 7) {
+        items.push({ key: `follow-up-${visit.id}`, urgency: followUpDays < 0 ? 0 : followUpDays <= 1 ? 1 : 2, title: `Veterinary follow-up · ${petName(visit.pet_id)}`, detail: dueText(followUpDays), href: `/pets/${visit.pet_id}` });
+      }
+    });
+
+    if (neonatalKittens.some((kitten) => kitten.active !== false)) {
+      const neonatal = neonatalDashboardStats(neonatalKittens, neonatalFeedings, neonatalWeights, neonatalEliminations);
+      if (neonatal.overdue > 0) items.push({ key: "neonatal-overdue", urgency: 0, title: `${neonatal.overdue} neonatal feeding${neonatal.overdue === 1 ? "" : "s"} overdue`, detail: "Open the neonatal dashboard now", href: "/neonatal" });
+      if (neonatal.weightLosses > 0) items.push({ key: "neonatal-weight", urgency: 0, title: `${neonatal.weightLosses} kitten${neonatal.weightLosses === 1 ? "" : "s"} with weight loss`, detail: "Review growth records and care status", href: "/neonatal" });
+      if (neonatal.feedingsDueNow > 0 || neonatal.feedingsDueSoon > 0) {
+        const count = neonatal.feedingsDueNow + neonatal.feedingsDueSoon;
+        items.push({ key: "neonatal-due", urgency: 1, title: `${count} neonatal feeding${count === 1 ? "" : "s"} due now or soon`, detail: "Review each kitten’s configured schedule", href: "/neonatal" });
+      }
+    }
+
+    return items.sort((a, b) => a.urgency - b.urgency || a.title.localeCompare(b.title));
+  }, [pets, criticalTasks, activeMedTasks, logByTaskId, problemCount, preventatives, vaccinations, vetVisits, neonatalKittens, neonatalFeedings, neonatalWeights, neonatalEliminations]);
+
   const requiredTasks = allActiveTasks.filter(t => t.care_type !== "optional");
   const isFullyComplete = requiredTasks.length > 0 &&
     requiredTasks.every(t => isTaskFullyDone(t, logByTaskId[t.id]));
