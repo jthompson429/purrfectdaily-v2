@@ -18,7 +18,7 @@ PurrTaskDaily is a collaborative pet-care web application for households, foster
 ## Product links
 
 - Application: [purrtaskdaily.com](https://purrtaskdaily.com)
-- How-to guide: [how-to.purrtaskdaily.com](https://how-to.purrtaskdaily.com)
+- How-to guide: [PurrTask Daily How To](https://purrtaskdaily-how-to-kpyh.vercel.app)
 - Questions and support: [no-reply@purrtaskdaily.com](mailto:no-reply@purrtaskdaily.com)
 
 ## Technology
