@@ -13,6 +13,7 @@ import { assignmentLabel } from "@/utils/assignment";
 import StatusBadge from "@/components/petprofile/StatusBadge";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
+import { displayWeightValue, weightDisplayUnit } from "@/utils/weight";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
 const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
@@ -109,6 +110,8 @@ export default function Manage() {
                   const latestWeight = weightLogs
                     .filter((entry) => entry.pet_id === pet.id)
                     .sort((a, b) => b.date.localeCompare(a.date))[0];
+                  const displayedWeight = displayWeightValue(latestWeight, pet.profile_type, pet.preferred_weight_unit);
+                  const displayedWeightUnit = weightDisplayUnit(pet.profile_type, pet.preferred_weight_unit);
                   const badges = computePetBadges(
                     pet,
                     preventatives.filter((p) => p.pet_id === pet.id),
@@ -133,8 +136,8 @@ export default function Manage() {
                         <p className="text-xs text-muted-foreground capitalize">
                           {pet.species}{pet.sex && pet.sex !== "unknown" ? ` · ${pet.sex}` : ""}{pet.birth_date ? ` · ${formatAge(pet.birth_date)}` : ""}
                         </p>
-                        {latestWeight && (
-                          <p className="text-xs text-muted-foreground">{latestWeight.weight} {pet.profile_type === "neonatal" ? "g" : "kg"}</p>
+                        {displayedWeight != null && (
+                          <p className="text-xs text-muted-foreground">{displayedWeight} {displayedWeightUnit}</p>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {badges.map((b) => <StatusBadge key={b.key} badge={b} />)}
