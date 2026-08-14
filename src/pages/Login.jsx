@@ -36,7 +36,8 @@ export default function Login() {
     <AuthLayout
       icon={LogIn}
       title="Welcome back"
-      subtitle="Log in to your account"
+      subtitle="Log in to your PurrTask Daily account"
+      heroImage={{ src: "/purrtask-daily-logo.jpg", alt: "PurrTask Daily logo" }}
       footer={
         <>
           Don't have an account?{" "}
