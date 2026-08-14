@@ -21,7 +21,7 @@ export default function DailySummaryScreen({
 
   const buildMessage = () => {
     const lines = [
-      `PurrfectDaily — Daily Care Complete`,
+      `PurrTaskDaily — Daily Care Complete`,
       `Date: ${today}`,
       caregiverName ? `Caregiver: ${caregiverName}` : null,
       ``,
@@ -37,7 +37,7 @@ export default function DailySummaryScreen({
   };
 
   const handleSendEmail = () => {
-    const subject = encodeURIComponent("PurrfectDaily: Daily care complete — payment unlocked");
+    const subject = encodeURIComponent("PurrTaskDaily: Daily care complete — payment unlocked");
     const body = encodeURIComponent(buildMessage());
     const mailto = `mailto:${ownerEmail}?subject=${subject}&body=${body}`;
     window.open(mailto, "_blank");
