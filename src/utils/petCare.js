@@ -140,7 +140,7 @@ export const buildReminders = (pet, preventatives, vaccinations, medications, we
     }
   });
   if (weightLogs && weightLogs.length) {
-    const sorted = [...weightLogs].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...weightLogs].sort((a, b) => b.date.localeCompare(a.date));
     const last = sorted[0];
     if (last) {
       const days = differenceInCalendarDays(new Date(), toLocal(last.date));
