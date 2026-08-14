@@ -53,7 +53,8 @@ export default function NeonatalFoster() {
   const previousWeight = sortedWeights[0]?.weight_g ?? kitten?.current_weight_g ?? null;
 
   const handleSaveKitten = async (data) => {
-    const { initial_weight_g: _initialWeight, ...profileData } = data;
+    const profileData = { ...data };
+    delete profileData.initial_weight_g;
     if (kitten?.id) await updateKitten.mutateAsync({ id: kitten.id, data: profileData });
     else await createKitten.mutateAsync(profileData);
     setDialog(null);
