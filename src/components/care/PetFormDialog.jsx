@@ -45,6 +45,7 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
     setSaving(true);
     try {
       const { id, created_date, updated_date, created_by_id, ...payload } = form;
+      delete payload.latest_weight;
       await onSave(payload, pet?.id);
     } catch (err) {
       setError(err?.message || "Could not save the profile. Please try again.");
