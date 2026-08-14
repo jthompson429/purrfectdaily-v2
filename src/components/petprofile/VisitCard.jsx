@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ChevronDown, Pencil, Trash2, Plus, FileText, Image as ImageIcon, Syringe, ShieldPlus, Pill } from "lucide-react";
-import { fmtDate } from "@/utils/petCare";
+import { fmtDate, todayStr } from "@/utils/petCare";
 
 const VISIT_LABEL = { wellness: "Wellness", sick_visit: "Sick Visit", vaccination: "Vaccination", surgery: "Surgery", dental: "Dental", emergency: "Emergency", follow_up: "Follow-up", other: "Other" };
 const VAC_LABEL = (v) => v.name === "custom" ? (v.custom_name || "Custom Vaccine") : v.name.toUpperCase();
@@ -22,9 +22,9 @@ function Field({ label, value }) {
 
 export default function VisitCard({ visit, pendingMedicationCount = 0, onEdit, onDelete, onAddMeds, onOpenAttachment }) {
   const [expanded, setExpanded] = useState(false);
-  const upcoming = visit.date && new Date(visit.date) > new Date(new Date().toDateString());
-  const status = upcoming ? "Upcoming" : "Completed";
-  const statusColor = upcoming ? "text-blue-500" : "text-green-500";
+  const today = todayStr();
+  const status = visit.date > today ? "Upcoming" : visit.date === today ? "Today" : "Completed";
+  const statusColor = status === "Upcoming" ? "text-blue-500" : status === "Today" ? "text-orange-500" : "text-green-500";
 
   const vaccs = visit.vaccinations_given || [];
   const prevs = visit.preventives_administered || [];
@@ -60,6 +60,7 @@ export default function VisitCard({ visit, pendingMedicationCount = 0, onEdit, o
             <Field label="Reason" value={visit.reason} />
             <Field label="Diagnosis" value={visit.diagnosis} />
             <Field label="Treatments Performed" value={visit.treatment} />
+            <Field label="Follow-up Date" value={visit.follow_up_date ? fmtDate(visit.follow_up_date) : ""} />
             <Field label="Follow-up Instructions" value={visit.follow_up_instructions} />
             <Field label="Notes" value={visit.notes} />
           </div>
