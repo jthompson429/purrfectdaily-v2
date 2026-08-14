@@ -1,7 +1,7 @@
 import { ExternalLink, LifeBuoy, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const HOW_TO_URL = "https://how-to.purrtaskdaily.com";
+const HOW_TO_URL = "https://purrtaskdaily-how-to-kpyh.vercel.app";
 const SUPPORT_EMAIL = "no-reply@purrtaskdaily.com";
 
 export default function HowTo() {
