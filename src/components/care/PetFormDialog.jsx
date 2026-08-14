@@ -15,7 +15,7 @@ const empty = {
   microchip_number: "", spayed_neutered: "unknown", living_situation: "indoor", profile_type: "house_pet",
   description: "", photo_url: "", care_level: "routine", quarantine_status: false,
   body_condition_notes: "", owner_foster_notes: "", health_status: "healthy", health_issues: "",
-  notes: "", sort_order: 0
+  known_allergies: "", emergency_instructions: "", notes: "", sort_order: 0
 };
 
 export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
@@ -209,6 +209,16 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
               <Input placeholder="List any known issues" value={form.health_issues || ""} onChange={(e) => set("health_issues", e.target.value)} className={inputClass} />
             </div>
           )}
+
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Known Allergies</Label>
+            <Textarea placeholder="Medications, foods, or other known reactions…" value={form.known_allergies || ""} onChange={(e) => set("known_allergies", e.target.value)} className={`${inputClass} h-16 resize-none`} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-muted-foreground text-xs uppercase tracking-wider">Emergency Instructions</Label>
+            <Textarea placeholder="Pet-specific instructions for urgent situations…" value={form.emergency_instructions || ""} onChange={(e) => set("emergency_instructions", e.target.value)} className={`${inputClass} h-20 resize-none`} />
+          </div>
 
           <div className="space-y-1.5">
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Body Condition Notes</Label>
