@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Phone, Plus, AlertTriangle, Trash2, Pencil } from "lucide-react";
@@ -24,9 +24,30 @@ const empty = { contact_name: "", contact_type: "other", phone: "", address: "",
 
 function ContactDialog({ open, onOpenChange, contact, onSave }) {
   const [form, setForm] = useState(empty);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
   const inputClass = "bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/50";
 
-  useState(() => { setForm(contact ? { ...empty, ...contact } : empty); }, [contact, open]);
+  useEffect(() => {
+    setForm(contact ? { ...empty, ...contact } : empty);
+    setError("");
+  }, [contact, open]);
+
+  const submit = async () => {
+    if (!form.contact_name.trim()) {
+      setError("Please enter a contact name.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({ ...form, contact_name: form.contact_name.trim() }, contact?.id);
+    } catch (err) {
+      setError(err?.message || "Could not save this contact. Please try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -62,10 +83,11 @@ function ContactDialog({ open, onOpenChange, contact, onSave }) {
             <Label className="text-muted-foreground text-xs uppercase tracking-wider">Notes</Label>
             <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Hours, special instructions..." className={`${inputClass} h-20 resize-none`} />
           </div>
+          {error && <p className="text-xs text-destructive font-medium" role="alert">{error}</p>}
           <DialogFooter className="pt-2 gap-2">
-            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} className="text-muted-foreground rounded-xl flex-1">Cancel</Button>
-            <Button onClick={() => onSave(form, contact?.id)} disabled={!form.contact_name.trim()} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">
-              Save
+            <Button type="button" variant="ghost" onClick={() => onOpenChange(false)} disabled={saving} className="text-muted-foreground rounded-xl flex-1">Cancel</Button>
+            <Button onClick={submit} disabled={saving || !form.contact_name.trim()} className="text-primary-foreground rounded-xl flex-1 font-bold border-0 bg-primary">
+              {saving ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </div>
@@ -85,9 +107,9 @@ export default function Emergency() {
     queryFn: () => base44.entities.EmergencyInfo.filter({ workspace_id: activeWorkspaceId }, "sort_order"),
   });
 
-  const create = useMutation({ mutationFn: d => wsCreate("EmergencyInfo", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
-  const update = useMutation({ mutationFn: ({ id, data }) => wsUpdate("EmergencyInfo", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
-  const remove = useMutation({ mutationFn: id => wsDelete("EmergencyInfo", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency"] }) });
+  const create = useMutation({ mutationFn: d => wsCreate("EmergencyInfo", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency", activeWorkspaceId] }) });
+  const update = useMutation({ mutationFn: ({ id, data }) => wsUpdate("EmergencyInfo", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency", activeWorkspaceId] }) });
+  const remove = useMutation({ mutationFn: id => wsDelete("EmergencyInfo", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["emergency", activeWorkspaceId] }) });
 
   const handleSave = async (formData, id) => {
     if (id) await update.mutateAsync({ id, data: formData });
@@ -148,14 +170,16 @@ export default function Emergency() {
                         {c.notes && <p className="text-xs text-muted-foreground mt-1 italic">{c.notes}</p>}
                       </div>
                     </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => { setEditing(c); setDialog(true); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
-                        <Pencil className="h-3 w-3" />
-                      </button>
-                      <button onClick={() => remove.mutate(c.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive transition-all">
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
+                    {canWrite && (
+                      <div className="flex gap-1">
+                        <button type="button" aria-label={`Edit ${c.contact_name}`} onClick={() => { setEditing(c); setDialog(true); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
+                          <Pencil className="h-3 w-3" />
+                        </button>
+                        <button type="button" aria-label={`Delete ${c.contact_name}`} onClick={() => { if (window.confirm(`Delete ${c.contact_name}?`)) remove.mutate(c.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive transition-all">
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               );
