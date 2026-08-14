@@ -33,6 +33,7 @@ export default function Manage() {
   const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives", activeWorkspaceId], queryFn: () => base44.entities.Preventative.filter({ workspace_id: activeWorkspaceId }) });
   const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations", activeWorkspaceId], queryFn: () => base44.entities.Vaccination.filter({ workspace_id: activeWorkspaceId }) });
   const { data: medications = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }) });
+  const { data: weightLogs = [] } = useQuery({ queryKey: ["allWeightLogs", activeWorkspaceId], queryFn: () => base44.entities.WeightLog.filter({ workspace_id: activeWorkspaceId }, "-date") });
 
   const createPet = useMutation({ mutationFn: d => wsCreate("PetProfile", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
   const updatePet = useMutation({ mutationFn: ({ id, data }) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["pets"] }) });
@@ -105,6 +106,9 @@ export default function Manage() {
             <div className="space-y-3 mb-4">
               <AnimatePresence>
                 {filteredPets.map((pet) => {
+                  const latestWeight = weightLogs
+                    .filter((entry) => entry.pet_id === pet.id)
+                    .sort((a, b) => b.date.localeCompare(a.date))[0];
                   const badges = computePetBadges(
                     pet,
                     preventatives.filter((p) => p.pet_id === pet.id),
@@ -129,8 +133,8 @@ export default function Manage() {
                         <p className="text-xs text-muted-foreground capitalize">
                           {pet.species}{pet.sex && pet.sex !== "unknown" ? ` · ${pet.sex}` : ""}{pet.birth_date ? ` · ${formatAge(pet.birth_date)}` : ""}
                         </p>
-                        {pet.latest_weight != null && pet.latest_weight !== "" && (
-                          <p className="text-xs text-muted-foreground">{pet.latest_weight} {pet.profile_type === "neonatal" ? "g" : "kg"}</p>
+                        {latestWeight && (
+                          <p className="text-xs text-muted-foreground">{latestWeight.weight} {pet.profile_type === "neonatal" ? "g" : "kg"}</p>
                         )}
                         <div className="flex flex-wrap gap-1 mt-1.5">
                           {badges.map((b) => <StatusBadge key={b.key} badge={b} />)}
