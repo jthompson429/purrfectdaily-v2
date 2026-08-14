@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { Plus, PawPrint, ChevronDown, ChevronUp, AlertCircle, BellRing, ChevronRight } from "lucide-react";
+import { Plus, PawPrint, ChevronDown, ChevronUp, BellRing, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { differenceInCalendarDays, format } from "date-fns";
 
@@ -477,39 +477,66 @@ export default function Dashboard() {
         </div>
 
         {/* Cross-feature attention queue */}
-        <section className="mb-4" aria-labelledby="attention-heading">
-          <div className="flex items-center justify-between mb-2 px-1">
+        <section className="mb-5" aria-labelledby="attention-heading">
+          <div className="flex items-center justify-between mb-2.5 px-1">
             <div className="flex items-center gap-2">
-              <BellRing className="h-4 w-4 text-primary" />
-              <h2 id="attention-heading" className="text-xs font-black uppercase tracking-wider text-foreground">Attention Needed</h2>
+              <BellRing className={`h-4 w-4 ${attentionNow.length > 0 ? "text-destructive" : "text-primary"}`} />
+              <h2 id="attention-heading" className="text-sm font-black text-foreground">Care Overview</h2>
             </div>
-            {attentionItems.length > 0 && <span className="text-[10px] font-bold text-muted-foreground">{attentionItems.length} item{attentionItems.length === 1 ? "" : "s"}</span>}
+            {attentionItems.length > 0 && <span className="rounded-full bg-muted px-2 py-1 text-[10px] font-black text-muted-foreground">{attentionItems.length}</span>}
           </div>
+
           {attentionItems.length === 0 ? (
-            <div className="rounded-2xl p-3 bg-green-500/10 border border-green-500/25">
-              <p className="text-sm font-bold text-green-600">No urgent or upcoming care needs</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Today’s scheduled tasks remain below.</p>
+            <div className="rounded-3xl p-4 bg-gradient-to-br from-green-500/15 to-primary/5 border border-green-500/25">
+              <p className="text-base font-black text-green-600">All clear</p>
+              <p className="text-xs text-muted-foreground mt-1">No urgent or upcoming care needs. Today’s tasks remain below.</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {attentionItems.slice(0, 8).map((item) => {
-                const tone = item.urgency === 0
-                  ? "bg-destructive/10 border-destructive/25 text-destructive"
-                  : item.urgency === 1
-                    ? "bg-amber-500/10 border-amber-500/25 text-amber-600"
-                    : "bg-blue-500/10 border-blue-500/25 text-blue-600";
-                return (
-                  <Link key={item.key} to={item.href} className={`flex items-center gap-3 rounded-2xl p-3 border ${tone}`}>
-                    <span className="h-2.5 w-2.5 rounded-full bg-current flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground">{item.title}</p>
-                      <p className="text-[11px] text-muted-foreground">{item.detail}</p>
-                    </div>
-                    <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                  </Link>
-                );
-              })}
-              {attentionItems.length > 8 && <p className="text-[10px] text-center font-semibold text-muted-foreground">+{attentionItems.length - 8} more upcoming item{attentionItems.length - 8 === 1 ? "" : "s"}</p>}
+            <div className="space-y-3">
+              {visibleAttentionNow.length > 0 && (
+                <div className="rounded-3xl overflow-hidden bg-gradient-to-br from-destructive/15 via-destructive/8 to-amber-500/10 border border-destructive/30 shadow-sm">
+                  <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.16em] text-destructive">Needs Attention Now</p>
+                    <span className="text-[10px] font-bold text-destructive">{attentionNow.length}</span>
+                  </div>
+                  <div className="divide-y divide-destructive/15">
+                    {visibleAttentionNow.map((item, index) => (
+                      <Link key={item.key} to={item.href} className={`flex items-center gap-3 px-4 ${index === 0 ? "py-4" : "py-3"} hover:bg-background/20 transition-colors`}>
+                        <span className={`${index === 0 ? "h-3 w-3" : "h-2.5 w-2.5"} rounded-full flex-shrink-0 ${item.urgency === 0 ? "bg-destructive" : "bg-amber-500"}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className={`${index === 0 ? "text-base" : "text-sm"} font-black text-foreground`}>{item.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{item.detail}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-destructive/70 flex-shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {visibleAttentionUpcoming.length > 0 && (
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground mb-2 px-1">Coming Up</p>
+                  <div className="rounded-2xl overflow-hidden bg-card border border-border divide-y divide-border">
+                    {visibleAttentionUpcoming.map((item) => (
+                      <Link key={item.key} to={item.href} className="flex items-center gap-3 px-3.5 py-3 hover:bg-muted/50 transition-colors">
+                        <span className="h-2.5 w-2.5 rounded-full bg-blue-500 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground">{item.title}</p>
+                          <p className="text-[11px] text-muted-foreground">{item.detail}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {(hiddenAttentionCount > 0 || showAllAttention) && (
+                <button type="button" onClick={() => setShowAllAttention((shown) => !shown)} className="w-full py-2 text-xs font-bold text-primary">
+                  {showAllAttention ? "Show fewer care items" : `Show ${hiddenAttentionCount} more care item${hiddenAttentionCount === 1 ? "" : "s"}`}
+                </button>
+              )}
             </div>
           )}
         </section>
@@ -521,25 +548,6 @@ export default function Dashboard() {
           criticalTotal={criticalTasks.length}
           criticalDone={criticalDone}
         />
-
-        {/* Problem alerts */}
-        {problemCount > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl p-3 mb-4 flex items-start gap-2.5 bg-destructive/10 border border-destructive/25"
-          >
-            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-bold text-destructive">
-                Reported Problems — {problemCount} task{problemCount !== 1 ? "s" : ""} had issues today
-              </p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">
-                Review the task cards below for details. Owner will be notified.
-              </p>
-            </div>
-          </motion.div>
-        )}
 
         {/* Off-week medication warnings */}
         {offMedWarnings.length > 0 && (
