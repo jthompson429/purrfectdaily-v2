@@ -156,7 +156,7 @@ function PetEmergencyDialog({ open, onOpenChange, pet, onSave }) {
 }
 
 export default function Emergency() {
-  const { activeWorkspaceId, canWrite } = useWorkspace();
+  const { activeWorkspaceId, canWrite, canDelete } = useWorkspace();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [petDialog, setPetDialog] = useState(false);
@@ -329,9 +329,11 @@ export default function Emergency() {
                         <button type="button" aria-label={`Edit ${c.contact_name}`} onClick={() => { setEditing(c); setDialog(true); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground transition-all">
                           <Pencil className="h-3 w-3" />
                         </button>
-                        <button type="button" aria-label={`Delete ${c.contact_name}`} onClick={() => { if (window.confirm(`Delete ${c.contact_name}?`)) remove.mutate(c.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive transition-all">
-                          <Trash2 className="h-3 w-3" />
-                        </button>
+                        {canDelete && (
+                          <button type="button" aria-label={`Delete ${c.contact_name}`} onClick={() => { if (window.confirm(`Delete ${c.contact_name}?`)) remove.mutate(c.id); }} className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive transition-all">
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
