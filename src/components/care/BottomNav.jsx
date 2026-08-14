@@ -61,7 +61,7 @@ export default function BottomNav() {
   return (
     <>
       {moreOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden" role="presentation">
+        <div className="fixed inset-0 z-[60] lg:hidden" role="presentation">
           <button
             type="button"
             aria-label="Close more menu"
@@ -72,7 +72,7 @@ export default function BottomNav() {
             role="dialog"
             aria-modal="true"
             aria-label="More navigation"
-            className="absolute inset-x-3 bottom-[88px] rounded-2xl border bg-background p-3 shadow-2xl"
+            className="absolute inset-x-3 bottom-[calc(5.75rem+env(safe-area-inset-bottom))] max-h-[calc(100dvh-7rem-env(safe-area-inset-bottom))] overflow-y-auto rounded-2xl border bg-background p-3 shadow-2xl"
           >
             <div className="flex items-center justify-between px-2 pb-2">
               <p className="text-sm font-black">More</p>
@@ -110,7 +110,7 @@ export default function BottomNav() {
         </div>
       )}
 
-      <div className="relative z-50 shrink-0 px-4 pb-safe bg-background/95 backdrop-blur-xl border-t border-border">
+      <div className="relative z-50 shrink-0 border-t border-border bg-background/95 px-4 pb-safe backdrop-blur-xl">
         <div className="max-w-lg mx-auto flex items-center justify-around py-3">
           {NAV_ITEMS.map(({ path, icon: Icon, label, showsClipboardBadge }) => {
             const active = isActive(pathname, path);
