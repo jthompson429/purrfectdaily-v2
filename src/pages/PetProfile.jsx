@@ -35,7 +35,7 @@ export default function PetProfile() {
   const { data: vaccinations = [] } = useQuery({ queryKey: ["vaccinations", id], queryFn: () => base44.entities.Vaccination.filter({ pet_id: id }, "-date_given") });
   const { data: medications = [] } = useQuery({ queryKey: ["medications", activeWorkspaceId, id], queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: id }, "-start_date") });
   const { data: vetVisits = [] } = useQuery({ queryKey: ["vetVisits", id], queryFn: () => base44.entities.VetVisit.filter({ workspace_id: activeWorkspaceId, pet_id: id }, "-date") });
-  const { data: weightLogs = [] } = useQuery({ queryKey: ["weightLogs", id], queryFn: () => base44.entities.WeightLog.filter({ pet_id: id }, "-date") });
+  const { data: weightLogs = [] } = useQuery({ queryKey: ["weightLogs", id], queryFn: () => base44.entities.WeightLog.filter({ workspace_id: activeWorkspaceId, pet_id: id }, "-date") });
 
   const updatePet = useMutation({ mutationFn: (data) => wsUpdate("PetProfile", id, data, activeWorkspaceId), onSuccess: () => { qc.invalidateQueries({ queryKey: ["pet", id] }); qc.invalidateQueries({ queryKey: ["pets"] }); } });
   const handleSavePet = async (formData) => { await updatePet.mutateAsync(formData); setEditOpen(false); };
@@ -113,7 +113,7 @@ export default function PetProfile() {
 
           <ErrorBoundary label="Care Status"><CareStatusCard pet={pet} preventatives={preventatives} vaccinations={vaccinations} medications={medications} vetVisits={vetVisits} /></ErrorBoundary>
           <ErrorBoundary label="Reminders"><RemindersList pet={pet} preventatives={preventatives} vaccinations={vaccinations} medications={medications} weightLogs={weightLogs} vetVisits={vetVisits} /></ErrorBoundary>
-          <ErrorBoundary label="Overview"><OverviewSection pet={pet} onEdit={() => setEditOpen(true)} /></ErrorBoundary>
+          <ErrorBoundary label="Overview"><OverviewSection pet={pet} weightLogs={weightLogs} onEdit={() => setEditOpen(true)} /></ErrorBoundary>
           <ErrorBoundary label="Preventive Care"><PreventativeSection petId={id} /></ErrorBoundary>
           <ErrorBoundary label="Vaccinations"><VaccinationSection petId={id} /></ErrorBoundary>
           <ErrorBoundary label="Medications"><MedicationSection petId={id} /></ErrorBoundary>
