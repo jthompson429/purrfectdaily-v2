@@ -56,32 +56,33 @@ export default function WeightSection({ petId, profileType, preferredWeightUnit 
 
   return (
     <SectionCard title="Weight History" icon={Scale} onAdd={() => { setEditing(null); setDialog(true); }} addLabel="Log">
+      {profileType !== "neonatal" && (
+        <div className="flex justify-end mb-3">
+          <div className="flex rounded-lg p-0.5 bg-muted border border-border" aria-label="Preferred weight unit">
+            {["kg", "lb"].map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => handleUnitChange(option)}
+                aria-pressed={unit === option}
+                className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase ${unit === option ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {items.length === 0 ? (
         <p className="text-xs text-muted-foreground py-3 text-center">No weight logged yet</p>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-end gap-2">
-              <p className="text-2xl font-black text-foreground">{latestValue} <span className="text-sm text-muted-foreground font-medium">{unit}</span></p>
-              {trend != null && (
-                <p className={`text-xs font-bold mb-1 ${trend >= 0 ? "text-green-500" : "text-red-500"}`}>
-                  {trend >= 0 ? "↑" : "↓"} {Math.abs(trend).toFixed(unit === "g" ? 1 : 2)} {unit}
-                </p>
-              )}
-            </div>
-            {profileType !== "neonatal" && (
-              <div className="flex rounded-lg p-0.5 bg-muted border border-border">
-                {["kg", "lb"].map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => handleUnitChange(option)}
-                    className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${unit === option ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
-                  >
-                    {option}
-                  </button>
-                ))}
-              </div>
+          <div className="flex items-end gap-2">
+            <p className="text-2xl font-black text-foreground">{latestValue} <span className="text-sm text-muted-foreground font-medium">{unit}</span></p>
+            {trend != null && (
+              <p className={`text-xs font-bold mb-1 ${trend >= 0 ? "text-green-500" : "text-red-500"}`}>
+                {trend >= 0 ? "↑" : "↓"} {Math.abs(trend).toFixed(unit === "g" ? 1 : 2)} {unit}
+              </p>
             )}
           </div>
           {chartData.length >= 2 && (
@@ -90,7 +91,7 @@ export default function WeightSection({ petId, profileType, preferredWeightUnit 
                 <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
                   <XAxis dataKey="date" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickLine={false} axisLine={false} />
                   <YAxis domain={["auto", "auto"]} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} tickLine={false} axisLine={false} width={32} />
-                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 11 }} labelStyle={{ color: "hsl(var(--muted-foreground))" }} />
+                  <Tooltip formatter={(value) => [`${value} ${unit}`, "Weight"]} contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 11 }} labelStyle={{ color: "hsl(var(--muted-foreground))" }} />
                   <Line type="monotone" dataKey="weight" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 2, fill: "hsl(var(--primary))" }} />
                 </LineChart>
               </ResponsiveContainer>
