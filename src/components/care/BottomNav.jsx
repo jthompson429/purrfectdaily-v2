@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  Building2, Cat, ClipboardList, Home, MoreHorizontal,
+  BookOpen, Building2, Cat, ClipboardList, Home, MoreHorizontal,
   Phone, Pill, Settings, X,
 } from "lucide-react";
 import { useClipboardUnseenCount } from "@/hooks/useClipboardUnseenCount";
@@ -31,6 +31,12 @@ const MORE_ITEMS = [
     icon: Building2,
     label: "Workspace",
     description: "Members and workspace settings",
+  },
+  {
+    path: "/how-to",
+    icon: BookOpen,
+    label: "How To",
+    description: "Learn the basics or ask a question",
   },
 ];
 
