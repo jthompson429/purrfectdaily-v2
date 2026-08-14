@@ -15,7 +15,7 @@ import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete, wsBulkCreate } from "@/lib/workspaceApi";
 
 export default function NeonatalOverview() {
-  const { activeWorkspaceId, canWrite } = useWorkspace();
+  const { activeWorkspaceId, canWrite, canManageMembers } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(null);
   const [editingKitten, setEditingKitten] = useState(null);
@@ -236,7 +236,7 @@ export default function NeonatalOverview() {
         )}
       </div>
 
-      <KittenProfileDialog open={dialog === "kitten"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={editingKitten} groups={groups} />
+      <KittenProfileDialog open={dialog === "kitten"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={editingKitten} groups={groups} canManageSchedule={canManageMembers} />
       <GroupDialog open={dialog === "group"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveGroup} group={editingGroup} />
       <BatchLogDialog open={dialog === "batch"} onOpenChange={(o) => !o && setDialog(null)} kittens={kittens} onSave={handleBatchSave} preselectedIds={batchPreselect} />
     </div>
