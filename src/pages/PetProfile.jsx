@@ -118,7 +118,7 @@ export default function PetProfile() {
           <ErrorBoundary label="Vaccinations"><VaccinationSection petId={id} /></ErrorBoundary>
           <ErrorBoundary label="Medications"><MedicationSection petId={id} /></ErrorBoundary>
           <ErrorBoundary label="Veterinary Visits"><VetVisitSection petId={id} /></ErrorBoundary>
-          <ErrorBoundary label="Weight History"><WeightSection petId={id} profileType={pet.profile_type} /></ErrorBoundary>
+          <ErrorBoundary label="Weight History"><WeightSection petId={id} profileType={pet.profile_type} preferredWeightUnit={pet.preferred_weight_unit || "kg"} /></ErrorBoundary>
           <ErrorBoundary label="Medical History"><MedicalHistoryTimeline preventatives={preventatives} vaccinations={vaccinations} vetVisits={vetVisits} medications={medications} /></ErrorBoundary>
         </div>
 
