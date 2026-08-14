@@ -98,7 +98,7 @@ export const doseSlots = (med) => med.schedule_type === "custom" ? ["as_needed"]
 // Keeping the id deterministic lets Today and Pet Profiles read the same record.
 export const medicationTaskId = (medId, slot) => `med_${medId}_${slot}`;
 
-export const buildReminders = (pet, preventatives, vaccinations, medications, weightLogs) => {
+export const buildReminders = (pet, preventatives, vaccinations, medications, weightLogs, vetVisits = []) => {
   const out = [];
   preventatives.forEach((p) => {
     const st = preventativeStatus(p);
@@ -122,6 +122,21 @@ export const buildReminders = (pet, preventatives, vaccinations, medications, we
     const manuallyRecorded = m.schedule_type === "custom" || m.frequency === "custom" || m.frequency === "as_needed";
     if (status.active && !manuallyRecorded) {
       out.push({ urgency: 2, label: `${m.medication_name} dose today` });
+    }
+  });
+  vetVisits.forEach((visit) => {
+    if (visit.date) {
+      const appointmentDays = differenceInCalendarDays(toLocal(visit.date), new Date());
+      if (appointmentDays === 0) out.push({ urgency: 1, label: "Veterinary visit today" });
+      else if (appointmentDays === 1) out.push({ urgency: 1, label: "Veterinary visit tomorrow" });
+      else if (appointmentDays > 1 && appointmentDays <= 7) out.push({ urgency: 2, label: `Veterinary visit in ${appointmentDays} days` });
+    }
+    if (visit.follow_up_date) {
+      const followUpDays = differenceInCalendarDays(toLocal(visit.follow_up_date), new Date());
+      if (followUpDays < 0) out.push({ urgency: 0, label: "Veterinary follow-up overdue" });
+      else if (followUpDays === 0) out.push({ urgency: 1, label: "Veterinary follow-up today" });
+      else if (followUpDays === 1) out.push({ urgency: 1, label: "Veterinary follow-up tomorrow" });
+      else if (followUpDays <= 7) out.push({ urgency: 2, label: `Veterinary follow-up in ${followUpDays} days` });
     }
   });
   if (weightLogs && weightLogs.length) {
@@ -187,6 +202,7 @@ export const buildMedicalHistory = (preventatives, vaccinations, vetVisits, medi
       vaccinationsGiven.length ? `Vaccines: ${vaccinationsGiven.join(", ")}` : "",
       preventativesGiven.length ? `Preventatives: ${preventativesGiven.join(", ")}` : "",
       medicationsPrescribed.length ? `Prescribed: ${medicationsPrescribed.join(", ")}` : "",
+      visit.follow_up_date ? `Follow-up: ${fmtDate(visit.follow_up_date)}` : "",
       visit.attachments?.length ? `${visit.attachments.length} attachment${visit.attachments.length === 1 ? "" : "s"}` : ""
     ].filter(Boolean).join(" · ");
     const clinicalSummary = visit.diagnosis
