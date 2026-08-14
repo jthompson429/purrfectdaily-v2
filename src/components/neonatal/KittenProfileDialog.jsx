@@ -90,7 +90,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
             <Label>Name / Temporary ID</Label>
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Neonate #1" />
           </div>
-          <div className={`grid gap-3 ${kitten ? "grid-cols-1" : "grid-cols-2"}`}>
+          <div className={`grid gap-3 ${kitten ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
             <div className="space-y-1.5">
               <Label>Estimated birth</Label>
               <Input
@@ -129,7 +129,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
               <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Sex</Label>
               <Select value={form.sex} onValueChange={(v) => setForm((f) => ({ ...f, sex: v }))}>
