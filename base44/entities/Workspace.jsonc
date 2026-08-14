@@ -39,6 +39,10 @@
     "urgent_medical_instructions": {
       "type": "string",
       "description": "Organization-specific instructions shown when a Digital Clipboard entry is marked urgent"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Custom workspace image or organization logo"
     }
   },
   "required": [
