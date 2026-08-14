@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Home, Cat, Pill, Settings, X, PawPrint, Building2, ClipboardList } from "lucide-react";
 import { useClipboardUnseenCount } from "@/hooks/useClipboardUnseenCount";
+import { useWorkspace } from "@/lib/workspaceContext";
 
 const GROUPS = [
   {
@@ -38,6 +39,7 @@ export default function SidebarNav() {
   const location = useLocation();
   const [openLabel, setOpenLabel] = useState(null);
   const clipboardUnseenCount = useClipboardUnseenCount();
+  const { activeWorkspace } = useWorkspace();
 
   // Close submenu on route change
   useEffect(() => {
@@ -98,10 +100,14 @@ export default function SidebarNav() {
               <button
                 className="sn3n-brand-btn"
                 type="button"
-                aria-label="PurrfectDaily home"
+                aria-label={activeWorkspace?.name ? `${activeWorkspace.name} home` : "PurrfectDaily home"}
                 tabIndex={-1}
               >
-                <PawPrint className="sn3n-brand-icon w-5 h-5" />
+                {activeWorkspace?.logo_url ? (
+                  <img src={activeWorkspace.logo_url} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                ) : (
+                  <PawPrint className="sn3n-brand-icon w-5 h-5" />
+                )}
               </button>
             </span>
           </div>
