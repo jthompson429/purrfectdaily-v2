@@ -240,7 +240,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
 
             {/* Action buttons */}
             <div className="flex gap-2">
-              {/* All tasks: Report Problem */}
+              {/* All tasks: record why care could not be completed */}
               <button
                 onClick={() => setReportMode(true)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all flex-shrink-0 bg-destructive/10 border border-destructive/20 text-destructive"
