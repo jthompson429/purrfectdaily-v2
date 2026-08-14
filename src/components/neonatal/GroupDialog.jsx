@@ -64,7 +64,7 @@ export default function GroupDialog({ open, onOpenChange, onSave, group }) {
             <Label>Group Name</Label>
             <Input value={form.group_name} onChange={(e) => setForm((f) => ({ ...f, group_name: e.target.value }))} placeholder="e.g. Daisy's Litter" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Group Type</Label>
               <Select value={form.group_type} onValueChange={(v) => setForm((f) => ({ ...f, group_type: v }))}>
