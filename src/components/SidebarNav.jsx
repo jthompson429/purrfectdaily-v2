@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Cat, Pill, Settings, X, PawPrint, Building2, ClipboardList } from "lucide-react";
+import { Home, Cat, Pill, Settings, X, PawPrint, Building2, ClipboardList, BookOpen } from "lucide-react";
 import { useClipboardUnseenCount } from "@/hooks/useClipboardUnseenCount";
 import { useWorkspace } from "@/lib/workspaceContext";
 
@@ -30,7 +30,7 @@ const GROUPS = [
   },
   {
     label: "Admin",
-    items: [{ icon: Settings, label: "Manage", path: "/manage" }, { icon: Building2, label: "Workspace", path: "/workspace-settings" }],
+    items: [{ icon: Settings, label: "Manage", path: "/manage" }, { icon: Building2, label: "Workspace", path: "/workspace-settings" }, { icon: BookOpen, label: "How To", path: "/how-to" }],
   },
 ];
 
