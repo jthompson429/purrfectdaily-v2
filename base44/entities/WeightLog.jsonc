@@ -12,6 +12,15 @@
     "weight": {
       "type": "number"
     },
+    "unit": {
+      "type": "string",
+      "enum": [
+        "g",
+        "kg",
+        "lb"
+      ],
+      "description": "Unit used when the weight was recorded"
+    },
     "date": {
       "type": "string",
       "format": "date"
