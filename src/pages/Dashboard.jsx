@@ -469,6 +469,44 @@ export default function Dashboard() {
           </span>
         </div>
 
+        {/* Cross-feature attention queue */}
+        <section className="mb-4" aria-labelledby="attention-heading">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <div className="flex items-center gap-2">
+              <BellRing className="h-4 w-4 text-primary" />
+              <h2 id="attention-heading" className="text-xs font-black uppercase tracking-wider text-foreground">Attention Needed</h2>
+            </div>
+            {attentionItems.length > 0 && <span className="text-[10px] font-bold text-muted-foreground">{attentionItems.length} item{attentionItems.length === 1 ? "" : "s"}</span>}
+          </div>
+          {attentionItems.length === 0 ? (
+            <div className="rounded-2xl p-3 bg-green-500/10 border border-green-500/25">
+              <p className="text-sm font-bold text-green-600">No urgent or upcoming care needs</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Today’s scheduled tasks remain below.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {attentionItems.slice(0, 8).map((item) => {
+                const tone = item.urgency === 0
+                  ? "bg-destructive/10 border-destructive/25 text-destructive"
+                  : item.urgency === 1
+                    ? "bg-amber-500/10 border-amber-500/25 text-amber-600"
+                    : "bg-blue-500/10 border-blue-500/25 text-blue-600";
+                return (
+                  <Link key={item.key} to={item.href} className={`flex items-center gap-3 rounded-2xl p-3 border ${tone}`}>
+                    <span className="h-2.5 w-2.5 rounded-full bg-current flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-foreground">{item.title}</p>
+                      <p className="text-[11px] text-muted-foreground">{item.detail}</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 flex-shrink-0" />
+                  </Link>
+                );
+              })}
+              {attentionItems.length > 8 && <p className="text-[10px] text-center font-semibold text-muted-foreground">+{attentionItems.length - 8} more upcoming item{attentionItems.length - 8 === 1 ? "" : "s"}</p>}
+            </div>
+          )}
+        </section>
+
         {/* Sticky progress header */}
         <DailyProgressHeader
           total={totalTasks}
