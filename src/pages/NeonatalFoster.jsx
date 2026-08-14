@@ -24,7 +24,7 @@ const QUICK = [
 ];
 
 export default function NeonatalFoster() {
-  const { activeWorkspaceId, canWrite } = useWorkspace();
+  const { activeWorkspaceId, canWrite, canManageMembers } = useWorkspace();
   const { kittenId } = useParams();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(null);
@@ -53,8 +53,9 @@ export default function NeonatalFoster() {
   const previousWeight = sortedWeights[0]?.weight_g ?? kitten?.current_weight_g ?? null;
 
   const handleSaveKitten = async (data) => {
-    if (kitten?.id) await updateKitten.mutateAsync({ id: kitten.id, data });
-    else await createKitten.mutateAsync(data);
+    const { initial_weight_g: _initialWeight, ...profileData } = data;
+    if (kitten?.id) await updateKitten.mutateAsync({ id: kitten.id, data: profileData });
+    else await createKitten.mutateAsync(profileData);
     setDialog(null);
   };
 
@@ -100,9 +101,9 @@ export default function NeonatalFoster() {
             <p className="text-muted-foreground text-xs">Neonatal Foster Care</p>
           </div>
           <div className="flex gap-1">
-            <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
+            {canWrite && <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
               <Pencil className="h-4 w-4" />
-            </button>
+            </button>}
             <button onClick={handleExport} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
               <Download className="h-4 w-4" />
             </button>
@@ -138,7 +139,7 @@ export default function NeonatalFoster() {
         <ActivityList feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} />
       </div>
 
-      <KittenProfileDialog open={dialog === "profile"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={kitten} groups={groups} />
+      <KittenProfileDialog open={dialog === "profile"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={kitten} groups={groups} canManageSchedule={canManageMembers} />
       <FeedingDialog open={dialog === "feeding"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createFeeding.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} />
       <WeightDialog open={dialog === "weight"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createWeight.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} previousWeight={previousWeight} />
       <EliminationDialog open={dialog === "elimination"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createElimination.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} />
