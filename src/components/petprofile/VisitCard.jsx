@@ -4,6 +4,11 @@ import { fmtDate } from "@/utils/petCare";
 
 const VISIT_LABEL = { wellness: "Wellness", sick_visit: "Sick Visit", vaccination: "Vaccination", surgery: "Surgery", dental: "Dental", emergency: "Emergency", follow_up: "Follow-up", other: "Other" };
 const VAC_LABEL = (v) => v.name === "custom" ? (v.custom_name || "Custom Vaccine") : v.name.toUpperCase();
+const formatFileSize = (bytes) => {
+  if (!bytes) return "";
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
 
 function Field({ label, value }) {
   if (!value) return null;
@@ -97,7 +102,10 @@ export default function VisitCard({ visit, pendingMedicationCount = 0, onEdit, o
                     <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-primary/10">
                       {a.type === "image" ? <ImageIcon className="h-3.5 w-3.5 text-primary" /> : <FileText className="h-3.5 w-3.5 text-primary" />}
                     </div>
-                    <span className="text-xs text-foreground/70 truncate">{a.name}</span>
+                    <span className="min-w-0">
+                      <span className="block text-xs text-foreground/70 truncate">{a.name}</span>
+                      {a.size_bytes > 0 && <span className="block text-[10px] text-muted-foreground">{formatFileSize(a.size_bytes)}</span>}
+                    </span>
                   </button>
                 ))}
               </div>
