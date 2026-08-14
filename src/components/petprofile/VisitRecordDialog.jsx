@@ -20,9 +20,14 @@ const MED_FREQ = [["once_daily", "Once Daily"], ["twice_daily", "Twice Daily"], 
 const PREV_FREQ = [["monthly", "Monthly"], ["every_3_months", "Every 3 Months"], ["annual", "Annual"], ["custom", "Custom"]];
 const PREV_PRESETS = ["Revolution Plus", "Credelio", "Heartworm", "Bravecto", "Frontline", "Profender"];
 
-const fileType = (url, name) => {
-  const ext = (name || url || "").toLowerCase().split(".").pop();
-  return ["jpg", "jpeg", "png", "gif", "webp"].includes(ext) ? "image" : "pdf";
+const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+const SUPPORTED_IMAGE_EXTENSIONS = ["jpg", "jpeg", "png", "webp"];
+
+const fileType = (name) => {
+  const ext = (name || "").toLowerCase().split(".").pop();
+  if (SUPPORTED_IMAGE_EXTENSIONS.includes(ext)) return "image";
+  if (ext === "pdf") return "pdf";
+  return null;
 };
 
 function SubHeading({ children, onAdd, addLabel }) {
@@ -72,13 +77,37 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
   const handleFile = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    const type = fileType(file.name);
+    if (!type) {
+      setError("Please upload a PDF, JPG, PNG, or WebP file.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > MAX_ATTACHMENT_BYTES) {
+      setError("Attachments must be 10 MB or smaller.");
+      e.target.value = "";
+      return;
+    }
+
+    setError("");
     setUploading(true);
     try {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      set("attachments", [...atts, { name: file.name, file_url, type: fileType(file_url, file.name) }]);
-    } catch { }
-    setUploading(false);
-    e.target.value = "";
+      if (!file_url) throw new Error("The upload did not return a file URL.");
+      set("attachments", [...atts, {
+        name: file.name,
+        file_url,
+        type,
+        size_bytes: file.size,
+        uploaded_at: new Date().toISOString()
+      }]);
+    } catch (err) {
+      setError(err?.message || "Could not upload the attachment. Please try again.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
   const rmAtt = (i) => set("attachments", atts.filter((_, x) => x !== i));
 
@@ -232,12 +261,12 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
                   <button type="button" onClick={() => rmAtt(i)} className="text-foreground/30 hover:text-destructive"><X className="h-3.5 w-3.5" /></button>
                 </div>
               ))}
-              <button type="button" onClick={() => fileRef.current?.click()} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(124,58,237,0.1)", border: "1px dashed rgba(124,58,237,0.4)" }}>
-                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} Upload
+              <button type="button" disabled={uploading} onClick={() => fileRef.current?.click()} className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-50 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(124,58,237,0.1)", border: "1px dashed rgba(124,58,237,0.4)" }}>
+                {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />} {uploading ? "Uploading…" : "Upload"}
               </button>
-              <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf" className="hidden" onChange={handleFile} />
+              <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
             </div>
-            <p className="text-[10px] text-foreground/25">PDF, JPG, or PNG — clinical summaries, certificates, lab results, invoices, etc.</p>
+            <p className="text-[10px] text-foreground/25">PDF, JPG, PNG, or WebP up to 10 MB — clinical summaries, certificates, lab results, invoices, etc.</p>
           </div>
 
           {error && <p className="text-xs text-destructive font-medium -mt-1">{error}</p>}
