@@ -201,7 +201,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               <AlertCircle className="h-3 w-3" /> Couldn’t Complete
             </p>
             {log?.exception_reason && <p className="text-[10px] font-semibold text-foreground/80 mt-1">{EXCEPTION_LABELS[log.exception_reason] || log.exception_reason}</p>}
-            {log?.notes && <p className="text-[10px] text-muted-foreground mt-0.5">"{log.notes}"</p>
+            {log?.notes && <p className="text-[10px] text-muted-foreground mt-0.5">"{log.notes}"</p>}
             {log?.photo_url && (
               <img src={log.photo_url} alt="Attached context" className="w-12 h-12 rounded-xl object-cover mt-2 ring-1 ring-destructive/30" />
             )}
