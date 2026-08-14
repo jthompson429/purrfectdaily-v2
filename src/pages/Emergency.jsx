@@ -219,7 +219,85 @@ export default function Emergency() {
           <p className="text-muted-foreground text-xs leading-relaxed">Contact the emergency vet immediately. Do not wait. Take the animal directly to emergency care if unreachable.</p>
         </div>
 
+        {/* Pet-specific critical information */}
+        <section className="mb-7">
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldAlert className="h-4 w-4 text-destructive" />
+            <h2 className="text-sm font-black text-foreground uppercase tracking-wide">Pet Emergency Details</h2>
+          </div>
+          <div className="space-y-3">
+            {pets.map((pet) => {
+              const activeMedications = medications.filter((medication) => medication.pet_id === pet.id && isMedicationActive(medication));
+              const hasDetails = pet.health_issues || pet.known_allergies || pet.emergency_instructions || pet.microchip_number || pet.quarantine_status || activeMedications.length > 0;
+              return (
+                <div key={pet.id} className="rounded-2xl p-4 bg-card border border-border">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      {pet.photo_url ? (
+                        <img src={pet.photo_url} alt="" className="h-10 w-10 rounded-xl object-cover flex-shrink-0" />
+                      ) : (
+                        <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">🐾</div>
+                      )}
+                      <div className="min-w-0">
+                        <p className="font-bold text-foreground text-sm truncate">{pet.name}</p>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{(pet.care_level || "routine").replaceAll("_", " ")} care</p>
+                      </div>
+                    </div>
+                    {canWrite && (
+                      <button type="button" aria-label={`Edit ${pet.name} emergency details`} onClick={() => { setEditingPet(pet); setPetDialog(true); }} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground bg-muted border border-border flex-shrink-0">
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {hasDetails ? (
+                    <div className="mt-3 space-y-2 text-xs">
+                      {pet.emergency_instructions && (
+                        <div className="rounded-xl p-3 bg-destructive/10 border border-destructive/20">
+                          <p className="font-bold text-destructive mb-1">Emergency Instructions</p>
+                          <p className="text-foreground/80 whitespace-pre-wrap">{pet.emergency_instructions}</p>
+                        </div>
+                      )}
+                      {pet.known_allergies && (
+                        <div>
+                          <span className="font-bold text-foreground">Known allergies: </span>
+                          <span className="text-muted-foreground whitespace-pre-wrap">{pet.known_allergies}</span>
+                        </div>
+                      )}
+                      {pet.health_issues && (
+                        <div>
+                          <span className="font-bold text-foreground">Health issues: </span>
+                          <span className="text-muted-foreground whitespace-pre-wrap">{pet.health_issues}</span>
+                        </div>
+                      )}
+                      {activeMedications.length > 0 && (
+                        <div>
+                          <p className="font-bold text-foreground flex items-center gap-1 mb-1"><Pill className="h-3 w-3" /> Active medications</p>
+                          <ul className="space-y-0.5 text-muted-foreground">
+                            {activeMedications.map((medication) => (
+                              <li key={medication.id}>{medication.medication_name}{medication.dosage_instructions ? ` · ${medication.dosage_instructions}` : ""}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {pet.microchip_number && <p><span className="font-bold text-foreground">Microchip: </span><span className="text-muted-foreground">{pet.microchip_number}</span></p>}
+                      {pet.quarantine_status && <p className="font-bold text-amber-600">Quarantine precautions are active</p>}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground mt-3">No emergency details added</p>
+                  )}
+                </div>
+              );
+            })}
+            {pets.length === 0 && <p className="text-xs text-muted-foreground text-center py-4">No pet profiles available</p>}
+          </div>
+        </section>
+
         {/* Contacts */}
+        <div className="flex items-center gap-2 mb-3">
+          <Phone className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-black text-foreground uppercase tracking-wide">Emergency Contacts</h2>
+        </div>
         <div className="space-y-3 mb-6">
           <AnimatePresence>
             {contacts.map(c => {
@@ -283,6 +361,7 @@ export default function Emergency() {
       </div>
 
       <ContactDialog open={dialog} onOpenChange={setDialog} contact={editing} onSave={handleSave} />
+      <PetEmergencyDialog open={petDialog} onOpenChange={setPetDialog} pet={editingPet} onSave={handleSavePet} />
     </div>
   );
 }
