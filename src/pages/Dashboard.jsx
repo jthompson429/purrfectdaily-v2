@@ -262,7 +262,7 @@ export default function Dashboard() {
     const pendingCriticalCare = criticalTasks.filter((task) => !task._isMedTask && !isTaskFullyDone(task, logByTaskId[task.id]));
     const pendingMedicationDoses = activeMedTasks.filter((task) => !isTaskFullyDone(task, logByTaskId[task.id]));
 
-    if (problemCount > 0) items.push({ key: "problems", urgency: 0, title: `${problemCount} reported care problem${problemCount === 1 ? "" : "s"}`, detail: "Review skipped tasks and caregiver notes", href: "/" });
+    if (problemCount > 0) items.push({ key: "problems", urgency: 0, title: `${problemCount} care task${problemCount === 1 ? "" : "s"} couldn’t be completed`, detail: "Review the recorded reasons and caregiver notes", href: "/" });
     if (pendingCriticalCare.length > 0) items.push({ key: "critical-care", urgency: 0, title: `${pendingCriticalCare.length} critical care task${pendingCriticalCare.length === 1 ? "" : "s"} remaining`, detail: "Complete these before routine care", href: "/" });
     if (pendingMedicationDoses.length > 0) items.push({ key: "medications", urgency: 1, title: `${pendingMedicationDoses.length} medication dose${pendingMedicationDoses.length === 1 ? "" : "s"} requiring attention`, detail: "Scheduled doses not yet recorded today", href: "/medications" });
 
@@ -356,7 +356,7 @@ export default function Dashboard() {
         `Critical tasks completed: ${criticalDone}`,
         `Routine tasks completed: ${routineDone}`,
         `Proof photos submitted: ${photoCount}`,
-        problemCount > 0 ? `Reported problems: ${problemCount}` : null,
+        problemCount > 0 ? `Tasks not completed: ${problemCount}` : null,
       ].filter(Boolean).join("\n");
 
       base44.integrations.Core.SendEmail({
@@ -408,6 +408,7 @@ export default function Dashboard() {
       status: extra.status || "done",
       photo_url: extra.photo_url || "",
       notes: extra.notes || "",
+      exception_reason: extra.exception_reason || "",
       completed_by: user?.full_name || "",
     };
     if (existing) {
