@@ -55,7 +55,7 @@ export default function GroupDialog({ open, onOpenChange, onSave, group }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card border-border">
+      <DialogContent className="max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain bg-card border-border">
         <DialogHeader>
           <DialogTitle>{group ? "Edit Group" : "New Neonatal Group"}</DialogTitle>
         </DialogHeader>
