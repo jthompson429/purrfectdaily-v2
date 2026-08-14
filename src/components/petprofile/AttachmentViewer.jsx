@@ -1,5 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 
 export default function AttachmentViewer({ attachment, onOpenChange }) {
   const open = !!attachment;
@@ -14,6 +14,13 @@ export default function AttachmentViewer({ attachment, onOpenChange }) {
             </a>
           )}
         </DialogHeader>
+        {attachment?.size_bytes > 0 && (
+          <p className="text-[11px] text-muted-foreground -mt-2">
+            {attachment.type === "pdf" ? "PDF" : "Image"} · {attachment.size_bytes < 1024 * 1024
+              ? `${Math.max(1, Math.round(attachment.size_bytes / 1024))} KB`
+              : `${(attachment.size_bytes / (1024 * 1024)).toFixed(1)} MB`}
+          </p>
+        )}
         <div className="overflow-auto max-h-[74vh] rounded-xl bg-muted">
           {attachment?.type === "image" ? (
             <img src={attachment.file_url} alt={attachment.name} className="w-full object-contain" />
