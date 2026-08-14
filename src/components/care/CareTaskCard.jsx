@@ -14,6 +14,16 @@ const TIME_LABELS = {
   morning: "Morning", afternoon: "Afternoon", evening: "Evening", bedtime: "Bedtime", anytime: "Anytime",
 };
 
+const EXCEPTION_REASONS = [
+  ["pet_unavailable", "Pet unavailable"],
+  ["pet_refused", "Pet refused"],
+  ["supplies_missing", "Supplies missing"],
+  ["health_concern", "Health concern"],
+  ["unsafe", "Could not do safely"],
+  ["other", "Other"],
+];
+const EXCEPTION_LABELS = Object.fromEntries(EXCEPTION_REASONS);
+
 export default function CareTaskCard({ task, log, onComplete, onReport }) {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -21,7 +31,9 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
   const [notes, setNotes] = useState(log?.notes || "");
   const [showNotes, setShowNotes] = useState(false);
   const [reportMode, setReportMode] = useState(false);
+  const [reportReason, setReportReason] = useState("");
   const [reportNotes, setReportNotes] = useState("");
+  const [submittingReport, setSubmittingReport] = useState(false);
   const [reportPhoto, setReportPhoto] = useState(null);
   const [reportUploading, setReportUploading] = useState(false);
   const fileRef = useRef();
@@ -55,10 +67,18 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
     onComplete(task, { photo_url: photoUrl, notes, status: "done" });
   };
 
-  const handleSubmitReport = () => {
-    if (!reportNotes.trim()) return;
-    onReport(task, { notes: reportNotes, photo_url: reportPhoto || "", status: "skipped" });
-    setReportMode(false);
+  const handleSubmitReport = async () => {
+    if (!reportReason || (reportReason === "other" && !reportNotes.trim())) return;
+    setSubmittingReport(true);
+    try {
+      await onReport(task, { exception_reason: reportReason, notes: reportNotes.trim(), photo_url: reportPhoto || "", status: "skipped" });
+      setReportMode(false);
+      setReportReason("");
+      setReportNotes("");
+      setReportPhoto(null);
+    } finally {
+      setSubmittingReport(false);
+    }
   };
 
   return (
@@ -224,7 +244,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
                 onClick={() => setReportMode(true)}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all flex-shrink-0 bg-destructive/10 border border-destructive/20 text-destructive"
               >
-                <AlertCircle className="h-3 w-3" /> Report Problem
+                <AlertCircle className="h-3 w-3" /> Couldn’t Complete
               </button>
 
               <motion.button
@@ -249,7 +269,7 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
           </div>
         )}
 
-        {/* Report Problem mode (critical only) */}
+        {/* Couldn’t Complete workflow */}
         <AnimatePresence>
           {reportMode && (
             <motion.div
@@ -260,12 +280,19 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
             >
               <div className="px-3 py-3 rounded-xl space-y-3 bg-destructive/10 border border-destructive/20">
                 <p className="text-xs font-bold text-destructive flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" /> Report Problem — describe what happened
+                  <AlertCircle className="h-3.5 w-3.5" /> Why couldn’t this task be completed?
                 </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {EXCEPTION_REASONS.map(([value, label]) => (
+                    <button key={value} type="button" onClick={() => setReportReason(value)} className={`px-2.5 py-2 rounded-xl text-[11px] font-semibold text-left border transition-colors ${reportReason === value ? "bg-destructive/15 border-destructive/40 text-destructive" : "bg-background border-border text-muted-foreground"}`}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <textarea
                   value={reportNotes}
                   onChange={e => setReportNotes(e.target.value)}
-                  placeholder="What happened? (required)"
+                  placeholder={reportReason === "other" ? "Add details (required)" : "Add helpful details (optional)" }
                   className="w-full px-3 py-2 rounded-xl text-xs text-foreground placeholder:text-muted-foreground/60 resize-none h-20 bg-background border border-destructive/30"
                 />
 
@@ -292,21 +319,22 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
 
                 <div className="flex gap-2">
                   <button
-                    onClick={() => { setReportMode(false); setReportNotes(""); setReportPhoto(null); }}
+                    onClick={() => { setReportMode(false); setReportReason(""); setReportNotes(""); setReportPhoto(null); }}
+                    disabled={submittingReport}
                     className="flex-1 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground transition-all bg-muted border border-border"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleSubmitReport}
-                    disabled={!reportNotes.trim()}
+                    disabled={!reportReason || (reportReason === "other" && !reportNotes.trim()) || submittingReport}
                     className="flex-1 py-2 rounded-xl text-xs font-bold text-foreground transition-all"
                     style={{
-                      background: reportNotes.trim() ? "linear-gradient(135deg, #dc2626, #7209B7)" : "hsl(var(--muted))",
-                      opacity: reportNotes.trim() ? 1 : 0.5,
+                      background: reportReason && (reportReason !== "other" || reportNotes.trim()) ? "linear-gradient(135deg, #dc2626, #7209B7)" : "hsl(var(--muted))",
+                      opacity: reportReason && (reportReason !== "other" || reportNotes.trim()) ? 1 : 0.5,
                     }}
                   >
-                    Submit Report
+                    {submittingReport ? "Saving…" : "Save Reason"}
                   </button>
                 </div>
               </div>
