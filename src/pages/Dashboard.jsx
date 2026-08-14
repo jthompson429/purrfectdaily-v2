@@ -363,6 +363,7 @@ export default function Dashboard() {
         to: ownerEmail,
         subject: "PurrTaskDaily: Daily care complete",
         body,
+        from_name: "PurrTaskDaily",
       }).catch(() => {});
     }
 
@@ -386,6 +387,7 @@ export default function Dashboard() {
       await base44.integrations.Core.SendEmail({
         to: ownerEmail,
         subject: `PurrTaskDaily: Task couldn’t be completed — ${taskName}`,
+        from_name: "PurrTaskDaily",
         body: [
           `A scheduled care task could not be completed.`,
           ``,
