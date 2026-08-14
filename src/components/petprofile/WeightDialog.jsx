@@ -21,6 +21,7 @@ export default function WeightDialog({ open, onOpenChange, item, onSave, profile
     const weight = Number(form.weight);
     if (form.weight === "" || !Number.isFinite(weight) || weight <= 0) { setError("Please enter a weight greater than zero."); return; }
     if (!form.date) { setError("Please enter the date."); return; }
+    if (form.date > todayStr()) { setError("Weight entries cannot be dated in the future."); return; }
     setError("");
     setSaving(true);
     try { await onSave({ ...form, weight }, item?.id); }
