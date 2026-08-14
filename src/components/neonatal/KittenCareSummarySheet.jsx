@@ -136,7 +136,7 @@ export default function KittenCareSummarySheet({
             <Row label="Expected Daily Gain" value="10–15 g/day" sub="reference only" />
           </Section>
 
-          <Section title={`Feeding · Every ${intervalHours % 1 === 0 ? intervalHours : intervalHours.toFixed(1)} ${intervalHours === 1 ? "hour" : "hours"}`}> 
+          <Section title={`Feeding · Every ${intervalHours % 1 === 0 ? intervalHours : intervalHours.toFixed(1)} ${intervalHours === 1 ? "hour" : "hours"}`}>
             <Row
               label="Last Feeding"
               value={lastFeeding ? `${lastFeeding.amount_ml || 0} mL` : "—"}
