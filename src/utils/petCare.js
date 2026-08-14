@@ -211,7 +211,7 @@ export const buildMedicalHistory = (preventatives, vaccinations, vetVisits, medi
       id: `medication-${m.id || `${m.medication_name}-${m.start_date}`}`,
       date: m.start_date,
       title: `${m.medication_name} started`,
-      detail: m.dosage_instructions || frequencyLabel(m.frequency),
+      detail: m.dosage_instructions || (m.frequency ? m.frequency.replace(/_/g, " ") : ""),
       kind: "medication"
     });
   });
