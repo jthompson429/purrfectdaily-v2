@@ -7,13 +7,13 @@ import WorkspaceSwitcher from "@/components/WorkspaceSwitcher";
 export default function Layout() {
   return (
     <WorkspaceProvider>
-      <div className="flex h-screen bg-background">
+      <div className="flex h-[100dvh] overflow-hidden bg-background">
         <aside className="hidden lg:flex shrink-0 h-full">
           <SidebarNav />
         </aside>
-        <div className="flex flex-col flex-1 min-w-0">
+        <div className="flex min-h-0 flex-1 flex-col min-w-0">
           <WorkspaceSwitcher />
-          <main className="flex-1 overflow-y-auto">
+          <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             <Outlet />
           </main>
           <div className="lg:hidden shrink-0">
