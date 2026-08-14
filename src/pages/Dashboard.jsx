@@ -22,6 +22,13 @@ import { wsCreate, wsUpdate, wsBulkUpdate } from "@/lib/workspaceApi";
 
 const TODAY = format(new Date(), "yyyy-MM-dd");
 
+const localDate = (value) => value ? new Date(`${value.slice(0, 10)}T00:00:00`) : null;
+const daysFromToday = (value) => {
+  const date = localDate(value);
+  return date && !Number.isNaN(date.getTime()) ? differenceInCalendarDays(date, new Date()) : null;
+};
+const dueText = (days) => days < 0 ? `${Math.abs(days)} day${Math.abs(days) === 1 ? "" : "s"} overdue` : days === 0 ? "Due today" : days === 1 ? "Due tomorrow" : `Due in ${days} days`;
+
 function taskSortScore(task) {
   if (task.care_type === "critical_medical") return 0;
   if (task.priority === "critical") return 1;
