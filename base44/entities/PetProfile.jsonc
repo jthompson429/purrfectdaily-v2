@@ -93,7 +93,16 @@
     },
     "latest_weight": {
       "type": "number",
-      "description": "Most recent weight in the pet's unit"
+      "description": "Legacy cached weight; WeightLog is canonical"
+    },
+    "preferred_weight_unit": {
+      "type": "string",
+      "enum": [
+        "kg",
+        "lb"
+      ],
+      "default": "kg",
+      "description": "Preferred display and entry unit for standard pet weights"
     },
     "body_condition_notes": {
       "type": "string"
