@@ -145,6 +145,13 @@
               "pdf",
               "image"
             ]
+          },
+          "size_bytes": {
+            "type": "number"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       }
