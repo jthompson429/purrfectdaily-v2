@@ -1,11 +1,13 @@
 import { format, formatDistanceToNow } from "date-fns";
 import { jsPDF } from "jspdf";
 
-// Feeding schedule: 3 times per day (every 8 hours).
-// The kitten is older and no longer needs 2-hourly feeds.
-export const FEEDING_INTERVAL_HOURS = 8;
-export const FEEDINGS_PER_DAY = 3;
-export const FEEDING_INTERVAL_MS = FEEDING_INTERVAL_HOURS * 60 * 60 * 1000;
+export const DEFAULT_FEEDING_INTERVAL_HOURS = 8;
+export const feedingIntervalHours = (value) => {
+  const candidate = typeof value === "object" ? value?.feeding_interval_hours : value;
+  const numeric = Number(candidate);
+  return Number.isFinite(numeric) && numeric >= 0.5 && numeric <= 24 ? numeric : DEFAULT_FEEDING_INTERVAL_HOURS;
+};
+export const feedingsPerDay = (intervalHours) => 24 / feedingIntervalHours(intervalHours);
 
 export const toLocalInput = (date) => {
   const d = date instanceof Date ? date : new Date(date);
@@ -26,10 +28,10 @@ export const timeAgo = (iso) => (iso ? formatDistanceToNow(new Date(iso), { addS
 
 export const isToday = (iso) => iso && format(new Date(iso), "yyyy-MM-dd") === format(new Date(), "yyyy-MM-dd");
 
-export const feedingStatus = (lastFeedingIso) => {
+export const feedingStatus = (lastFeedingIso, intervalHours = DEFAULT_FEEDING_INTERVAL_HOURS) => {
   if (!lastFeedingIso) return { status: "unknown", label: "No feedings yet", tone: "muted", diffMin: null, due: null };
   const now = new Date();
-  const due = new Date(new Date(lastFeedingIso).getTime() + FEEDING_INTERVAL_MS);
+  const due = new Date(new Date(lastFeedingIso).getTime() + feedingIntervalHours(intervalHours) * 60 * 60 * 1000);
   const diffMin = (due - now) / 60000;
   if (diffMin < -15) return { status: "overdue", label: "Overdue", tone: "red", diffMin, due };
   if (diffMin <= 5) return { status: "feed_now", label: "Feed Now", tone: "orange", diffMin, due };
@@ -88,14 +90,14 @@ export const formatDurationShort = (ms) => {
 
 // Combined, glanceable kitten care status for the status card.
 // color: green | yellow | red | gray
-export const kittenStatus = ({ lastFeeding, trend, now = Date.now() }) => {
+export const kittenStatus = ({ lastFeeding, trend, now = Date.now(), feedingInterval = DEFAULT_FEEDING_INTERVAL_HOURS }) => {
   const hasFeed = !!lastFeeding && !!lastFeeding.date_time;
   let feedDueIn = null;
   let feedOverdue = false;
   let feedDueSoon = false;
   let feedOk = false;
   if (hasFeed) {
-    const due = new Date(lastFeeding.date_time).getTime() + FEEDING_INTERVAL_MS;
+    const due = new Date(lastFeeding.date_time).getTime() + feedingIntervalHours(feedingInterval) * 60 * 60 * 1000;
     feedDueIn = due - now;
     feedOverdue = feedDueIn < 0;
     feedDueSoon = !feedOverdue && feedDueIn <= 15 * 60 * 1000;
@@ -324,7 +326,7 @@ export const kittenSummary = (kitten, allFeedings, allWeights, allEliminations, 
   const prevWeight = sortedW[1] || null;
   const weightToday = lastWeight ? isToday(lastWeight.date_time) : false;
   const weightChange = lastWeight && prevWeight ? lastWeight.weight_g - prevWeight.weight_g : null;
-  const fStatus = feedingStatus(lastFeeding?.date_time);
+  const fStatus = feedingStatus(lastFeeding?.date_time, kitten.feeding_interval_hours);
   const currentWeight = lastWeight?.weight_g ?? kitten.current_weight_g ?? null;
 
   // Status priority: overdue > weight_decreased > no_feedings > no_weight_today > due_soon > on_track
