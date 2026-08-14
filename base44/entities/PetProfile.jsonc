@@ -121,6 +121,14 @@
     "health_issues": {
       "type": "string"
     },
+    "known_allergies": {
+      "type": "string",
+      "description": "Known allergies or adverse reactions that may affect emergency care"
+    },
+    "emergency_instructions": {
+      "type": "string",
+      "description": "Pet-specific instructions for urgent or emergency situations"
+    },
     "current_medications": {
       "type": "string"
     },
