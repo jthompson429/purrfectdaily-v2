@@ -1,39 +1,71 @@
-**Welcome to your Base44 project** 
+# PurrTaskDaily
 
-**About**
+PurrTaskDaily is a collaborative pet-care web application for households, foster families, and rescue organizations. It helps teams coordinate daily care while reducing missed, duplicated, or memory-dependent work.
 
-View and Edit  your app on [Base44.com](http://Base44.com) 
+## Core capabilities
 
-This project contains everything you need to run your app locally.
+- At-a-glance care dashboard focused on current, upcoming, and overdue needs
+- Pet profiles and shared medical history
+- Scheduled care tasks with completion records and exception reporting
+- Medication schedules, dose tracking, and duplicate prevention
+- Vaccinations, preventatives, veterinary visits, reminders, and follow-ups
+- Neonatal and foster care, including groups, kittens, feeding schedules, and growth tracking
+- Digital Clipboard for workspace handoffs and urgent care communication
+- Emergency information and workspace-specific escalation instructions
+- Role-based workspaces for owners, administrators, caregivers, and viewers
+- Optional workspace branding for households and rescue organizations
 
-**Edit the code in your local development environment**
+## Product links
 
-Any change pushed to the repo will also be reflected in the Base44 Builder.
+- Application: [purrtaskdaily.com](https://purrtaskdaily.com)
+- How-to guide: [how-to.purrtaskdaily.com](https://how-to.purrtaskdaily.com)
+- Questions and support: [no-reply@purrtaskdaily.com](mailto:no-reply@purrtaskdaily.com)
 
-**Prerequisites:** 
+## Technology
 
-1. Clone the repository using the project's Git URL 
-2. Navigate to the project directory
-3. Install dependencies: `npm install`
-4. Create an `.env.local` file and set the right environment variables
+The frontend is built with React and Vite. Application data, authentication, file storage, integrations, backend functions, and entity schemas are provided through Base44.
 
+Key application resources are organized under:
+
+- `src/pages/` — route-level screens
+- `src/components/` — shared interface and feature components
+- `src/lib/` — application services and workspace context
+- `base44/entities/` — data schemas and row-level security
+- `base44/functions/` — permission-aware backend operations
+
+## Local development
+
+Install dependencies:
+
+```bash
+npm install
 ```
+
+Create an `.env.local` file with the Base44 application configuration:
+
+```text
 VITE_BASE44_APP_ID=your_app_id
 VITE_BASE44_APP_BASE_URL=your_backend_url
-
-e.g.
-VITE_BASE44_APP_ID=cbef744a8545c389ef439ea6
-VITE_BASE44_APP_BASE_URL=https://my-to-do-list-81bfaad7.base44.app
 ```
 
-Run the app: `npm run dev`
+Start the development server:
 
-**Publish your changes**
+```bash
+npm run dev
+```
 
-Open [Base44.com](http://Base44.com) and click on Publish.
+Create a production build:
 
-**Docs & Support**
+```bash
+npm run build
+```
 
-Documentation: [https://docs.base44.com/Integrations/Using-GitHub](https://docs.base44.com/Integrations/Using-GitHub)
+## Security and privacy
 
-Support: [https://app.base44.com/support](https://app.base44.com/support)
+PurrTaskDaily uses authenticated, role-based workspaces. Workspace-scoped records are protected by entity rules and permission-aware backend operations. Do not commit credentials, private keys, production environment files, or exported animal and caregiver data to this repository.
+
+Urgent Clipboard email notifications intentionally omit workspace, pet, author, and medical details; recipients must sign in to review the item securely.
+
+## Project status
+
+The application is in active pre-release testing with rescue and household workflows. Product feedback and operational questions can be sent to [no-reply@purrtaskdaily.com](mailto:no-reply@purrtaskdaily.com).
