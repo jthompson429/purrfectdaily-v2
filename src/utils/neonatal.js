@@ -174,6 +174,7 @@ export const buildReport = (kitten, feedings, weights, eliminations, motherLogs)
     lines.push(`Current weight: ${kitten.current_weight_g != null ? kitten.current_weight_g + " g" : "—"}`);
     lines.push(`Mother present: ${kitten.mother_present ? "Yes" : "No"}`);
     lines.push(`Supplementing KMR: ${kitten.supplementing_kmr ? "Yes" : "No"}`);
+    lines.push(`Feeding schedule: Every ${feedingIntervalHours(kitten)} hours`);
     if (kitten.notes) lines.push(`Notes: ${kitten.notes}`);
   }
   lines.push("");
@@ -250,6 +251,7 @@ export const generateFosterReportPDF = (kitten, feedings, weights, eliminations,
   kv("Total Weight Change", totalChange != null ? `${totalChange >= 0 ? "+" : ""}${totalChange.toFixed(1)} g` : "—");
   kv("Mother Present", kitten ? (kitten.mother_present ? "Yes" : "No") : "—");
   kv("Supplementing KMR", kitten ? (kitten.supplementing_kmr ? "Yes" : "No") : "—");
+  kv("Feeding Schedule", kitten ? `Every ${feedingIntervalHours(kitten)} hours` : "—");
   y += 8;
 
   const drawTable = (headers, rows, colWidths) => {
