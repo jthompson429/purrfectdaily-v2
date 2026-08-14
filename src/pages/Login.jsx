@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import purrtaskDailyLogo from "@/assets/purrtaskDailyLogo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -37,7 +38,7 @@ export default function Login() {
       icon={LogIn}
       title="Welcome back"
       subtitle="Log in to your PurrTask Daily account"
-      heroImage={{ src: "/purrtask-daily-logo.jpg", alt: "PurrTask Daily logo" }}
+      heroImage={{ src: purrtaskDailyLogo, alt: "PurrTask Daily logo" }}
       footer={
         <>
           Don't have an account?{" "}
