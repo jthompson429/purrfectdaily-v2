@@ -100,7 +100,7 @@ export default function SidebarNav() {
               <button
                 className="sn3n-brand-btn"
                 type="button"
-                aria-label={activeWorkspace?.name ? `${activeWorkspace.name} home` : "PurrfectDaily home"}
+                aria-label={activeWorkspace?.name ? `${activeWorkspace.name} home` : "PurrTaskDaily home"}
                 tabIndex={-1}
               >
                 {activeWorkspace?.logo_url ? (
