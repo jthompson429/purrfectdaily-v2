@@ -12,7 +12,7 @@ import GroupDialog from "@/components/neonatal/GroupDialog";
 import BatchLogDialog from "@/components/neonatal/BatchLogDialog";
 import { neonatalDashboardStats, kittensByGroup, GROUP_TYPE_LABELS, timeAgo } from "@/utils/neonatal";
 import { useWorkspace } from "@/lib/workspaceContext";
-import { wsCreate, wsUpdate, wsBulkCreate } from "@/lib/workspaceApi";
+import { wsCreate, wsUpdate, wsDelete, wsBulkCreate } from "@/lib/workspaceApi";
 
 export default function NeonatalOverview() {
   const { activeWorkspaceId, canWrite } = useWorkspace();
@@ -66,8 +66,14 @@ export default function NeonatalOverview() {
     } else {
       const created = await createKitten.mutateAsync(profileData);
       if (initialWeight != null) {
-        await wsCreate("NeonatalWeight", { kitten_id: created.id, date_time: new Date().toISOString(), weight_g: initialWeight, notes: "Initial profile weight" }, activeWorkspaceId);
-        qc.invalidateQueries({ queryKey: ["neonatalWeights", activeWorkspaceId] });
+        try {
+          await wsCreate("NeonatalWeight", { kitten_id: created.id, date_time: new Date().toISOString(), weight_g: initialWeight, notes: "Initial profile weight" }, activeWorkspaceId);
+          qc.invalidateQueries({ queryKey: ["neonatalWeights", activeWorkspaceId] });
+        } catch (error) {
+          await wsDelete("NeonatalKitten", created.id, activeWorkspaceId).catch(() => {});
+          qc.invalidateQueries({ queryKey: ["neonatalKittens", activeWorkspaceId] });
+          throw error;
+        }
       }
     }
     setDialog(null); setEditingKitten(null);
