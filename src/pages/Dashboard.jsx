@@ -94,6 +94,38 @@ export default function Dashboard() {
     queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId }),
   });
 
+  const { data: preventatives = [] } = useQuery({
+    queryKey: ["allPreventatives", activeWorkspaceId],
+    queryFn: () => base44.entities.Preventative.filter({ workspace_id: activeWorkspaceId }),
+  });
+
+  const { data: vaccinations = [] } = useQuery({
+    queryKey: ["allVaccinations", activeWorkspaceId],
+    queryFn: () => base44.entities.Vaccination.filter({ workspace_id: activeWorkspaceId }),
+  });
+
+  const { data: vetVisits = [] } = useQuery({
+    queryKey: ["allVetVisits", activeWorkspaceId],
+    queryFn: () => base44.entities.VetVisit.filter({ workspace_id: activeWorkspaceId }),
+  });
+
+  const { data: neonatalKittens = [] } = useQuery({
+    queryKey: ["neonatalKittens", activeWorkspaceId],
+    queryFn: () => base44.entities.NeonatalKitten.filter({ workspace_id: activeWorkspaceId }),
+  });
+  const { data: neonatalFeedings = [] } = useQuery({
+    queryKey: ["neonatalFeedings", activeWorkspaceId],
+    queryFn: () => base44.entities.NeonatalFeeding.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300),
+  });
+  const { data: neonatalWeights = [] } = useQuery({
+    queryKey: ["neonatalWeights", activeWorkspaceId],
+    queryFn: () => base44.entities.NeonatalWeight.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300),
+  });
+  const { data: neonatalEliminations = [] } = useQuery({
+    queryKey: ["neonatalEliminations", activeWorkspaceId],
+    queryFn: () => base44.entities.NeonatalElimination.filter({ workspace_id: activeWorkspaceId }, "-date_time", 300),
+  });
+
   const { data: payConfigs = [] } = useQuery({
     queryKey: ["payConfig", activeWorkspaceId],
     queryFn: () => base44.entities.PayConfig.filter({ workspace_id: activeWorkspaceId }),
