@@ -8,8 +8,9 @@ import WeightDialog from "./WeightDialog";
 import { fmtShort } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
+import { displayWeightValue, weightDisplayUnit } from "@/utils/weight";
 
-export default function WeightSection({ petId, profileType }) {
+export default function WeightSection({ petId, profileType, preferredWeightUnit = "kg" }) {
   const { activeWorkspaceId } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
@@ -35,12 +36,23 @@ export default function WeightSection({ petId, profileType }) {
     setDialog(false); setEditing(null);
   };
 
-  const unit = profileType === "neonatal" ? "g" : "kg";
+  const handleUnitChange = async (unit) => {
+    await wsUpdate("PetProfile", petId, { preferred_weight_unit: unit }, activeWorkspaceId);
+    qc.invalidateQueries({ queryKey: ["pet", petId] });
+    qc.invalidateQueries({ queryKey: ["pets", activeWorkspaceId] });
+  };
+
+  const unit = weightDisplayUnit(profileType, preferredWeightUnit);
   const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date));
   const latest = sorted[sorted.length - 1];
   const prev = sorted[sorted.length - 2];
-  const trend = latest && prev != null ? latest.weight - prev.weight : null;
-  const chartData = sorted.map((w) => ({ date: fmtShort(w.date), weight: w.weight }));
+  const latestValue = displayWeightValue(latest, profileType, preferredWeightUnit);
+  const previousValue = displayWeightValue(prev, profileType, preferredWeightUnit);
+  const trend = latestValue != null && previousValue != null ? latestValue - previousValue : null;
+  const chartData = sorted.map((entry) => ({
+    date: fmtShort(entry.date),
+    weight: displayWeightValue(entry, profileType, preferredWeightUnit)
+  }));
 
   return (
     <SectionCard title="Weight History" icon={Scale} onAdd={() => { setEditing(null); setDialog(true); }} addLabel="Log">
@@ -48,12 +60,28 @@ export default function WeightSection({ petId, profileType }) {
         <p className="text-xs text-muted-foreground py-3 text-center">No weight logged yet</p>
       ) : (
         <div className="space-y-3">
-          <div className="flex items-end gap-2">
-            <p className="text-2xl font-black text-foreground">{latest.weight} <span className="text-sm text-muted-foreground font-medium">{unit}</span></p>
-            {trend != null && (
-              <p className={`text-xs font-bold mb-1 ${trend >= 0 ? "text-green-500" : "text-red-500"}`}>
-                {trend >= 0 ? "↑" : "↓"} {Math.abs(trend).toFixed(1)} {unit}
-              </p>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-end gap-2">
+              <p className="text-2xl font-black text-foreground">{latestValue} <span className="text-sm text-muted-foreground font-medium">{unit}</span></p>
+              {trend != null && (
+                <p className={`text-xs font-bold mb-1 ${trend >= 0 ? "text-green-500" : "text-red-500"}`}>
+                  {trend >= 0 ? "↑" : "↓"} {Math.abs(trend).toFixed(unit === "g" ? 1 : 2)} {unit}
+                </p>
+              )}
+            </div>
+            {profileType !== "neonatal" && (
+              <div className="flex rounded-lg p-0.5 bg-muted border border-border">
+                {["kg", "lb"].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => handleUnitChange(option)}
+                    className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${unit === option ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
           {chartData.length >= 2 && (
@@ -71,7 +99,7 @@ export default function WeightSection({ petId, profileType }) {
           <div className="space-y-1">
             {[...items].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).map((w) => (
               <div key={w.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 bg-muted">
-                <span className="text-xs text-foreground/70">{w.weight} {unit}</span>
+                <span className="text-xs text-foreground/70">{displayWeightValue(w, profileType, preferredWeightUnit)} {unit}</span>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-muted-foreground">{fmtShort(w.date)}</span>
                   <button onClick={() => { setEditing(w); setDialog(true); }} className="text-muted-foreground hover:text-foreground"><Pencil className="h-3 w-3" /></button>
@@ -82,7 +110,7 @@ export default function WeightSection({ petId, profileType }) {
           </div>
         </div>
       )}
-      <WeightDialog open={dialog} onOpenChange={setDialog} item={editing} onSave={handleSave} profileType={profileType} />
+      <WeightDialog open={dialog} onOpenChange={setDialog} item={editing} onSave={handleSave} profileType={profileType} preferredUnit={unit} />
     </SectionCard>
   );
 }
