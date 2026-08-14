@@ -27,6 +27,13 @@
       "type": "boolean",
       "default": false
     },
+    "feeding_interval_hours": {
+      "type": "number",
+      "default": 8,
+      "minimum": 0.5,
+      "maximum": 24,
+      "description": "Owner/admin-defined number of hours between scheduled feedings"
+    },
     "notes": {
       "type": "string"
     },
