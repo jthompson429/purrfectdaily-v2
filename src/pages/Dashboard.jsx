@@ -315,6 +315,12 @@ export default function Dashboard() {
     return items.sort((a, b) => a.urgency - b.urgency || a.title.localeCompare(b.title));
   }, [pets, criticalTasks, activeMedTasks, logByTaskId, problemCount, preventatives, vaccinations, vetVisits, neonatalKittens, neonatalFeedings, neonatalWeights, neonatalEliminations]);
 
+  const attentionNow = attentionItems.filter((item) => item.urgency <= 1);
+  const attentionUpcoming = attentionItems.filter((item) => item.urgency > 1);
+  const visibleAttentionNow = showAllAttention ? attentionNow : attentionNow.slice(0, 3);
+  const visibleAttentionUpcoming = showAllAttention ? attentionUpcoming : attentionUpcoming.slice(0, attentionNow.length > 0 ? 2 : 3);
+  const hiddenAttentionCount = attentionItems.length - visibleAttentionNow.length - visibleAttentionUpcoming.length;
+
   const requiredTasks = allActiveTasks.filter(t => t.care_type !== "optional");
   const isFullyComplete = requiredTasks.length > 0 &&
     requiredTasks.every(t => isTaskFullyDone(t, logByTaskId[t.id]));
