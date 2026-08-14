@@ -81,7 +81,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md bg-card border-border">
+      <DialogContent className="max-w-md max-h-[calc(100dvh-1rem)] overflow-y-auto overscroll-contain bg-card border-border">
         <DialogHeader>
           <DialogTitle>{kitten ? "Edit Kitten Profile" : "Neonatal Kitten Profile"}</DialogTitle>
         </DialogHeader>
