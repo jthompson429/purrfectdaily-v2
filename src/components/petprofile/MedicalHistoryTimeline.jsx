@@ -34,7 +34,7 @@ export default function MedicalHistoryTimeline({ preventatives, vaccinations, ve
                 {event.summary && <p className="text-[11px] text-foreground/60 mt-0.5 leading-relaxed">{event.summary}</p>}
               </div>
             );
-          })
+          })}
         </div>
       )}
     </div>
