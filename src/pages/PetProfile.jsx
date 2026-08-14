@@ -112,7 +112,7 @@ export default function PetProfile() {
           </ErrorBoundary>
 
           <ErrorBoundary label="Care Status"><CareStatusCard pet={pet} preventatives={preventatives} vaccinations={vaccinations} medications={medications} vetVisits={vetVisits} /></ErrorBoundary>
-          <ErrorBoundary label="Reminders"><RemindersList pet={pet} preventatives={preventatives} vaccinations={vaccinations} medications={medications} weightLogs={weightLogs} /></ErrorBoundary>
+          <ErrorBoundary label="Reminders"><RemindersList pet={pet} preventatives={preventatives} vaccinations={vaccinations} medications={medications} weightLogs={weightLogs} vetVisits={vetVisits} /></ErrorBoundary>
           <ErrorBoundary label="Overview"><OverviewSection pet={pet} onEdit={() => setEditOpen(true)} /></ErrorBoundary>
           <ErrorBoundary label="Preventive Care"><PreventativeSection petId={id} /></ErrorBoundary>
           <ErrorBoundary label="Vaccinations"><VaccinationSection petId={id} /></ErrorBoundary>
