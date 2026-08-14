@@ -1,5 +1,6 @@
 import { Pencil } from "lucide-react";
 import { formatBirthDate, formatAge } from "@/utils/pet";
+import { displayWeightValue, weightDisplayUnit } from "@/utils/weight";
 
 const SPECIES_LABEL = { cat: "Cat", dog: "Dog", rabbit: "Rabbit", bird: "Bird", other: "Other" };
 const SEX_LABEL = { male: "Male", female: "Female", unknown: "Unknown" };
@@ -17,9 +18,9 @@ function Row({ label, value }) {
 export default function OverviewSection({ pet, weightLogs = [], onEdit }) {
   const spayed = pet.spayed_neutered === "yes" ? "Yes" : pet.spayed_neutered === "no" ? "No" : "Unknown";
   const latestWeight = [...weightLogs].sort((a, b) => b.date.localeCompare(a.date))[0];
-  const weight = latestWeight
-    ? `${latestWeight.weight} ${pet.profile_type === "neonatal" ? "g" : "kg"}`
-    : "—";
+  const displayUnit = weightDisplayUnit(pet.profile_type, pet.preferred_weight_unit);
+  const displayValue = displayWeightValue(latestWeight, pet.profile_type, pet.preferred_weight_unit);
+  const weight = displayValue != null ? `${displayValue} ${displayUnit}` : "—";
 
   return (
     <div className="rounded-2xl p-4 bg-card border border-border">
