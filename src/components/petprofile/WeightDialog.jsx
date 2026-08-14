@@ -16,7 +16,7 @@ export default function WeightDialog({ open, onOpenChange, item, onSave, profile
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     setForm(item
-      ? { ...empty(defaultUnit), ...item, unit: item.unit || defaultUnit, weight: item.weight ?? "" }
+      ? { ...empty(defaultUnit), ...item, unit: item.unit || (profileType === "neonatal" ? "g" : "kg"), weight: item.weight ?? "" }
       : empty(defaultUnit));
     setError("");
   }, [item, open, defaultUnit]);
