@@ -15,6 +15,7 @@ const empty = () => ({
   initial_weight_g: "",
   mother_present: true,
   supplementing_kmr: false,
+  feeding_interval_hours: 8,
   notes: "",
   group_id: "",
   photo_url: "",
@@ -22,7 +23,7 @@ const empty = () => ({
   sex: "unknown",
 });
 
-export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten, groups = [] }) {
+export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten, groups = [], canManageSchedule = false }) {
   const [form, setForm] = useState(empty);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,6 +38,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
         initial_weight_g: "",
         mother_present: kitten.mother_present ?? true,
         supplementing_kmr: kitten.supplementing_kmr ?? false,
+        feeding_interval_hours: kitten.feeding_interval_hours ?? 8,
         notes: kitten.notes || "",
         group_id: kitten.group_id || "",
         photo_url: kitten.photo_url || "",
@@ -68,10 +70,12 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
     if (!form.birth_date || new Date(form.birth_date) > new Date()) { setError("Estimated birth cannot be in the future."); return; }
     const initialWeight = form.initial_weight_g === "" ? null : Number(form.initial_weight_g);
     if (initialWeight != null && (!Number.isFinite(initialWeight) || initialWeight <= 0)) { setError("Initial weight must be greater than zero."); return; }
+    const feedingInterval = Number(form.feeding_interval_hours);
+    if (!Number.isFinite(feedingInterval) || feedingInterval < 0.5 || feedingInterval > 24) { setError("Feeding interval must be between 0.5 and 24 hours."); return; }
     setSaving(true);
     setError("");
     try {
-      await onSave({ ...form, name: form.name.trim(), initial_weight_g: initialWeight });
+      await onSave({ ...form, name: form.name.trim(), initial_weight_g: initialWeight, feeding_interval_hours: feedingInterval });
     } catch (err) {
       setError(err?.message || "Could not save the kitten profile. Please try again.");
     } finally {
@@ -128,6 +132,14 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
               <Label>Active neonatal care</Label>
               <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
             </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Feeding interval</Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" inputMode="decimal" min="0.5" max="24" step="0.5" value={form.feeding_interval_hours} disabled={!canManageSchedule} onChange={(e) => { setForm((f) => ({ ...f, feeding_interval_hours: e.target.value })); setError(""); }} />
+              <span className="text-sm font-semibold text-muted-foreground whitespace-nowrap">hours</span>
+            </div>
+            <p className="text-[10px] text-muted-foreground">{canManageSchedule ? "Controls due times, overdue alerts, and per-feeding guidance" : "Only workspace owners and admins can change this schedule"}</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
