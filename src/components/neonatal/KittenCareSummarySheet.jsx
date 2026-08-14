@@ -9,6 +9,7 @@ import {
   kittenStatus,
   kittenStatusLine,
   formatDurationShort,
+  feedingIntervalHours,
 } from "@/utils/neonatal";
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
@@ -79,10 +80,11 @@ export default function KittenCareSummarySheet({
   const lastPee = e.find((x) => x.urinated) || null;
   const lastPoop = e.find((x) => x.defecated) || null;
   const motherToday = m.find((x) => isToday(x.date_time)) || null;
-  const nextDue = lastFeeding ? new Date(lastFeeding.date_time).getTime() + 2 * 60 * 60 * 1000 : null;
+  const intervalHours = feedingIntervalHours(kitten?.feeding_interval_hours);
+  const nextDue = lastFeeding ? new Date(lastFeeding.date_time).getTime() + intervalHours * 60 * 60 * 1000 : null;
   const remaining = nextDue ? nextDue - now : null;
 
-  const status = kittenStatus({ lastFeeding, trend, now });
+  const status = kittenStatus({ lastFeeding, trend, now, feedingInterval: intervalHours });
   const line = kittenStatusLine(status, { lastFeeding });
 
   const events = [
@@ -134,7 +136,7 @@ export default function KittenCareSummarySheet({
             <Row label="Expected Daily Gain" value="10–15 g/day" sub="reference only" />
           </Section>
 
-          <Section title="Feeding">
+          <Section title={`Feeding · Every ${intervalHours % 1 === 0 ? intervalHours : intervalHours.toFixed(1)} ${intervalHours === 1 ? "hour" : "hours"}`}> 
             <Row
               label="Last Feeding"
               value={lastFeeding ? `${lastFeeding.amount_ml || 0} mL` : "—"}
