@@ -62,7 +62,7 @@ export default function WeightDialog({ open, onOpenChange, item, onSave, profile
                 </SelectContent>
               </Select>
             </div>
-          )
+          )}
           <div className="space-y-1.5">
             <Label className="text-foreground/60 text-xs uppercase tracking-wider">Notes</Label>
             <Textarea placeholder="Optional…" value={form.notes || ""} onChange={(e) => set("notes", e.target.value)} className={`${inputClass} h-16 resize-none`} />
