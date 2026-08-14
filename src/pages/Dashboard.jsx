@@ -72,6 +72,7 @@ export default function Dashboard() {
   const [showSummary, setShowSummary] = useState(false);
   const [collapsedPets, setCollapsedPets] = useState({});
   const [filter, setFilter] = useState("all");
+  const [showAllAttention, setShowAllAttention] = useState(false);
   const [migration, setMigration] = useState({ open: false, pending: [] });
   const completionFiredRef = useRef(false);
   const qc = useQueryClient();
