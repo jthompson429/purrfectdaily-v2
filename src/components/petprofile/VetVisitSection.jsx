@@ -23,7 +23,7 @@ export default function VetVisitSection({ petId }) {
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [viewer, setViewer] = useState(null);
-  const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ pet_id: petId }, "-date") });
+  const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-date") });
   const { data: medicationSchedules = [] } = useQuery({
     queryKey: ["medications", activeWorkspaceId, petId],
     queryFn: () => base44.entities.MedicationSchedule.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-start_date")
