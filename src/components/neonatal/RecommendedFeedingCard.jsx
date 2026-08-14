@@ -1,22 +1,19 @@
 import { useState } from "react";
 import { Info } from "lucide-react";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
-import { formatTime, formatDurationShort, FEEDING_INTERVAL_HOURS, FEEDINGS_PER_DAY } from "@/utils/neonatal";
-
-const ACTIVE_INTERVAL = {
-  label: "3 times a day",
-  feedingsPerDay: FEEDINGS_PER_DAY,
-  hours: FEEDING_INTERVAL_HOURS,
-};
+import { formatTime, formatDurationShort, feedingIntervalHours, feedingsPerDay } from "@/utils/neonatal";
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
-export default function RecommendedFeedingCard({ weight, fedTodayMl, lastFeeding, nursingObserved, now = Date.now() }) {
+export default function RecommendedFeedingCard({ weight, fedTodayMl, lastFeeding, nursingObserved, intervalHours, now = Date.now() }) {
   const [infoOpen, setInfoOpen] = useState(false);
+  const hours = feedingIntervalHours(intervalHours);
+  const dailyFeedings = feedingsPerDay(hours);
+  const scheduleLabel = `Every ${hours % 1 === 0 ? hours : hours.toFixed(1)} ${hours === 1 ? "hour" : "hours"}`;
 
   const hasWeight = weight != null && weight > 0;
   const dailyTarget = hasWeight ? weight * 0.30 : null;
-  const perFeeding = dailyTarget != null ? dailyTarget / ACTIVE_INTERVAL.feedingsPerDay : null;
+  const perFeeding = dailyTarget != null ? dailyTarget / dailyFeedings : null;
 
   const fedToday = fedTodayMl || 0;
   const pct = dailyTarget && dailyTarget > 0 ? Math.min(100, (fedToday / dailyTarget) * 100) : 0;
@@ -24,7 +21,7 @@ export default function RecommendedFeedingCard({ weight, fedTodayMl, lastFeeding
   let nextText = null;
   let nextOverdue = false;
   if (lastFeeding?.date_time) {
-    const due = new Date(lastFeeding.date_time).getTime() + ACTIVE_INTERVAL.hours * 60 * 60 * 1000;
+    const due = new Date(lastFeeding.date_time).getTime() + hours * 60 * 60 * 1000;
     const delta = due - now;
     if (delta < 0) {
       nextOverdue = true;
@@ -55,7 +52,7 @@ export default function RecommendedFeedingCard({ weight, fedTodayMl, lastFeeding
                 The recommendation is calculated from the kitten's latest recorded weight using the general
                 guideline of approximately 30 mL of kitten formula per 100 g of body weight per day.
               </p>
-              <p>The app assumes feedings 3 times a day (every {FEEDING_INTERVAL_HOURS} hours).</p>
+              <p>This kitten’s active schedule is {scheduleLabel.toLowerCase()} (approximately {dailyFeedings.toFixed(dailyFeedings % 1 === 0 ? 0 : 1)} feedings per day).</p>
               <p>This recommendation is intended as a starting point only.</p>
               <p>
                 If the kitten is nursing from its mother or your veterinarian recommends a different feeding plan,
@@ -80,7 +77,7 @@ export default function RecommendedFeedingCard({ weight, fedTodayMl, lastFeeding
       <div className="grid grid-cols-2 gap-2 mt-3">
         <div className="rounded-xl p-2.5 bg-muted">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Schedule</p>
-          <p className="text-sm font-bold text-foreground">{ACTIVE_INTERVAL.label}</p>
+          <p className="text-sm font-bold text-foreground">{scheduleLabel}</p>
         </div>
         <div className="rounded-xl p-2.5 bg-muted">
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Daily Target</p>
