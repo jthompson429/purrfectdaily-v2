@@ -73,11 +73,11 @@ async function notifyUrgentClipboardEntry(base44, wsId, entry, excludeNotifiedUs
           to: member.email,
           subject: "An urgent Digital Clipboard item needs review",
           body: [
-            "<p>An urgent Digital Clipboard item needs review in Purrfect Daily.</p>",
-            "<p>Sign in to Purrfect Daily to view it securely.</p>",
+            "<p>An urgent Digital Clipboard item needs review in PurrTaskDaily.</p>",
+            "<p>Sign in to PurrTaskDaily to view it securely.</p>",
             "<p>This email intentionally does not include Clipboard details.</p>",
           ].join(""),
-          from_name: "Purrfect Daily",
+          from_name: "PurrTaskDaily",
         }),
       ),
     );
