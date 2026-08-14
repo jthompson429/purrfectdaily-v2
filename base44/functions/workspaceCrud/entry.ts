@@ -111,6 +111,9 @@ export default async function(req) {
       if (!canCreate(role)) {
         return Response.json({ error: "You have read-only access to this workspace." }, { status: 403 });
       }
+      if (entity === "NeonatalKitten" && !["owner", "admin"].includes(role) && data?.feeding_interval_hours != null && Number(data.feeding_interval_hours) !== 8) {
+        return Response.json({ error: "Only workspace owners and admins can set neonatal feeding schedules." }, { status: 403 });
+      }
       const result = await entityApi.create({ ...data, workspace_id: wsId });
 
       // Important and normal entries stay quiet. Urgent delivery follows
@@ -156,6 +159,14 @@ export default async function(req) {
       const record = await entityApi.get(id);
       if (!record || record.workspace_id !== wsId) {
         return Response.json({ error: "Record not found in this workspace." }, { status: 404 });
+      }
+      if (
+        entity === "NeonatalKitten" &&
+        !["owner", "admin"].includes(role) &&
+        Object.prototype.hasOwnProperty.call(data || {}, "feeding_interval_hours") &&
+        Number(data.feeding_interval_hours) !== Number(record.feeding_interval_hours ?? 8)
+      ) {
+        return Response.json({ error: "Only workspace owners and admins can change neonatal feeding schedules." }, { status: 403 });
       }
       const result = await entityApi.update(id, data);
 
