@@ -127,10 +127,13 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        onOpenAutoFocus={(event) => event.preventDefault()}
+        className="w-[calc(100vw-2rem)] sm:max-w-lg rounded-3xl border-border bg-background max-h-[90vh] overflow-y-auto"
+      >
         <DialogHeader><DialogTitle className="text-foreground font-bold text-xl">{item?.id ? "Edit Vet Visit" : "Add Vet Visit"}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-4 mt-2">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-foreground/60 text-xs uppercase tracking-wider">Visit Date</Label>
               <Input type="date" value={form.date || ""} onChange={(e) => set("date", e.target.value)} className={`${inputClass} [color-scheme:light]`} />
@@ -146,7 +149,7 @@ export default function VisitRecordDialog({ open, onOpenChange, item, onSave }) 
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-foreground/60 text-xs uppercase tracking-wider">Clinic</Label>
               <Input placeholder="e.g. CityVet" value={form.clinic || ""} onChange={(e) => set("clinic", e.target.value)} className={inputClass} />
