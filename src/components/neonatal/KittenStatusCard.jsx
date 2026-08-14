@@ -16,8 +16,8 @@ const DOT = {
   gray: "#94a3b8",
 };
 
-export default function KittenStatusCard({ lastFeeding, trend, now, onOpen }) {
-  const status = kittenStatus({ lastFeeding, trend, now });
+export default function KittenStatusCard({ lastFeeding, trend, now, feedingInterval, onOpen }) {
+  const status = kittenStatus({ lastFeeding, trend, now, feedingInterval });
   const line = kittenStatusLine(status, { lastFeeding });
   const tone = TONE[status.color];
 
