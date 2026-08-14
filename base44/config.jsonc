@@ -1,5 +1,5 @@
 {
-  "name": "Purrfect Daily v2",
+  "name": "PurrTaskDaily",
   "app_id": "6a712de617e488e601ea5834",
   "site": {
     "installCommand": "npm install",
