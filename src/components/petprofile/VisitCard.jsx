@@ -15,7 +15,7 @@ function Field({ label, value }) {
   );
 }
 
-export default function VisitCard({ visit, onEdit, onDelete, onAddMeds, onOpenAttachment }) {
+export default function VisitCard({ visit, pendingMedicationCount = 0, onEdit, onDelete, onAddMeds, onOpenAttachment }) {
   const [expanded, setExpanded] = useState(false);
   const upcoming = visit.date && new Date(visit.date) > new Date(new Date().toDateString());
   const status = upcoming ? "Upcoming" : "Completed";
@@ -25,7 +25,7 @@ export default function VisitCard({ visit, onEdit, onDelete, onAddMeds, onOpenAt
   const prevs = visit.preventives_administered || [];
   const meds = visit.medications_prescribed || [];
   const atts = visit.attachments || [];
-  const showAddMeds = meds.length > 0 && !visit.meds_added;
+  const showAddMeds = pendingMedicationCount > 0;
 
   return (
     <div className="rounded-xl overflow-hidden bg-card border border-border">
@@ -84,7 +84,7 @@ export default function VisitCard({ visit, onEdit, onDelete, onAddMeds, onOpenAt
 
           {showAddMeds && (
             <button onClick={onAddMeds} className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold text-yellow-600 bg-yellow-500/10 border border-dashed border-yellow-500/40">
-              <Plus className="h-3.5 w-3.5" /> Add {meds.length} prescribed medication{meds.length > 1 ? "s" : ""} to active meds
+              <Plus className="h-3.5 w-3.5" /> Add {pendingMedicationCount} prescribed medication{pendingMedicationCount > 1 ? "s" : ""} to active meds
             </button>
           )}
 
