@@ -144,9 +144,9 @@ export default function VetVisitSection({ petId }) {
         continue;
       }
 
-      const legacyMatch = visit.meds_added
-        ? medicationSchedules.find((item) => !item.source_visit_id && prescriptionKey(item) === key)
-        : null;
+      const legacyMatch = medicationSchedules.find(
+        (item) => !item.source_visit_id && prescriptionKey(item) === key
+      );
       if (legacyMatch) {
         await wsUpdate("MedicationSchedule", legacyMatch.id, { source_visit_id: visit.id }, activeWorkspaceId);
         continue;
