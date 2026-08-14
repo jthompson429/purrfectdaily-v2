@@ -136,24 +136,90 @@ export const buildReminders = (pet, preventatives, vaccinations, medications, we
   return out;
 };
 
+const VISIT_TYPE_LABELS = {
+  wellness: "Wellness",
+  sick_visit: "Sick Visit",
+  vaccination: "Vaccination",
+  surgery: "Surgery",
+  dental: "Dental",
+  emergency: "Emergency",
+  follow_up: "Follow-up",
+  other: "Veterinary"
+};
+
+const vaccineLabel = (v) =>
+  v.name === "custom" ? v.custom_name || "Custom vaccine" : v.name?.toUpperCase() || "Vaccine";
+
 export const buildMedicalHistory = (preventatives, vaccinations, vetVisits, medications) => {
   const events = [];
+  const visitIds = new Set(vetVisits.map((visit) => visit.id).filter(Boolean));
+
   preventatives.forEach((p) => {
-    if (p.date_given) events.push({ date: p.date_given, title: `${p.name} applied`, kind: "preventative" });
+    if (!p.date_given || (p.source_visit_id && visitIds.has(p.source_visit_id))) return;
+    events.push({
+      id: `preventative-${p.id || `${p.name}-${p.date_given}`}`,
+      date: p.date_given,
+      title: `${p.name} administered`,
+      detail: frequencyLabel(p.frequency, p.custom_interval_days),
+      kind: "preventative"
+    });
   });
+
   vaccinations.forEach((v) => {
-    if (v.date_given) {
-      const label = v.name === "custom" ? v.custom_name || "Vaccine" : `${v.name.toUpperCase()} vaccine`;
-      events.push({ date: v.date_given, title: label, detail: v.veterinarian, kind: "vaccination" });
-    }
+    if (!v.date_given || (v.source_visit_id && visitIds.has(v.source_visit_id))) return;
+    events.push({
+      id: `vaccination-${v.id || `${v.name}-${v.date_given}`}`,
+      date: v.date_given,
+      title: vaccineLabel(v),
+      detail: v.veterinarian || "",
+      summary: v.due_date ? `Next due ${fmtDate(v.due_date)}` : "",
+      kind: "vaccination"
+    });
   });
-  vetVisits.forEach((v) => {
-    if (v.date) events.push({ date: v.date, title: v.reason || "Vet visit", detail: v.diagnosis || v.treatment, kind: "visit" });
+
+  vetVisits.forEach((visit) => {
+    if (!visit.date) return;
+    const visitType = VISIT_TYPE_LABELS[visit.visit_type] || "Veterinary";
+    const vaccinationsGiven = (visit.vaccinations_given || []).map(vaccineLabel).filter(Boolean);
+    const preventativesGiven = (visit.preventives_administered || []).map((item) => item.name).filter(Boolean);
+    const medicationsPrescribed = (visit.medications_prescribed || []).map((item) => item.name).filter(Boolean);
+    const careSummary = [
+      vaccinationsGiven.length ? `Vaccines: ${vaccinationsGiven.join(", ")}` : "",
+      preventativesGiven.length ? `Preventatives: ${preventativesGiven.join(", ")}` : "",
+      medicationsPrescribed.length ? `Prescribed: ${medicationsPrescribed.join(", ")}` : "",
+      visit.attachments?.length ? `${visit.attachments.length} attachment${visit.attachments.length === 1 ? "" : "s"}` : ""
+    ].filter(Boolean).join(" · ");
+    const clinicalSummary = visit.diagnosis
+      ? `Diagnosis: ${visit.diagnosis}`
+      : visit.treatment
+        ? `Treatment: ${visit.treatment}`
+        : "";
+
+    events.push({
+      id: `visit-${visit.id || visit.date}`,
+      date: visit.date,
+      title: visit.reason || `${visitType} visit`,
+      detail: [visitType, visit.clinic, visit.veterinarian].filter(Boolean).join(" · "),
+      summary: [clinicalSummary, careSummary].filter(Boolean).join(" · "),
+      kind: "visit"
+    });
   });
+
   medications.forEach((m) => {
-    if (m.start_date) events.push({ date: m.start_date, title: `${m.medication_name} started`, kind: "medication" });
+    if (!m.start_date || (m.source_visit_id && visitIds.has(m.source_visit_id))) return;
+    events.push({
+      id: `medication-${m.id || `${m.medication_name}-${m.start_date}`}`,
+      date: m.start_date,
+      title: `${m.medication_name} started`,
+      detail: m.dosage_instructions || frequencyLabel(m.frequency),
+      kind: "medication"
+    });
   });
-  return events.filter((e) => e.date).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const kindOrder = { visit: 0, vaccination: 1, preventative: 2, medication: 3 };
+  return events
+    .filter((event) => event.date)
+    .sort((a, b) => b.date.localeCompare(a.date) || kindOrder[a.kind] - kindOrder[b.kind]);
 };
 
 export const COLOR_MAP = {
