@@ -5,7 +5,7 @@ import { Scale, Pencil, Trash2 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import SectionCard from "./SectionCard";
 import WeightDialog from "./WeightDialog";
-import { fmtShort, todayStr } from "@/utils/petCare";
+import { fmtShort } from "@/utils/petCare";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 
@@ -14,23 +14,20 @@ export default function WeightSection({ petId, profileType }) {
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
-  const { data: items = [] } = useQuery({ queryKey: ["weightLogs", petId], queryFn: () => base44.entities.WeightLog.filter({ pet_id: petId }, "-date") });
+  const { data: items = [] } = useQuery({ queryKey: ["weightLogs", petId], queryFn: () => base44.entities.WeightLog.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-date") });
   const upsert = useMutation({
     mutationFn: ({ id, data }) => id ? wsUpdate("WeightLog", id, data, activeWorkspaceId) : wsCreate("WeightLog", { ...data, pet_id: petId }, activeWorkspaceId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["weightLogs", petId] }); qc.invalidateQueries({ queryKey: ["pet", petId] }); }
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] })
   });
   const remove = useMutation({ mutationFn: (id) => wsDelete("WeightLog", id, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["weightLogs", petId] }) });
 
   const handleSave = async (data, id) => {
     await upsert.mutateAsync({ id, data });
-    if (!id) {
-      try { await wsUpdate("PetProfile", petId, { latest_weight: Number(data.weight) }, activeWorkspaceId); } catch {}
-    }
     setDialog(false); setEditing(null);
   };
 
   const unit = profileType === "neonatal" ? "g" : "kg";
-  const sorted = [...items].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const sorted = [...items].sort((a, b) => a.date.localeCompare(b.date));
   const latest = sorted[sorted.length - 1];
   const prev = sorted[sorted.length - 2];
   const trend = latest && prev != null ? latest.weight - prev.weight : null;
@@ -63,7 +60,7 @@ export default function WeightSection({ petId, profileType }) {
             </div>
           )}
           <div className="space-y-1">
-            {[...items].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map((w) => (
+            {[...items].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5).map((w) => (
               <div key={w.id} className="flex items-center justify-between rounded-lg px-2 py-1.5 bg-muted">
                 <span className="text-xs text-foreground/70">{w.weight} {unit}</span>
                 <div className="flex items-center gap-2">
