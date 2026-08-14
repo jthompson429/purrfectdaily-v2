@@ -11,18 +11,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useToast } from "@/components/ui/use-toast";
 import InviteDialog from "@/components/workspace/InviteDialog";
 import { wsManage } from "@/lib/workspaceApi";
-import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, BellRing, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Crown, UserCog, Mail, Trash2, ArrowRightLeft, BellRing, Clock, CheckCircle, XCircle, ImagePlus, Loader2 } from "lucide-react";
 
 const ROLE_LABELS = { owner: "Owner", admin: "Admin", caregiver: "Caregiver", viewer: "Viewer" };
 
 export default function WorkspaceSettings() {
-  const { activeWorkspaceId, activeWorkspace, canManageMembers, isOwner, pendingInvitations, acceptInvitation } = useWorkspace();
+  const { activeWorkspaceId, activeWorkspace, canManageMembers, isOwner, pendingInvitations, acceptInvitation, reload } = useWorkspace();
   const qc = useQueryClient();
   const { toast } = useToast();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
   const [editName, setEditName] = useState("");
   const [urgentInstructions, setUrgentInstructions] = useState("");
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
 
   useEffect(() => {
     setUrgentInstructions(activeWorkspace?.urgent_medical_instructions || "");
@@ -48,7 +49,10 @@ export default function WorkspaceSettings() {
 
   const updateWs = useMutation({
     mutationFn: ({ data }) => wsManage("updateWorkspace", { data, workspace_id: activeWorkspaceId }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] }),
+    onSuccess: async () => {
+      qc.invalidateQueries({ queryKey: ["workspace-members", activeWorkspaceId] });
+      await reload();
+    },
   });
 
   const updateMember = useMutation({
@@ -122,6 +126,40 @@ export default function WorkspaceSettings() {
     toast({ title: "Urgent-care instructions updated" });
   };
 
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast({ title: "Choose an image file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image is too large", description: "Choose an image smaller than 5 MB.", variant: "destructive" });
+      return;
+    }
+
+    setIsUploadingLogo(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      await updateWs.mutateAsync({ data: { logo_url: file_url } });
+      toast({ title: "Workspace image updated" });
+    } catch (error) {
+      toast({ title: "Could not update workspace image", description: error.message, variant: "destructive" });
+    } finally {
+      setIsUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    try {
+      await updateWs.mutateAsync({ data: { logo_url: "" } });
+      toast({ title: "Workspace image removed" });
+    } catch (error) {
+      toast({ title: "Could not remove workspace image", description: error.message, variant: "destructive" });
+    }
+  };
+
   const handleAcceptInvitation = async (inv) => {
     await acceptInvitation(inv);
     toast({ title: "Invitation accepted" });
@@ -149,6 +187,44 @@ export default function WorkspaceSettings() {
           <div>
             <Label className="text-xs text-muted-foreground">Owner</Label>
             <p className="text-sm font-medium mt-0.5">{activeWorkspace?.owner_email}</p>
+          </div>
+        </section>
+
+        {/* Workspace branding */}
+        <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Workspace Branding</h2>
+            <p className="mt-1 text-xs text-muted-foreground">Add an organization logo or workspace image. Square images work best.</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-border bg-muted">
+              {activeWorkspace?.logo_url ? (
+                <img src={activeWorkspace.logo_url} alt={`${activeWorkspace.name} workspace`} className="h-full w-full object-cover" />
+              ) : (
+                <ImagePlus className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+              )}
+            </div>
+            <div className="space-y-2">
+              {canManageMembers ? (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm" variant="outline" disabled={isUploadingLogo || updateWs.isPending}>
+                      <label className="cursor-pointer">
+                        {isUploadingLogo ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <ImagePlus className="mr-1.5 h-4 w-4" />}
+                        {activeWorkspace?.logo_url ? "Change image" : "Upload image"}
+                        <input type="file" accept="image/*" className="sr-only" onChange={handleLogoUpload} disabled={isUploadingLogo || updateWs.isPending} />
+                      </label>
+                    </Button>
+                    {activeWorkspace?.logo_url && (
+                      <Button size="sm" variant="ghost" onClick={handleRemoveLogo} disabled={isUploadingLogo || updateWs.isPending}>Remove</Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, or other image formats up to 5 MB.</p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">Only workspace Owners and Admins can change this image.</p>
+              )}
+            </div>
           </div>
         </section>
 
