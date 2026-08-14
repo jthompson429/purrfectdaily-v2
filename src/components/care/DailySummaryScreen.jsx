@@ -29,7 +29,7 @@ export default function DailySummaryScreen({
       `Critical tasks completed: ${criticalDone}`,
       `Routine tasks completed: ${routineDone}`,
       `Proof photos submitted: ${photoCount}`,
-      problemCount > 0 ? `Reported problems: ${problemCount}` : null,
+      problemCount > 0 ? `Tasks not completed: ${problemCount}` : null,
       ``,
       `Daily care is complete. All required tasks have been completed and proof photos have been submitted where required.`,
     ].filter(l => l !== null).join("\n");
@@ -146,7 +146,7 @@ export default function DailySummaryScreen({
             {problemCount > 0 ? (
               <div className="rounded-2xl p-3 text-center bg-destructive/10 border border-destructive/20">
                 <p className="text-xl font-black text-destructive">{problemCount}</p>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Problems Reported</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Not Completed</p>
               </div>
             ) : (
               <div className="rounded-2xl p-3 text-center bg-green-500/10 border border-green-500/20">
@@ -163,7 +163,7 @@ export default function DailySummaryScreen({
             >
               <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
               <p className="text-xs text-destructive">
-                <span className="font-bold">Reported Problems</span> — {problemCount} task{problemCount !== 1 ? "s" : ""} had issues. Check the dashboard for details.
+                <span className="font-bold">Tasks Not Completed</span> — {problemCount} task{problemCount !== 1 ? "s" : ""} could not be completed. Check the dashboard for the recorded reasons.
               </p>
             </div>
           )}
