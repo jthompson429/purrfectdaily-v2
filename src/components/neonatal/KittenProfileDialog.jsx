@@ -12,7 +12,7 @@ import { toLocalInput, fromLocalInput, nowLocalInput } from "@/utils/neonatal";
 const empty = () => ({
   name: "",
   birth_date: fromLocalInput(nowLocalInput()),
-  current_weight_g: "",
+  initial_weight_g: "",
   mother_present: true,
   supplementing_kmr: false,
   notes: "",
@@ -25,6 +25,8 @@ const empty = () => ({
 export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten, groups = [] }) {
   const [form, setForm] = useState(empty);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -32,7 +34,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
       setForm({
         name: kitten.name || "",
         birth_date: kitten.birth_date || fromLocalInput(nowLocalInput()),
-        current_weight_g: kitten.current_weight_g ?? "",
+        initial_weight_g: "",
         mother_present: kitten.mother_present ?? true,
         supplementing_kmr: kitten.supplementing_kmr ?? false,
         notes: kitten.notes || "",
@@ -44,6 +46,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
     } else {
       setForm(empty());
     }
+    setError("");
   }, [open, kitten]);
 
   const handlePhotoUpload = async (e) => {
@@ -60,12 +63,20 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
     }
   };
 
-  const submit = () => {
-    if (!form.name.trim()) return;
-    onSave({
-      ...form,
-      current_weight_g: form.current_weight_g === "" ? null : parseFloat(form.current_weight_g),
-    });
+  const submit = async () => {
+    if (!form.name.trim()) { setError("Please enter a name or temporary ID."); return; }
+    if (!form.birth_date || new Date(form.birth_date) > new Date()) { setError("Estimated birth cannot be in the future."); return; }
+    const initialWeight = form.initial_weight_g === "" ? null : Number(form.initial_weight_g);
+    if (initialWeight != null && (!Number.isFinite(initialWeight) || initialWeight <= 0)) { setError("Initial weight must be greater than zero."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      await onSave({ ...form, name: form.name.trim(), initial_weight_g: initialWeight });
+    } catch (err) {
+      setError(err?.message || "Could not save the kitten profile. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -88,16 +99,21 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
                 onChange={(e) => setForm((f) => ({ ...f, birth_date: fromLocalInput(e.target.value) }))}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label>Current weight (g)</Label>
-              <Input
-                type="number"
-                inputMode="decimal"
-                value={form.current_weight_g}
-                onChange={(e) => setForm((f) => ({ ...f, current_weight_g: e.target.value }))}
-                placeholder="0"
-              />
-            </div>
+            {!kitten && (
+              <div className="space-y-1.5">
+                <Label>Initial weight (g)</Label>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  value={form.initial_weight_g}
+                  onChange={(e) => { setForm((f) => ({ ...f, initial_weight_g: e.target.value })); setError(""); }}
+                  placeholder="Optional"
+                />
+                <p className="text-[10px] text-muted-foreground">Creates the first growth record</p>
+              </div>
+            )}
           </div>
           <div className="rounded-xl divide-y divide-border bg-muted">
             <div className="flex items-center justify-between px-3 py-2.5">
@@ -158,9 +174,10 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
             <Textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} rows={3} />
           </div>
         </div>
+        {error && <p className="text-xs text-destructive font-medium" role="alert">{error}</p>}
         <div className="pt-2">
-          <Button onClick={submit} className="w-full" disabled={!form.name.trim()}>
-            Save Profile
+          <Button onClick={submit} className="w-full" disabled={!form.name.trim() || saving || uploading}>
+            {saving ? "Saving…" : "Save Profile"}
           </Button>
         </div>
       </DialogContent>
