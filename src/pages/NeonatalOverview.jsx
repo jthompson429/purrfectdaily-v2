@@ -1,26 +1,31 @@
 import { useState, useMemo, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Cat, Plus, Users, FolderPlus, ArrowRight, AlertTriangle, Pencil } from "lucide-react";
+import { Cat, Plus, Users, FolderPlus, ArrowRight, AlertTriangle, Pencil, ArchiveRestore, ChevronDown, ChevronUp, GraduationCap } from "lucide-react";
 import { format } from "date-fns";
 import NeonatalStatsBar from "@/components/neonatal/NeonatalStatsBar";
 import KittenSummaryCard from "@/components/neonatal/KittenSummaryCard";
 import KittenProfileDialog from "@/components/neonatal/KittenProfileDialog";
 import GroupDialog from "@/components/neonatal/GroupDialog";
 import BatchLogDialog from "@/components/neonatal/BatchLogDialog";
+import KittenLifecycleDialog from "@/components/neonatal/KittenLifecycleDialog";
 import { neonatalDashboardStats, kittensByGroup, GROUP_TYPE_LABELS, timeAgo } from "@/utils/neonatal";
 import { useWorkspace } from "@/lib/workspaceContext";
-import { wsCreate, wsUpdate, wsDelete, wsBulkCreate } from "@/lib/workspaceApi";
+import { wsCreate, wsUpdate, wsDelete, wsBulkCreate, wsTransitionNeonatalKitten } from "@/lib/workspaceApi";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function NeonatalOverview() {
   const { activeWorkspaceId, canWrite, canManageMembers } = useWorkspace();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [dialog, setDialog] = useState(null);
   const [editingKitten, setEditingKitten] = useState(null);
   const [editingGroup, setEditingGroup] = useState(null);
   const [batchPreselect, setBatchPreselect] = useState(null);
+  const [showInactive, setShowInactive] = useState(false);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30000);
@@ -38,9 +43,20 @@ export default function NeonatalOverview() {
   const updateKitten = useMutation({ mutationFn: ({ id, data }) => wsUpdate("NeonatalKitten", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalKittens"] }) });
   const createGroup = useMutation({ mutationFn: (d) => wsCreate("NeonatalGroup", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
   const updateGroup = useMutation({ mutationFn: ({ id, data }) => wsUpdate("NeonatalGroup", id, data, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalGroups"] }) });
+  const transitionKitten = useMutation({
+    mutationFn: ({ kittenId, action, archiveReason }) => wsTransitionNeonatalKitten(kittenId, action, archiveReason, activeWorkspaceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["neonatalKittens"] });
+      qc.invalidateQueries({ queryKey: ["pets"] });
+      qc.invalidateQueries({ queryKey: ["weightLogs"] });
+    },
+  });
 
   const stats = useMemo(() => neonatalDashboardStats(kittens, feedings, weights, eliminations, now), [kittens, feedings, weights, eliminations, now]);
   const activeGroups = groups.filter((g) => g.status === "active");
+  const inactiveKittens = kittens
+    .filter((k) => k.active === false)
+    .sort((a, b) => new Date(b.archived_at || b.updated_date || 0) - new Date(a.archived_at || a.updated_date || 0));
   const { groups: groupedKittens } = kittensByGroup(kittens.filter((k) => k.active !== false));
 
   // Build recent activity with kitten names
@@ -109,6 +125,24 @@ export default function NeonatalOverview() {
   };
 
   const openEditKitten = (k) => { setEditingKitten(k); setDialog("kitten"); };
+  const openLifecycle = () => setDialog("lifecycle");
+  const handleGraduateKitten = async () => {
+    const result = await transitionKitten.mutateAsync({ kittenId: editingKitten.id, action: "graduate" });
+    setDialog(null);
+    setEditingKitten(null);
+    toast({ title: "Moved to Pet Profiles", description: `${editingKitten.name} is no longer in active neonatal care.` });
+    if (result?.pet?.id) navigate(`/pets/${result.pet.id}`);
+  };
+  const handleArchiveKitten = async (archiveReason) => {
+    await transitionKitten.mutateAsync({ kittenId: editingKitten.id, action: "archive", archiveReason });
+    setDialog(null);
+    setEditingKitten(null);
+    toast({ title: "Kitten archived", description: "Neonatal history has been preserved." });
+  };
+  const handleRestoreKitten = async (kitten) => {
+    await transitionKitten.mutateAsync({ kittenId: kitten.id, action: "restore" });
+    toast({ title: "Kitten restored", description: `${kitten.name} is active in neonatal care again.` });
+  };
   const openBatchForGroup = (groupKittens) => {
     setBatchPreselect(groupKittens.map((k) => k.id));
     setDialog("batch");
@@ -186,6 +220,79 @@ export default function NeonatalOverview() {
           )}
         </div>
 
+        {/* Inactive kittens */}
+        {inactiveKittens.length > 0 && (
+          <div className="mt-5">
+            <button
+              type="button"
+              onClick={() => setShowInactive((value) => !value)}
+              className="w-full rounded-2xl border border-border bg-card px-3 py-3 flex items-center justify-between"
+              aria-expanded={showInactive}
+            >
+              <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Inactive Kittens ({inactiveKittens.length})
+              </span>
+              {showInactive ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </button>
+            {showInactive && (
+              <div className="space-y-2 mt-2">
+                {inactiveKittens.map((kitten) => {
+                  const graduated = kitten.lifecycle_status === "graduated" || !!kitten.pet_profile_id;
+                  return (
+                    <div key={kitten.id} className="rounded-2xl border border-border bg-card p-3">
+                      <div className="flex items-start gap-3">
+                        <div className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden shrink-0">
+                          {kitten.photo_url
+                            ? <img src={kitten.photo_url} alt="" className="h-full w-full object-cover" />
+                            : graduated
+                              ? <GraduationCap className="h-5 w-5 text-primary" />
+                              : <ArchiveRestore className="h-5 w-5 text-muted-foreground" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">{kitten.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {graduated ? "Moved to Pet Profiles" : ({
+                              adopted: "Adopted",
+                              transferred: "Transferred",
+                              no_longer_in_care: "No longer in neonatal care",
+                              other: "Archived",
+                            }[kitten.archive_reason] || "Archived")}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 mt-3">
+                        <Link
+                          to={`/neonatal/kitten/${kitten.id}`}
+                          className="rounded-xl border border-border px-3 py-2 text-center text-xs font-bold text-foreground"
+                        >
+                          View History
+                        </Link>
+                        {graduated && kitten.pet_profile_id ? (
+                          <Link
+                            to={`/pets/${kitten.pet_profile_id}`}
+                            className="rounded-xl bg-primary px-3 py-2 text-center text-xs font-bold text-primary-foreground"
+                          >
+                            Open Pet Profile
+                          </Link>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleRestoreKitten(kitten)}
+                            disabled={!canWrite || transitionKitten.isPending}
+                            className="rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
+                          >
+                            Restore
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Groups */}
         {activeGroups.length > 0 && (
           <div className="mt-5">
@@ -236,7 +343,22 @@ export default function NeonatalOverview() {
         )}
       </div>
 
-      <KittenProfileDialog open={dialog === "kitten"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={editingKitten} groups={groups} canManageSchedule={canManageMembers} />
+      <KittenProfileDialog
+        open={dialog === "kitten"}
+        onOpenChange={(o) => !o && setDialog(null)}
+        onSave={handleSaveKitten}
+        kitten={editingKitten}
+        groups={groups}
+        canManageSchedule={canManageMembers}
+        onManageLifecycle={openLifecycle}
+      />
+      <KittenLifecycleDialog
+        open={dialog === "lifecycle"}
+        onOpenChange={(o) => !o && setDialog(null)}
+        kitten={editingKitten}
+        onGraduate={handleGraduateKitten}
+        onArchive={handleArchiveKitten}
+      />
       <GroupDialog open={dialog === "group"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveGroup} group={editingGroup} />
       <BatchLogDialog open={dialog === "batch"} onOpenChange={(o) => !o && setDialog(null)} kittens={kittens} onSave={handleBatchSave} preselectedIds={batchPreselect} />
     </div>
