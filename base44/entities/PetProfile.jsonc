@@ -66,6 +66,7 @@
       "enum": [
         "house_pet",
         "foster",
+        "stray",
         "neonatal",
         "nursing_mother",
         "senior"
