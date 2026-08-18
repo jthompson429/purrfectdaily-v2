@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Archive } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { toLocalInput, fromLocalInput, nowLocalInput } from "@/utils/neonatal";
 
@@ -23,7 +24,7 @@ const empty = () => ({
   sex: "unknown",
 });
 
-export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten, groups = [], canManageSchedule = false }) {
+export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten, groups = [], canManageSchedule = false, onManageLifecycle }) {
   const [form, setForm] = useState(empty);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -187,10 +188,22 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
           </div>
         </div>
         {error && <p className="text-xs text-destructive font-medium" role="alert">{error}</p>}
-        <div className="pt-2">
+        <div className="pt-2 space-y-2">
           <Button onClick={submit} className="w-full" disabled={!form.name.trim() || saving || uploading}>
             {saving ? "Saving…" : "Save Profile"}
           </Button>
+          {kitten && kitten.active !== false && onManageLifecycle && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={onManageLifecycle}
+              disabled={saving || uploading}
+            >
+              <Archive className="mr-2 h-4 w-4" />
+              Complete Neonatal Care
+            </Button>
+          )}
         </div>
       </DialogContent>
     </Dialog>
