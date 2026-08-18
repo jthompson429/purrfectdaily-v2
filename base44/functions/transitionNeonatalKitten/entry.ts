@@ -104,7 +104,7 @@ export default async function (req) {
     let pet = null;
     let petWeight = null;
     try {
-      const petData = {
+      const petData: Record<string, unknown> = {
         workspace_id: workspaceId,
         name: kitten.name,
         species: "cat",
