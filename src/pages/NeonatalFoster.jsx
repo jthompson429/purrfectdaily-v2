@@ -148,7 +148,9 @@ export default function NeonatalFoster() {
           </div>
         )}
 
-        <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={kitten.active === false ? undefined : () => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
+        {kitten.active !== false && (
+          <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={() => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
+        )}
 
         <div className="grid grid-cols-2 gap-2 mt-3">
           <Link to={`/neonatal/kitten/${kitten.id}/growth`} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-foreground/80 bg-card border border-border">
