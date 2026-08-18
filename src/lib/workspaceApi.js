@@ -47,6 +47,15 @@ export function wsDeleteMany(entity, query, wsId) {
   return callFn("workspaceCrud", { entity, action: "deleteMany", query, workspace_id: wsId });
 }
 
+export function wsTransitionNeonatalKitten(kittenId, action, archiveReason, wsId) {
+  return callFn("transitionNeonatalKitten", {
+    kitten_id: kittenId,
+    action,
+    archive_reason: archiveReason,
+    workspace_id: wsId,
+  });
+}
+
 export function wsRecordMedicationDose(data, wsId) {
   return callFn("recordMedicationDose", { ...data, workspace_id: wsId });
 }
