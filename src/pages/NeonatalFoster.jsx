@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -12,9 +12,11 @@ import FeedingDialog from "@/components/neonatal/FeedingDialog";
 import WeightDialog from "@/components/neonatal/WeightDialog";
 import EliminationDialog from "@/components/neonatal/EliminationDialog";
 import MotherLogDialog from "@/components/neonatal/MotherLogDialog";
+import KittenLifecycleDialog from "@/components/neonatal/KittenLifecycleDialog";
 import { buildReport, generateFosterReportPDF } from "@/utils/neonatal";
 import { useWorkspace } from "@/lib/workspaceContext";
-import { wsCreate, wsUpdate } from "@/lib/workspaceApi";
+import { wsCreate, wsUpdate, wsTransitionNeonatalKitten } from "@/lib/workspaceApi";
+import { useToast } from "@/components/ui/use-toast";
 
 const QUICK = [
   { key: "feeding", label: "Feeding", icon: Droplet, color: "#3b82f6" },
@@ -27,6 +29,8 @@ export default function NeonatalFoster() {
   const { activeWorkspaceId, canWrite, canManageMembers } = useWorkspace();
   const { kittenId } = useParams();
   const qc = useQueryClient();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [dialog, setDialog] = useState(null);
 
   const { data: kittens = [] } = useQuery({ queryKey: ["neonatalKittens", activeWorkspaceId], queryFn: () => base44.entities.NeonatalKitten.filter({ workspace_id: activeWorkspaceId }) });
@@ -48,6 +52,14 @@ export default function NeonatalFoster() {
   const createWeight = useMutation({ mutationFn: (d) => wsCreate("NeonatalWeight", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalWeights"] }) });
   const createElimination = useMutation({ mutationFn: (d) => wsCreate("NeonatalElimination", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalEliminations"] }) });
   const createMotherLog = useMutation({ mutationFn: (d) => wsCreate("NeonatalMotherLog", d, activeWorkspaceId), onSuccess: () => qc.invalidateQueries({ queryKey: ["neonatalMotherLogs"] }) });
+  const transitionKitten = useMutation({
+    mutationFn: ({ action, archiveReason }) => wsTransitionNeonatalKitten(kittenId, action, archiveReason, activeWorkspaceId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["neonatalKittens"] });
+      qc.invalidateQueries({ queryKey: ["pets"] });
+      qc.invalidateQueries({ queryKey: ["weightLogs"] });
+    },
+  });
 
   const sortedWeights = [...weights].sort((a, b) => new Date(b.date_time) - new Date(a.date_time));
   const previousWeight = sortedWeights[0]?.weight_g ?? kitten?.current_weight_g ?? null;
@@ -58,6 +70,20 @@ export default function NeonatalFoster() {
     if (kitten?.id) await updateKitten.mutateAsync({ id: kitten.id, data: profileData });
     else await createKitten.mutateAsync(profileData);
     setDialog(null);
+  };
+
+  const handleGraduateKitten = async () => {
+    const result = await transitionKitten.mutateAsync({ action: "graduate" });
+    setDialog(null);
+    toast({ title: "Moved to Pet Profiles", description: `${kitten.name} is no longer in active neonatal care.` });
+    if (result?.pet?.id) navigate(`/pets/${result.pet.id}`);
+  };
+
+  const handleArchiveKitten = async (archiveReason) => {
+    await transitionKitten.mutateAsync({ action: "archive", archiveReason });
+    setDialog(null);
+    toast({ title: "Kitten archived", description: "Neonatal history has been preserved." });
+    navigate("/neonatal");
   };
 
   const handleExport = () => {
@@ -99,7 +125,11 @@ export default function NeonatalFoster() {
           </Link>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-black text-foreground font-heading truncate">{kitten.name}</h1>
-            <p className="text-muted-foreground text-xs">Neonatal Foster Care</p>
+            <p className="text-muted-foreground text-xs">
+              {kitten.active === false
+                ? kitten.pet_profile_id ? "Graduated · Neonatal history" : "Archived · Neonatal history"
+                : "Neonatal Foster Care"}
+            </p>
           </div>
           <div className="flex gap-1">
             {canWrite && <button onClick={() => setDialog("profile")} className="h-9 w-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground transition-all bg-muted border border-border">
@@ -111,7 +141,14 @@ export default function NeonatalFoster() {
           </div>
         </div>
 
-        <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={() => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
+        {kitten.active === false && (
+          <div className="rounded-2xl border border-border bg-muted/50 p-3 mb-3">
+            <p className="text-sm font-bold text-foreground">This kitten is no longer in active neonatal care.</p>
+            <p className="text-xs text-muted-foreground mt-1">Records remain available for review and foster-report export.</p>
+          </div>
+        )}
+
+        <NeonatalDashboard kitten={kitten} feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} onLogCare={kitten.active === false ? undefined : () => setDialog("feeding")} onGenerateReport={handleGenerateReport} />
 
         <div className="grid grid-cols-2 gap-2 mt-3">
           <Link to={`/neonatal/kitten/${kitten.id}/growth`} className="py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold text-foreground/80 bg-card border border-border">
@@ -122,7 +159,7 @@ export default function NeonatalFoster() {
           </button>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 my-4">
+        {kitten.active !== false && <div className="grid grid-cols-4 gap-2 my-4">
           {QUICK.map(({ key, label, icon: Icon, color }) => (
             <motion.button
               key={key}
@@ -134,13 +171,28 @@ export default function NeonatalFoster() {
               <span className="text-[10px] font-bold text-muted-foreground">{label}</span>
             </motion.button>
           ))}
-        </div>
+        </div>}
 
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 px-1">Recent Activity</p>
         <ActivityList feedings={feedings} weights={weights} eliminations={eliminations} motherLogs={motherLogs} />
       </div>
 
-      <KittenProfileDialog open={dialog === "profile"} onOpenChange={(o) => !o && setDialog(null)} onSave={handleSaveKitten} kitten={kitten} groups={groups} canManageSchedule={canManageMembers} />
+      <KittenProfileDialog
+        open={dialog === "profile"}
+        onOpenChange={(o) => !o && setDialog(null)}
+        onSave={handleSaveKitten}
+        kitten={kitten}
+        groups={groups}
+        canManageSchedule={canManageMembers}
+        onManageLifecycle={() => setDialog("lifecycle")}
+      />
+      <KittenLifecycleDialog
+        open={dialog === "lifecycle"}
+        onOpenChange={(o) => !o && setDialog(null)}
+        kitten={kitten}
+        onGraduate={handleGraduateKitten}
+        onArchive={handleArchiveKitten}
+      />
       <FeedingDialog open={dialog === "feeding"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createFeeding.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} />
       <WeightDialog open={dialog === "weight"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createWeight.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} previousWeight={previousWeight} />
       <EliminationDialog open={dialog === "elimination"} onOpenChange={(o) => !o && setDialog(null)} onSave={async (d) => { await createElimination.mutateAsync({ ...d, kitten_id: kitten?.id }); setDialog(null); }} />
