@@ -50,6 +50,36 @@
       "default": true,
       "description": "Whether kitten is currently in active neonatal care"
     },
+    "lifecycle_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "graduated",
+        "archived"
+      ],
+      "default": "active",
+      "description": "Current neonatal lifecycle state"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When active neonatal care ended"
+    },
+    "archive_reason": {
+      "type": "string",
+      "enum": [
+        "adopted",
+        "transferred",
+        "no_longer_in_care",
+        "other",
+        "moved_to_pet_profiles"
+      ],
+      "description": "Why the kitten left active neonatal care"
+    },
+    "pet_profile_id": {
+      "type": "string",
+      "description": "PetProfile created when this kitten graduated from neonatal care"
+    },
     "sex": {
       "type": "string",
       "enum": [
