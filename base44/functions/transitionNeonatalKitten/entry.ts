@@ -76,8 +76,6 @@ export default async function (req) {
       const updated = await base44.asServiceRole.entities.NeonatalKitten.update(kittenId, {
         active: true,
         lifecycle_status: "active",
-        archived_at: null,
-        archive_reason: null,
       });
       await audit(base44, workspaceId, user, "restore_NeonatalKitten", kittenId);
       return Response.json({ data: { kitten: updated } });
@@ -106,22 +104,23 @@ export default async function (req) {
     let pet = null;
     let petWeight = null;
     try {
-      pet = await base44.asServiceRole.entities.PetProfile.create({
+      const petData = {
         workspace_id: workspaceId,
         name: kitten.name,
         species: "cat",
         sex: kitten.sex || "unknown",
-        birth_date: kitten.birth_date ? String(kitten.birth_date).slice(0, 10) : null,
         living_situation: "foster",
         profile_type: "foster",
         photo_url: kitten.photo_url || "",
         preferred_weight_unit: "kg",
-        latest_weight: latestWeight ? latestWeight.weight_g / 1000 : undefined,
         notes: [
           "Moved from Neonatal Care.",
           kitten.notes || "",
         ].filter(Boolean).join("\n\n"),
-      });
+      };
+      if (kitten.birth_date) petData.birth_date = String(kitten.birth_date).slice(0, 10);
+      if (latestWeight?.weight_g != null) petData.latest_weight = latestWeight.weight_g / 1000;
+      pet = await base44.asServiceRole.entities.PetProfile.create(petData);
 
       if (latestWeight?.weight_g != null) {
         petWeight = await base44.asServiceRole.entities.WeightLog.create({
