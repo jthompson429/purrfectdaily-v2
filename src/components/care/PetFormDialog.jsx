@@ -123,6 +123,7 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
                 <SelectContent className="bg-popover border-border">
                   <SelectItem value="house_pet" className="text-foreground hover:bg-muted">House Pet</SelectItem>
                   <SelectItem value="foster" className="text-foreground hover:bg-muted">Foster</SelectItem>
+                  <SelectItem value="stray" className="text-foreground hover:bg-muted">Stray</SelectItem>
                   <SelectItem value="neonatal" className="text-foreground hover:bg-muted">Neonatal Kitten</SelectItem>
                   <SelectItem value="nursing_mother" className="text-foreground hover:bg-muted">Nursing Mother</SelectItem>
                   <SelectItem value="senior" className="text-foreground hover:bg-muted">Senior Pet</SelectItem>
