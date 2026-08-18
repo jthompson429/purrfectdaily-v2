@@ -44,6 +44,11 @@
         "archived"
       ],
       "default": "active"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this group left the active Neonatal Dashboard"
     }
   },
   "required": [
