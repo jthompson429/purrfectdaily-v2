@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Cat, Plus, Users, FolderPlus, ArrowRight, AlertTriangle, Pencil, ArchiveRestore, ChevronDown, ChevronUp, GraduationCap } from "lucide-react";
+import { Cat, Plus, Users, FolderPlus, ArrowRight, AlertTriangle, Pencil, ArchiveRestore, ChevronDown, ChevronUp, GraduationCap, History } from "lucide-react";
 import { format } from "date-fns";
 import NeonatalStatsBar from "@/components/neonatal/NeonatalStatsBar";
 import KittenSummaryCard from "@/components/neonatal/KittenSummaryCard";
@@ -160,6 +160,14 @@ export default function NeonatalOverview() {
             <h1 className="text-2xl font-black text-foreground font-heading">Neonatal Dashboard</h1>
             <p className="text-muted-foreground text-xs">{stats.totalActive} active {stats.totalActive === 1 ? "kitten" : "kittens"}</p>
           </div>
+          <Link
+            to="/neonatal/history"
+            className="h-10 w-10 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground bg-muted border border-border"
+            aria-label="Open neonatal history"
+            title="Neonatal History"
+          >
+            <History className="h-4 w-4" />
+          </Link>
         </div>
 
         {/* Action buttons */}
