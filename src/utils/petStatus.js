@@ -3,6 +3,7 @@ import { preventativeStatus, vaccinationStatus, isMedicationActive } from "./pet
 export const computePetBadges = (pet, preventatives = [], vaccinations = [], medications = []) => {
   const badges = [];
 
+  if (pet.profile_type === "stray") badges.push({ key: "stray", label: "Stray", dot: "bg-amber-400", text: "text-amber-600" });
   if (pet.profile_type === "neonatal") badges.push({ key: "neonatal", label: "Neonatal Kitten", dot: "bg-primary", text: "text-primary" });
   if (pet.profile_type === "nursing_mother") badges.push({ key: "nursing", label: "Nursing Mother", dot: "bg-blue-400", text: "text-blue-500" });
   if (pet.profile_type === "senior") badges.push({ key: "senior", label: "Senior Pet", dot: "bg-indigo-400", text: "text-indigo-500" });
