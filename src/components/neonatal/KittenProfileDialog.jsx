@@ -129,10 +129,6 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
               <Label>Supplementing with KMR</Label>
               <Switch checked={form.supplementing_kmr} onCheckedChange={(v) => setForm((f) => ({ ...f, supplementing_kmr: v }))} />
             </div>
-            <div className="flex items-center justify-between px-3 py-2.5">
-              <Label>Active neonatal care</Label>
-              <Switch checked={form.active} onCheckedChange={(v) => setForm((f) => ({ ...f, active: v }))} />
-            </div>
           </div>
           <div className="space-y-1.5">
             <Label>Feeding interval</Label>
