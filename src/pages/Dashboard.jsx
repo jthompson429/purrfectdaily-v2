@@ -72,6 +72,7 @@ export default function Dashboard() {
   const [showSummary, setShowSummary] = useState(false);
   const [collapsedPets, setCollapsedPets] = useState({});
   const [filter, setFilter] = useState("all");
+  const [sortMode, setSortMode] = useState("default");
   const [showAllAttention, setShowAllAttention] = useState(false);
   const [migration, setMigration] = useState({ open: false, pending: [] });
   const completionFiredRef = useRef(false);
@@ -174,14 +175,36 @@ export default function Dashboard() {
     qc.invalidateQueries({ queryKey: ["careTasks"] });
   };
 
+  const completionQueryKey = ["completionLogs", TODAY, activeWorkspaceId];
+
   const createLog = useMutation({
     mutationFn: (data) => wsCreate("CompletionLog", data, activeWorkspaceId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["completionLogs", TODAY] }); },
+    onMutate: async (data) => {
+      await qc.cancelQueries({ queryKey: completionQueryKey });
+      const previous = qc.getQueryData(completionQueryKey) || [];
+      const optimisticId = `optimistic-${data.task_id}-${Date.now()}`;
+      qc.setQueryData(completionQueryKey, [...previous, { ...data, id: optimisticId }]);
+      return { previous, optimisticId };
+    },
+    onError: (_error, _data, context) => qc.setQueryData(completionQueryKey, context?.previous || []),
+    onSuccess: (created, data, context) => {
+      qc.setQueryData(completionQueryKey, (current = []) => current.map((log) =>
+        log.id === context?.optimisticId ? { ...data, ...created, id: created?.id || log.id } : log
+      ));
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: completionQueryKey }),
   });
 
   const updateLog = useMutation({
     mutationFn: ({ id, data }) => wsUpdate("CompletionLog", id, data, activeWorkspaceId),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["completionLogs", TODAY] }); },
+    onMutate: async ({ id, data }) => {
+      await qc.cancelQueries({ queryKey: completionQueryKey });
+      const previous = qc.getQueryData(completionQueryKey) || [];
+      qc.setQueryData(completionQueryKey, previous.map((log) => log.id === id ? { ...log, ...data } : log));
+      return { previous };
+    },
+    onError: (_error, _variables, context) => qc.setQueryData(completionQueryKey, context?.previous || []),
+    onSettled: () => qc.invalidateQueries({ queryKey: completionQueryKey }),
   });
 
   const createTask = useMutation({
@@ -297,7 +320,7 @@ export default function Dashboard() {
         items.push({ key: `visit-${visit.id}`, urgency: visitDays <= 1 ? 1 : 2, title: `Veterinary visit · ${petName(visit.pet_id)}`, detail: dueText(visitDays), href: `/pets/${visit.pet_id}` });
       }
       const followUpDays = daysFromToday(visit.follow_up_date);
-      if (followUpDays != null && followUpDays <= 7) {
+      if (!visit.follow_up_completed && followUpDays != null && followUpDays <= 7) {
         items.push({ key: `follow-up-${visit.id}`, urgency: followUpDays < 0 ? 0 : followUpDays <= 1 ? 1 : 2, title: `Veterinary follow-up · ${petName(visit.pet_id)}`, detail: dueText(followUpDays), href: `/pets/${visit.pet_id}` });
       }
     });
@@ -451,9 +474,19 @@ export default function Dashboard() {
   }, [allActiveTasks, pets]);
 
   const visibleGroups = useMemo(() => {
-    if (filter === "all") return groups;
-    return groups.filter(g => g.kind === filter);
-  }, [groups, filter]);
+    const filtered = filter === "all" ? groups : groups.filter(g => g.kind === filter);
+    if (sortMode === "default") return filtered;
+
+    const countFor = (group) => group.tasks.filter((task) => {
+      const completed = logByTaskId[task.id]?.status === "done";
+      return sortMode === "completed" ? completed : !completed;
+    }).length;
+
+    return filtered
+      .map((group, index) => ({ group, index, count: countFor(group) }))
+      .sort((a, b) => b.count - a.count || a.index - b.index)
+      .map(({ group }) => group);
+  }, [groups, filter, sortMode, logByTaskId]);
 
   const FILTERS = [["all", "All"], ["pet", "🐾 Pets"], ["area", "🏠 Areas"], ["general", "✦ General"]];
 
@@ -576,13 +609,27 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-6">
             {/* Assignment filters */}
-            <div className="flex gap-2">
-              {FILTERS.map(([v, l]) => (
-                <button key={v} onClick={() => setFilter(v)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${filter === v ? "text-primary-foreground bg-primary" : "text-muted-foreground bg-muted border border-border"}`}>
-                  {l}
-                </button>
-              ))}
+            <div className="space-y-2">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {FILTERS.map(([v, l]) => (
+                  <button key={v} onClick={() => setFilter(v)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${filter === v ? "text-primary-foreground bg-primary" : "text-muted-foreground bg-muted border border-border"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+              <label className="flex items-center justify-end gap-2 text-xs font-bold text-muted-foreground">
+                Sort by
+                <select
+                  value={sortMode}
+                  onChange={(event) => setSortMode(event.target.value)}
+                  className="h-8 rounded-xl bg-muted border border-border px-2.5 text-xs font-bold text-foreground"
+                >
+                  <option value="default">Default</option>
+                  <option value="not_completed">Not Completed</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </label>
             </div>
 
             {visibleGroups.map(group => {
