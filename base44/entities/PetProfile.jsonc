@@ -73,6 +73,16 @@
       ],
       "default": "house_pet"
     },
+    "available_for_adoption": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this animal should appear in the adoption queue"
+    },
+    "adoption_available_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this animal is or will be available for adoption"
+    },
     "description": {
       "type": "string"
     },
