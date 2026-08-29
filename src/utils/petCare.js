@@ -131,7 +131,7 @@ export const buildReminders = (pet, preventatives, vaccinations, medications, we
       else if (appointmentDays === 1) out.push({ urgency: 1, label: "Veterinary visit tomorrow" });
       else if (appointmentDays > 1 && appointmentDays <= 7) out.push({ urgency: 2, label: `Veterinary visit in ${appointmentDays} days` });
     }
-    if (visit.follow_up_date) {
+    if (visit.follow_up_date && !visit.follow_up_completed) {
       const followUpDays = differenceInCalendarDays(toLocal(visit.follow_up_date), new Date());
       if (followUpDays < 0) out.push({ urgency: 0, label: "Veterinary follow-up overdue" });
       else if (followUpDays === 0) out.push({ urgency: 1, label: "Veterinary follow-up today" });
