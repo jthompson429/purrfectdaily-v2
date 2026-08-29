@@ -51,6 +51,18 @@
       "format": "date",
       "description": "Recommended or scheduled follow-up date"
     },
+    "follow_up_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the recommended veterinary follow-up has been completed"
+    },
+    "follow_up_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "follow_up_completed_by": {
+      "type": "string"
+    },
     "notes": {
       "type": "string"
     },
