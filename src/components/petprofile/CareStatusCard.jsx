@@ -29,7 +29,7 @@ export default function CareStatusCard({ pet, preventatives, vaccinations, medic
     if (visit.date && visit.date >= today) {
       candidates.push({ date: visit.date, label: visit.date === today ? "Today" : fmtShort(visit.date), detail: visit.clinic || "Vet visit" });
     }
-    if (visit.follow_up_date && visit.follow_up_date >= today) {
+    if (visit.follow_up_date && !visit.follow_up_completed && visit.follow_up_date >= today) {
       candidates.push({ date: visit.follow_up_date, label: visit.follow_up_date === today ? "Follow-up today" : `Follow-up ${fmtShort(visit.follow_up_date)}`, detail: visit.clinic || "" });
     }
     return candidates;
