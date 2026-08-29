@@ -37,7 +37,7 @@ export default function DailySummaryScreen({
   };
 
   const handleSendEmail = () => {
-    const subject = encodeURIComponent("PurrTaskDaily: Daily care complete — payment unlocked");
+    const subject = encodeURIComponent("PurrTaskDaily: Daily care complete");
     const body = encodeURIComponent(buildMessage());
     const mailto = `mailto:${ownerEmail}?subject=${subject}&body=${body}`;
     window.open(mailto, "_blank");
