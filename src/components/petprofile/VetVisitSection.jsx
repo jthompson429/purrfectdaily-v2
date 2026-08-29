@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Stethoscope, Plus, CalendarClock } from "lucide-react";
+import { Stethoscope, Plus, CalendarClock, CheckCircle2, Loader2 } from "lucide-react";
 import SectionCard from "./SectionCard";
 import VisitRecordDialog from "./VisitRecordDialog";
 import VisitCard from "./VisitCard";
@@ -18,11 +18,12 @@ const prescriptionKey = (item, fallbackDate = "") =>
   `${(item.medication_name || item.name || "").trim().toLowerCase()}::${item.start_date || fallbackDate}`;
 
 export default function VetVisitSection({ petId }) {
-  const { activeWorkspaceId } = useWorkspace();
+  const { activeWorkspaceId, canWrite } = useWorkspace();
   const qc = useQueryClient();
   const [dialog, setDialog] = useState(false);
   const [editing, setEditing] = useState(null);
   const [viewer, setViewer] = useState(null);
+  const { data: user } = useQuery({ queryKey: ["me"], queryFn: () => base44.auth.me() });
   const { data } = useQuery({ queryKey: ["vetVisits", petId], queryFn: () => base44.entities.VetVisit.filter({ workspace_id: activeWorkspaceId, pet_id: petId }, "-date") });
   const { data: medicationSchedules = [] } = useQuery({
     queryKey: ["medications", activeWorkspaceId, petId],
@@ -33,7 +34,7 @@ export default function VetVisitSection({ petId }) {
   const upcomingItems = items.filter((visit) => visit.date >= today).sort((a, b) => a.date.localeCompare(b.date));
   const historyItems = items.filter((visit) => visit.date < today);
   const followUps = items
-    .filter((visit) => visit.follow_up_date >= today)
+    .filter((visit) => visit.follow_up_date && !visit.follow_up_completed)
     .sort((a, b) => a.follow_up_date.localeCompare(b.follow_up_date));
 
   const invalidateVisitCare = () => {
@@ -42,7 +43,17 @@ export default function VetVisitSection({ petId }) {
     qc.invalidateQueries({ queryKey: ["preventatives", petId] });
     qc.invalidateQueries({ queryKey: ["allVaccinations", activeWorkspaceId] });
     qc.invalidateQueries({ queryKey: ["allPreventatives", activeWorkspaceId] });
+    qc.invalidateQueries({ queryKey: ["allVetVisits", activeWorkspaceId] });
   };
+
+  const completeFollowUp = useMutation({
+    mutationFn: (visit) => wsUpdate("VetVisit", visit.id, {
+      follow_up_completed: true,
+      follow_up_completed_at: new Date().toISOString(),
+      follow_up_completed_by: user?.full_name || "",
+    }, activeWorkspaceId),
+    onSuccess: invalidateVisitCare,
+  });
 
   const remove = useMutation({
     mutationFn: async (id) => {
@@ -119,7 +130,14 @@ export default function VetVisitSection({ petId }) {
       const previous = id ? items.find((visit) => visit.id === id) : null;
       const previousKeys = (previous?.medications_prescribed || []).map((item) => prescriptionKey(item, previous?.date)).sort().join("|");
       const nextKeys = (data.medications_prescribed || []).map((item) => prescriptionKey(item, data.date)).sort().join("|");
-      const visitData = previous && previousKeys !== nextKeys ? { ...data, meds_added: false } : data;
+      const medicationAdjustedData = previous && previousKeys !== nextKeys ? { ...data, meds_added: false } : data;
+      const followUpChanged = previous && previous.follow_up_date !== data.follow_up_date;
+      const visitData = followUpChanged ? {
+        ...medicationAdjustedData,
+        follow_up_completed: false,
+        follow_up_completed_at: "",
+        follow_up_completed_by: "",
+      } : medicationAdjustedData;
       const saved = id
         ? await wsUpdate("VetVisit", id, visitData, activeWorkspaceId)
         : await wsCreate("VetVisit", { ...visitData, pet_id: petId }, activeWorkspaceId);
@@ -215,20 +233,36 @@ export default function VetVisitSection({ petId }) {
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold px-1">Upcoming & Follow-ups</p>
               {upcomingItems.map(renderVisit)}
               {followUps.map((visit) => (
-                <button
+                <div
                   key={`follow-up-${visit.id}`}
-                  type="button"
-                  onClick={() => { setEditing(visit); setDialog(true); }}
-                  className="w-full rounded-xl p-3 flex items-start gap-2 text-left bg-orange-500/10 border border-orange-500/25"
+                  className="w-full rounded-xl p-3 flex items-start gap-2 bg-orange-500/10 border border-orange-500/25"
                 >
-                  <CalendarClock className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                  <span className="min-w-0">
-                    <span className="block text-xs font-bold text-foreground">Follow-up {fmtDate(visit.follow_up_date)}</span>
-                    <span className="block text-[11px] text-muted-foreground truncate">
-                      {visit.reason || "Veterinary visit"}{visit.follow_up_instructions ? ` · ${visit.follow_up_instructions}` : ""}
+                  <button
+                    type="button"
+                    onClick={() => { setEditing(visit); setDialog(true); }}
+                    className="flex flex-1 min-w-0 items-start gap-2 text-left"
+                  >
+                    <CalendarClock className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
+                    <span className="min-w-0">
+                      <span className="block text-xs font-bold text-foreground">Follow-up {fmtDate(visit.follow_up_date)}</span>
+                      <span className="block text-[11px] text-muted-foreground truncate">
+                        {visit.reason || "Veterinary visit"}{visit.follow_up_instructions ? ` · ${visit.follow_up_instructions}` : ""}
+                      </span>
                     </span>
-                  </span>
-                </button>
+                  </button>
+                  {canWrite && (
+                    <button
+                      type="button"
+                      onClick={() => completeFollowUp.mutate(visit)}
+                      disabled={completeFollowUp.isPending}
+                      className="flex-shrink-0 rounded-lg px-2.5 py-1.5 text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/25 disabled:opacity-50"
+                    >
+                      {completeFollowUp.isPending && completeFollowUp.variables?.id === visit.id
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <span className="flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Complete</span>}
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}
