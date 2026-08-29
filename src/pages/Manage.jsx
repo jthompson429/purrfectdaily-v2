@@ -31,6 +31,7 @@ export default function Manage() {
   const navigate = useNavigate();
 
   const { data: pets = [] } = useQuery({ queryKey: ["pets", activeWorkspaceId], queryFn: () => base44.entities.PetProfile.filter({ workspace_id: activeWorkspaceId }, "sort_order") });
+  const { data: neonatalKittens = [] } = useQuery({ queryKey: ["neonatalKittens", activeWorkspaceId], queryFn: () => base44.entities.NeonatalKitten.filter({ workspace_id: activeWorkspaceId }) });
   const { data: tasks = [] } = useQuery({ queryKey: ["careTasks", activeWorkspaceId], queryFn: () => base44.entities.CareTask.filter({ workspace_id: activeWorkspaceId }, "sort_order") });
   const { data: preventatives = [] } = useQuery({ queryKey: ["allPreventatives", activeWorkspaceId], queryFn: () => base44.entities.Preventative.filter({ workspace_id: activeWorkspaceId }) });
   const { data: vaccinations = [] } = useQuery({ queryKey: ["allVaccinations", activeWorkspaceId], queryFn: () => base44.entities.Vaccination.filter({ workspace_id: activeWorkspaceId }) });
@@ -177,6 +178,7 @@ export default function Manage() {
         {activeTab === "adoption" && (
           <AdoptionTab
             pets={pets}
+            kittens={neonatalKittens}
             onOpenPet={(petId) => navigate(`/pets/${petId}`)}
             onOpenKitten={(kittenId) => navigate(`/neonatal/kitten/${kittenId}`)}
           />
