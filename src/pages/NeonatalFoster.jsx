@@ -25,6 +25,12 @@ const QUICK = [
   { key: "mother", label: "Mother", icon: Cat, color: "#f59e0b" },
 ];
 
+const localToday = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10);
+};
+
 export default function NeonatalFoster() {
   const { activeWorkspaceId, canWrite, canManageMembers } = useWorkspace();
   const { kittenId } = useParams();
@@ -129,7 +135,7 @@ export default function NeonatalFoster() {
               {kitten.active === false
                 ? kitten.pet_profile_id ? "Graduated · Neonatal history" : "Archived · Neonatal history"
                 : kitten.available_for_adoption
-                  ? kitten.adoption_available_date && kitten.adoption_available_date > new Date().toISOString().slice(0, 10)
+                  ? kitten.adoption_available_date && kitten.adoption_available_date > localToday()
                     ? `Neonatal Foster Care · Available ${format(new Date(`${kitten.adoption_available_date}T00:00:00`), "MMM d, yyyy")}`
                     : "Neonatal Foster Care · Available Now"
                   : "Neonatal Foster Care"}
