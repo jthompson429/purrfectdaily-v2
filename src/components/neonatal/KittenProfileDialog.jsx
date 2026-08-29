@@ -21,8 +21,16 @@ const empty = () => ({
   group_id: "",
   photo_url: "",
   active: true,
+  available_for_adoption: false,
+  adoption_available_date: "",
   sex: "unknown",
 });
+
+const localToday = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset();
+  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10);
+};
 
 export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten, groups = [], canManageSchedule = false, onManageLifecycle }) {
   const [form, setForm] = useState(empty);
@@ -44,6 +52,8 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
         group_id: kitten.group_id || "",
         photo_url: kitten.photo_url || "",
         active: kitten.active ?? true,
+        available_for_adoption: kitten.available_for_adoption ?? false,
+        adoption_available_date: kitten.adoption_available_date || "",
         sex: kitten.sex || "unknown",
       });
     } else {
@@ -73,6 +83,7 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
     if (initialWeight != null && (!Number.isFinite(initialWeight) || initialWeight <= 0)) { setError("Initial weight must be greater than zero."); return; }
     const feedingInterval = Number(form.feeding_interval_hours);
     if (!Number.isFinite(feedingInterval) || feedingInterval < 0.5 || feedingInterval > 24) { setError("Feeding interval must be between 0.5 and 24 hours."); return; }
+    if (form.available_for_adoption && !form.adoption_available_date) { setError("Please enter the date this kitten will be available for adoption."); return; }
     setSaving(true);
     setError("");
     try {
@@ -162,6 +173,43 @@ export default function KittenProfileDialog({ open, onOpenChange, onSave, kitten
                 </SelectContent>
               </Select>
             </div>
+          </div>
+          <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/5 p-3 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <Label>Available for Adoption</Label>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Include this kitten in the adoption queue</p>
+              </div>
+              <Switch
+                checked={form.available_for_adoption}
+                onCheckedChange={(checked) => setForm((f) => ({
+                  ...f,
+                  available_for_adoption: checked,
+                  adoption_available_date: checked ? (f.adoption_available_date || localToday()) : "",
+                }))}
+              />
+            </div>
+            {form.available_for_adoption && (
+              <div className="space-y-1.5">
+                <Label>Available Date</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    value={form.adoption_available_date}
+                    onChange={(e) => { setForm((f) => ({ ...f, adoption_available_date: e.target.value })); setError(""); }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => setForm((f) => ({ ...f, adoption_available_date: localToday() }))}
+                  >
+                    Available now
+                  </Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground">This status will carry into Pet Profiles when neonatal care is completed.</p>
+              </div>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Photo</Label>
