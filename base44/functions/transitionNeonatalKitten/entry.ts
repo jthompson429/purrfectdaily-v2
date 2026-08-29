@@ -113,6 +113,8 @@ export default async function (req) {
         profile_type: "foster",
         photo_url: kitten.photo_url || "",
         preferred_weight_unit: "kg",
+        available_for_adoption: kitten.available_for_adoption === true,
+        adoption_available_date: kitten.available_for_adoption ? kitten.adoption_available_date || "" : "",
         notes: [
           "Moved from Neonatal Care.",
           kitten.notes || "",
