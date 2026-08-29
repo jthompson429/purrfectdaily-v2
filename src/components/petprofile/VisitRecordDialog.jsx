@@ -10,7 +10,8 @@ import { base44 } from "@/api/base44Client";
 
 const empty = {
   date: "", clinic: "", veterinarian: "", visit_type: "wellness", reason: "", diagnosis: "",
-  treatment: "", follow_up_date: "", follow_up_instructions: "", notes: "",
+  treatment: "", follow_up_date: "", follow_up_instructions: "", follow_up_completed: false,
+  follow_up_completed_at: "", follow_up_completed_by: "", notes: "",
   vaccinations_given: [], medications_prescribed: [], preventives_administered: [], attachments: [], meds_added: false
 };
 
