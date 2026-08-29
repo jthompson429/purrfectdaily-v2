@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import PetFormDialog from "@/components/care/PetFormDialog";
 import TaskFormDialog from "@/components/care/TaskFormDialog";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatAge } from "@/utils/pet";
 import { computePetBadges } from "@/utils/petStatus";
 import { assignmentLabel } from "@/utils/assignment";
@@ -17,6 +18,15 @@ import { displayWeightValue, weightDisplayUnit } from "@/utils/weight";
 import AdoptionTab from "@/components/adoption/AdoptionTab";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
+const PROFILE_TYPE_LABELS = {
+  house_pet: "House Pet",
+  foster: "Foster",
+  stray: "Stray",
+  neonatal: "Neonatal",
+  nursing_mother: "Nursing Mother",
+  senior: "Senior",
+};
+const CARE_LEVEL_ORDER = { critical: 0, special: 1, routine: 2 };
 const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
 
 export default function Manage() {
@@ -27,6 +37,7 @@ export default function Manage() {
   const [editingTask, setEditingTask] = useState(null);
   const [activeTab, setActiveTab] = useState("pets");
   const [search, setSearch] = useState("");
+  const [petSort, setPetSort] = useState("alphabetical");
   const qc = useQueryClient();
   const navigate = useNavigate();
 
@@ -60,14 +71,28 @@ export default function Manage() {
 
   const getPetName = (id) => pets.find(p => p.id === id)?.name || "";
   const q = search.trim().toLowerCase();
-  const filteredPets = q
+  const filteredPets = (q
     ? pets.filter((p) => {
         const badges = computePetBadges(p, preventatives.filter((x) => x.pet_id === p.id), vaccinations.filter((x) => x.pet_id === p.id), medications.filter((x) => x.pet_id === p.id));
         const petMedications = medications.filter((medication) => medication.pet_id === p.id);
         const hay = [p.name, p.species, p.breed, ...petMedications.map((medication) => medication.medication_name), ...badges.map((b) => b.label)].join(" ").toLowerCase();
         return hay.includes(q);
       })
-    : pets;
+    : pets
+  ).slice().sort((a, b) => {
+    const byName = (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base", numeric: true });
+    if (petSort === "profile_type") {
+      const aType = PROFILE_TYPE_LABELS[a.profile_type] || "Other";
+      const bType = PROFILE_TYPE_LABELS[b.profile_type] || "Other";
+      return aType.localeCompare(bType, undefined, { sensitivity: "base" }) || byName;
+    }
+    if (petSort === "care_level") {
+      const aLevel = CARE_LEVEL_ORDER[a.care_level || "routine"] ?? 99;
+      const bLevel = CARE_LEVEL_ORDER[b.care_level || "routine"] ?? 99;
+      return aLevel - bLevel || byName;
+    }
+    return byName;
+  });
 
   return (
     <div className="min-h-full bg-background">
@@ -96,14 +121,29 @@ export default function Manage() {
         {activeTab === "pets" && (
           <div>
             {pets.length > 0 && (
-              <div className="relative mb-3">
-                <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, status, medication…"
-                  className="pl-9 bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/60"
-                />
+              <div className="space-y-2 mb-3">
+                <div className="relative">
+                  <Search className="h-4 w-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search by name, status, medication…"
+                    className="pl-9 bg-muted border-border text-foreground rounded-xl placeholder:text-muted-foreground/60"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-muted-foreground whitespace-nowrap">Sort by</span>
+                  <Select value={petSort} onValueChange={setPetSort}>
+                    <SelectTrigger className="h-10 flex-1 rounded-xl bg-muted border-border" aria-label="Sort Pet Profiles">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="alphabetical">Alphabetical (A–Z)</SelectItem>
+                      <SelectItem value="profile_type">Profile Type</SelectItem>
+                      <SelectItem value="care_level">Care Level</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
             <div className="space-y-3 mb-4">
