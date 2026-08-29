@@ -27,6 +27,7 @@ const EXCEPTION_LABELS = Object.fromEntries(EXCEPTION_REASONS);
 export default function CareTaskCard({ task, log, onComplete, onReport }) {
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [submittingComplete, setSubmittingComplete] = useState(false);
   const [photoUrl, setPhotoUrl] = useState(log?.photo_url || null);
   const [notes, setNotes] = useState(log?.notes || "");
   const [showNotes, setShowNotes] = useState(false);
@@ -62,9 +63,14 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
     setReportUploading(false);
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (task.requires_photo && !photoUrl) return;
-    onComplete(task, { photo_url: photoUrl, notes, status: "done" });
+    setSubmittingComplete(true);
+    try {
+      await onComplete(task, { photo_url: photoUrl, notes, status: "done" });
+    } finally {
+      setSubmittingComplete(false);
+    }
   };
 
   const handleSubmitReport = async () => {
@@ -251,8 +257,8 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
               <motion.button
                 whileTap={{ scale: 0.96 }}
                 onClick={handleComplete}
-                disabled={needsPhoto}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-primary-foreground transition-all"
+                disabled={needsPhoto || submittingComplete}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-primary-foreground transition-all disabled:cursor-wait"
                 style={{
                   background: needsPhoto
                     ? "hsl(var(--muted))"
@@ -263,8 +269,8 @@ export default function CareTaskCard({ task, log, onComplete, onReport }) {
                   cursor: needsPhoto ? "not-allowed" : "pointer",
                 }}
               >
-                <CheckCircle2 className="h-4 w-4" />
-                {needsPhoto ? "Photo Required" : "Mark Complete"}
+                {submittingComplete ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {needsPhoto ? "Photo Required" : submittingComplete ? "Saving…" : "Mark Complete"}
               </motion.button>
             </div>
           </div>
