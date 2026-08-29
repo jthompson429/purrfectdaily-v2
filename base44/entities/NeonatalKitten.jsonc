@@ -50,6 +50,16 @@
       "default": true,
       "description": "Whether kitten is currently in active neonatal care"
     },
+    "available_for_adoption": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this kitten should appear in the adoption queue"
+    },
+    "adoption_available_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date this kitten becomes available for adoption"
+    },
     "lifecycle_status": {
       "type": "string",
       "enum": [
