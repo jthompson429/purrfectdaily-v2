@@ -128,7 +128,11 @@ export default function NeonatalFoster() {
             <p className="text-muted-foreground text-xs">
               {kitten.active === false
                 ? kitten.pet_profile_id ? "Graduated · Neonatal history" : "Archived · Neonatal history"
-                : "Neonatal Foster Care"}
+                : kitten.available_for_adoption
+                  ? kitten.adoption_available_date && kitten.adoption_available_date > new Date().toISOString().slice(0, 10)
+                    ? `Neonatal Foster Care · Available ${format(new Date(`${kitten.adoption_available_date}T00:00:00`), "MMM d, yyyy")}`
+                    : "Neonatal Foster Care · Available Now"
+                  : "Neonatal Foster Care"}
             </p>
           </div>
           <div className="flex gap-1">
