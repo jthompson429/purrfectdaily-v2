@@ -14,6 +14,7 @@ import StatusBadge from "@/components/petprofile/StatusBadge";
 import { useWorkspace } from "@/lib/workspaceContext";
 import { wsCreate, wsUpdate, wsDelete } from "@/lib/workspaceApi";
 import { displayWeightValue, weightDisplayUnit } from "@/utils/weight";
+import AdoptionTab from "@/components/adoption/AdoptionTab";
 
 const SPECIES_EMOJI = { cat: "🐱", dog: "🐶", rabbit: "🐰", bird: "🐦", other: "🐾" };
 const CATEGORY_EMOJI = { feeding: "🍖", medication: "💊", water: "💧", litter: "🗑️", hygiene: "🧼", quarantine: "⚠️", house_check: "🏠", other: "⭐" };
@@ -81,8 +82,8 @@ export default function Manage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1.5 mb-6 p-1 rounded-2xl bg-muted">
-          {[["pets","Profiles"],["tasks","Care Tasks"],["pay","Notifications"]].map(([v,l]) => (
+        <div className="grid grid-cols-4 gap-1 mb-6 p-1 rounded-2xl bg-muted">
+          {[["pets","Profiles"],["adoption","Adoption"],["tasks","Care Tasks"],["pay","Notifications"]].map(([v,l]) => (
             <button key={v} onClick={() => setActiveTab(v)}
               className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === v ? "text-primary-foreground bg-primary" : "text-muted-foreground"}`}>
               {l}
@@ -170,6 +171,15 @@ export default function Manage() {
               <Plus className="h-4 w-4" /> Add Pet
             </motion.button>
           </div>
+        )}
+
+        {/* Adoption queue */}
+        {activeTab === "adoption" && (
+          <AdoptionTab
+            pets={pets}
+            onOpenPet={(petId) => navigate(`/pets/${petId}`)}
+            onOpenKitten={(kittenId) => navigate(`/neonatal/kitten/${kittenId}`)}
+          />
         )}
 
         {/* Tasks tab */}
