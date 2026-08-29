@@ -62,6 +62,12 @@ export default function VisitCard({ visit, pendingMedicationCount = 0, onEdit, o
             <Field label="Treatments Performed" value={visit.treatment} />
             <Field label="Follow-up Date" value={visit.follow_up_date ? fmtDate(visit.follow_up_date) : ""} />
             <Field label="Follow-up Instructions" value={visit.follow_up_instructions} />
+            {visit.follow_up_completed && (
+              <Field
+                label="Follow-up Status"
+                value={`Completed${visit.follow_up_completed_by ? ` by ${visit.follow_up_completed_by}` : ""}${visit.follow_up_completed_at ? ` on ${fmtDate(visit.follow_up_completed_at)}` : ""}`}
+              />
+            )}
             <Field label="Notes" value={visit.notes} />
           </div>
 
