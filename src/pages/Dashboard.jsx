@@ -348,8 +348,10 @@ export default function Dashboard() {
   const isFullyComplete = requiredTasks.length > 0 &&
     requiredTasks.every(t => isTaskFullyDone(t, logByTaskId[t.id]));
 
+  const completionSavePending = createLog.isPending || updateLog.isPending;
+
   useEffect(() => {
-    if (!isFullyComplete || totalTasks === 0) return;
+    if (completionSavePending || !isFullyComplete || totalTasks === 0) return;
     if (completionFiredRef.current) return;
 
     const alreadySent = notifications.some(n => n.type === "daily_complete" && n.notification_date === TODAY);
@@ -391,7 +393,7 @@ export default function Dashboard() {
     }
 
     setTimeout(() => setShowSummary(true), 700);
-  }, [isFullyComplete, totalTasks, notifications]);
+  }, [completionSavePending, isFullyComplete, totalTasks, notifications]);
 
   const problemNotifiedRef = useRef(new Set());
   useEffect(() => {
