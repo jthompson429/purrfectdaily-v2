@@ -15,7 +15,14 @@ const empty = {
   microchip_number: "", spayed_neutered: "unknown", living_situation: "indoor", profile_type: "house_pet",
   description: "", photo_url: "", care_level: "routine", quarantine_status: false,
   body_condition_notes: "", owner_foster_notes: "", health_status: "healthy", health_issues: "",
-  known_allergies: "", emergency_instructions: "", notes: "", sort_order: 0
+  known_allergies: "", emergency_instructions: "", available_for_adoption: false,
+  adoption_available_date: "", notes: "", sort_order: 0
+};
+
+const localToday = () => {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 };
 
 export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
@@ -41,6 +48,10 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return;
+    if (form.available_for_adoption && !form.adoption_available_date) {
+      setError("Please select the date this animal will be available for adoption.");
+      return;
+    }
     setError("");
     setSaving(true);
     try {
@@ -174,6 +185,37 @@ export default function PetFormDialog({ open, onOpenChange, pet, onSave }) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="rounded-2xl p-3 space-y-3 bg-green-500/10 border border-green-500/25">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-foreground text-sm font-bold">Available for Adoption</p>
+                <p className="text-muted-foreground text-xs">Include this animal in the adoption queue</p>
+              </div>
+              <Switch
+                checked={form.available_for_adoption}
+                onCheckedChange={(value) => setForm((current) => ({
+                  ...current,
+                  available_for_adoption: value,
+                  adoption_available_date: value ? (current.adoption_available_date || localToday()) : "",
+                }))}
+              />
+            </div>
+            {form.available_for_adoption && (
+              <div className="space-y-1.5">
+                <Label className="text-muted-foreground text-xs uppercase tracking-wider">Available Date</Label>
+                <Input
+                  type="date"
+                  value={form.adoption_available_date || ""}
+                  onChange={(event) => { set("adoption_available_date", event.target.value); setError(""); }}
+                  className={`${inputClass} [color-scheme:light]`}
+                />
+                <button type="button" onClick={() => set("adoption_available_date", localToday())} className="text-[11px] font-bold text-green-600">
+                  Available now
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
