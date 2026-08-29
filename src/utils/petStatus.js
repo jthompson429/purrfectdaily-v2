@@ -1,7 +1,19 @@
 import { preventativeStatus, vaccinationStatus, isMedicationActive } from "./petCare";
 
+const adoptionLabel = (date) => {
+  if (!date) return "Available Now";
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60000;
+  const today = new Date(now.getTime() - offset).toISOString().slice(0, 10);
+  if (date <= today) return "Available Now";
+  const formatted = new Date(`${date}T00:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `Available ${formatted}`;
+};
+
 export const computePetBadges = (pet, preventatives = [], vaccinations = [], medications = []) => {
   const badges = [];
+
+  if (pet.available_for_adoption) badges.push({ key: "adoption", label: adoptionLabel(pet.adoption_available_date), dot: "bg-green-400", text: "text-green-600" });
 
   if (pet.profile_type === "stray") badges.push({ key: "stray", label: "Stray", dot: "bg-amber-400", text: "text-amber-600" });
   if (pet.profile_type === "neonatal") badges.push({ key: "neonatal", label: "Neonatal Kitten", dot: "bg-primary", text: "text-primary" });
